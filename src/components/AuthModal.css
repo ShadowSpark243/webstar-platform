@@ -143,6 +143,40 @@
       margin-top: 0.25rem;
 }
 
+.input-error input {
+      border-color: #ef4444 !important;
+      background: rgba(239, 68, 68, 0.05) !important;
+      color: #fca5a5 !important;
+}
+
+.input-error input:focus {
+      box-shadow: 0 0 0 2px rgba(239, 68, 68, 0.2) !important;
+}
+
+.input-error .input-icon {
+      color: #ef4444 !important;
+}
+
+.field-error-text {
+      color: #ef4444;
+      font-size: 0.75rem;
+      margin-top: 0.25rem;
+      font-weight: 500;
+      animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+      from {
+            opacity: 0;
+            transform: translateY(-4px);
+      }
+
+      to {
+            opacity: 1;
+            transform: translateY(0);
+      }
+}
+
 .auth-submit {
       margin-top: 1rem;
       width: 100%;

@@ -11,6 +11,7 @@ const AdminKyc = () => {
       const [activeTab, setActiveTab] = useState('PENDING'); // 'PENDING' or 'ALL'
       const [searchQuery, setSearchQuery] = useState('');
       const [confirmModal, setConfirmModal] = useState(null); // { docId, status, userName }
+      const [rejectionReason, setRejectionReason] = useState('');
       const [processing, setProcessing] = useState(false);
 
       const fetchData = async () => {
@@ -43,14 +44,20 @@ const AdminKyc = () => {
       const handleKycReview = (docId, status, userName, e) => {
             e.stopPropagation();
             setConfirmModal({ docId, status, userName });
+            setRejectionReason('');
       };
 
       const executeKycReview = async () => {
             if (!confirmModal) return;
+            if (confirmModal.status === 'REJECTED' && !rejectionReason.trim()) {
+                  alert("Please provide a reason for rejection.");
+                  return;
+            }
             setProcessing(true);
             try {
-                  await api.put('/admin/kyc/review', { docId: confirmModal.docId, status: confirmModal.status });
+                  await api.put('/admin/kyc/review', { docId: confirmModal.docId, status: confirmModal.status, rejectionReason });
                   setConfirmModal(null);
+                  setRejectionReason('');
                   fetchData();
             } catch (err) {
                   alert("Failed to process KYC review: " + (err?.response?.data?.message || err.message));
@@ -249,6 +256,23 @@ const AdminKyc = () => {
                                                 Are you sure you want to <strong style={{ color: confirmModal.status === 'VERIFIED' ? '#10b981' : '#ef4444' }}>{confirmModal.status === 'VERIFIED' ? 'approve' : 'reject'}</strong> the KYC documents for <strong style={{ color: 'white' }}>{confirmModal.userName}</strong>?
                                                 {confirmModal.status === 'VERIFIED' ? ' This will verify their identity and allow them to participate.' : ' This will reject their documents and they will need to resubmit.'}
                                           </p>
+
+                                          {confirmModal.status === 'REJECTED' && (
+                                                <div style={{ marginBottom: '1.5rem' }}>
+                                                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Reason for Rejection *</label>
+                                                      <textarea
+                                                            placeholder="State the reason clearly so the user knows how to fix it."
+                                                            value={rejectionReason}
+                                                            onChange={(e) => setRejectionReason(e.target.value)}
+                                                            rows="3"
+                                                            style={{
+                                                                  width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
+                                                                  color: 'white', borderRadius: '0.5rem', outline: 'none', resize: 'vertical', fontFamily: 'inherit', fontSize: '0.9rem'
+                                                            }}
+                                                      />
+                                                </div>
+                                          )}
+
                                           <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
                                                 <button
                                                       onClick={() => setConfirmModal(null)}

@@ -208,6 +208,11 @@ const KycPage = () => {
                                                 <div style={{ flex: 1 }}>
                                                       <h4 style={{ margin: '0 0 0.25rem 0', color: '#ef4444' }}>Verification Rejected</h4>
                                                       <p style={{ margin: 0, color: 'rgba(255, 255, 255, 0.7)', fontSize: '0.9rem' }}>Your documents were rejected. Please re-submit with clearer documents.</p>
+                                                      {user?.kycDocuments?.rejectionReason && (
+                                                            <div style={{ marginTop: '0.75rem', padding: '0.75rem', background: 'rgba(239, 68, 68, 0.15)', borderLeft: '3px solid #ef4444', borderRadius: '0 0.5rem 0.5rem 0', color: '#fca5a5', fontSize: '0.85rem' }}>
+                                                                  <strong>Admin Note:</strong> {user.kycDocuments.rejectionReason}
+                                                            </div>
+                                                      )}
                                                 </div>
                                           </div>
                                           {!showReKyc && (

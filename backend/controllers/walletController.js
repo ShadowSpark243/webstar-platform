@@ -166,11 +166,10 @@ exports.investInProject = async (req, res) => {
             const expectedReturn = investAmount * (1 + project.roiPercentage / 100);
             const projectWillBeFunded = project.raisedAmount + investAmount >= project.targetAmount;
 
-            // 4. ATOMIC DB TRANSACTION — all writes succeed or all roll back
-            let updatedUser;
-            await prisma.$transaction(async (tx) => {
+            // 4. ATOMIC DB TRANSACTION — Array transaction executes in a SINGLE round trip, much faster!
+            const [newInvestment, newTx, updatedUser] = await prisma.$transaction([
                   // Create Investment record
-                  await tx.investment.create({
+                  prisma.investment.create({
                         data: {
                               userId: req.user.id,
                               projectId: project.id,
@@ -178,10 +177,9 @@ exports.investInProject = async (req, res) => {
                               expectedReturn,
                               status: 'ACTIVE'
                         }
-                  });
-
+                  }),
                   // Log Investment Transaction
-                  await tx.transaction.create({
+                  prisma.transaction.create({
                         data: {
                               userId: req.user.id,
                               type: 'INVESTMENT',
@@ -189,26 +187,24 @@ exports.investInProject = async (req, res) => {
                               status: 'APPROVED',
                               description: `Investment in ${project.title}`
                         }
-                  });
-
+                  }),
                   // Deduct from User wallet
-                  updatedUser = await tx.user.update({
+                  prisma.user.update({
                         where: { id: req.user.id },
                         data: {
                               walletBalance: { decrement: investAmount },
                               totalInvested: { increment: investAmount }
                         }
-                  });
-
+                  }),
                   // Update Project raisedAmount (auto-fund if target reached)
-                  await tx.project.update({
+                  prisma.project.update({
                         where: { id: project.id },
                         data: {
                               raisedAmount: { increment: investAmount },
                               ...(projectWillBeFunded ? { status: 'FUNDED' } : {})
                         }
-                  });
-            });
+                  })
+            ]);
 
             // 5. MLM 5-Level Commission Distribution (runs AFTER transaction — failure here won't undo the investment)
             const networkStats = require('../utils/networkStats');
@@ -216,6 +212,10 @@ exports.investInProject = async (req, res) => {
                   investmentAmount: investAmount,
                   isNewlyActive: user.totalInvested === 0
             });
+
+            // 6. Invalidate Project Cache globally
+            const { projectCache } = require('./projectController');
+            if (projectCache) projectCache.del('activeProjects');
 
             res.status(200).json({ success: true, message: 'Investment successful!', user: updatedUser });
       } catch (error) {

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import { Film, AlertCircle, PlaySquare, ChevronRight, X, TrendingUp, Clock, Target, Users, IndianRupee, Info, CheckCircle2, XCircle } from 'lucide-react';
+import { Film, AlertCircle, PlaySquare, ChevronRight, X, TrendingUp, Clock, Target, Users, IndianRupee, Info, CheckCircle2, XCircle, Loader2 } from 'lucide-react';
 import './Dashboard.css';
 
 const ProjectsPage = () => {
@@ -328,8 +328,8 @@ const ProjectsPage = () => {
                                           </p>
                                           <div style={{ display: 'flex', gap: '0.75rem' }}>
                                                 <button onClick={() => setConfirmInvest(false)} disabled={isProcessing} style={{ flex: 1, padding: '0.65rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>Cancel</button>
-                                                <button onClick={executeInvest} disabled={isProcessing} style={{ flex: 2, padding: '0.65rem', background: '#10b981', border: 'none', color: 'white', borderRadius: '0.5rem', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.85rem', opacity: isProcessing ? 0.6 : 1 }}>
-                                                      {isProcessing ? 'Processing...' : 'Confirm Investment'}
+                                                <button onClick={executeInvest} disabled={isProcessing} style={{ flex: 2, padding: '0.65rem', background: '#10b981', border: 'none', color: 'white', borderRadius: '0.5rem', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.85rem', opacity: isProcessing ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                                      {isProcessing ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : 'Confirm Investment'}
                                                 </button>
                                           </div>
                                     </div>

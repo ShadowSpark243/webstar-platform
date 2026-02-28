@@ -63,6 +63,7 @@ model KycDocument {
   documentNumber String
   documentUrl    String
   status         KYC       @default(PENDING)
+  rejectionReason String?  @db.Text
   reviewedBy     Int?
   reviewedAt     DateTime?
   createdAt      DateTime  @default(now())
@@ -80,6 +81,7 @@ model Transaction {
   amount          Float
   status          TxStatus @default(PENDING)
   description     String?
+  rejectionReason String?  @db.Text
   bankReference   String?
   bankAccountInfo String?
   createdAt       DateTime @default(now())

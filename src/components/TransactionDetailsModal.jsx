@@ -144,6 +144,9 @@ const TransactionDetailsModal = ({ transaction, onClose, onInspectUser }) => {
 
                               {/* Detail Rows */}
                               <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0' }}>
+                                    {transaction.status === 'REJECTED' && transaction.rejectionReason && (
+                                          <DetailRow icon={<XCircle size={14} color="#ef4444" />} label={<span style={{ color: '#ef4444' }}>Rejection Note</span>} value={<span style={{ color: '#fca5a5' }}>{transaction.rejectionReason}</span>} />
+                                    )}
                                     <DetailRow icon={<FileText size={14} />} label="Description" value={transaction.description || '—'} />
                                     <DetailRow icon={<Clock size={14} />} label="Timestamp" value={new Date(transaction.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} />
                                     {transaction.bankReference && (

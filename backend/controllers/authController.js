@@ -192,7 +192,13 @@ exports.getMe = async (req, res) => {
                         teamVolume: true,
                         rank: true,
                         referralCode: true,
-                        createdAt: true
+                        createdAt: true,
+                        kycDocuments: {
+                              select: {
+                                    status: true,
+                                    rejectionReason: true
+                              }
+                        }
                   }
             });
 

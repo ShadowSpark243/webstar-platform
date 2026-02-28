@@ -272,12 +272,13 @@ exports.getAllKyc = async (req, res) => {
 
 exports.reviewKyc = async (req, res) => {
       try {
-            const { docId, status } = req.body; // status must be 'VERIFIED' or 'REJECTED'
+            const { docId, status, rejectionReason } = req.body; // status must be 'VERIFIED' or 'REJECTED'
 
             const document = await prisma.kycDocument.update({
                   where: { id: parseInt(docId) },
                   data: {
                         status,
+                        rejectionReason: status === 'REJECTED' ? rejectionReason : null,
                         reviewedBy: req.user.id,
                         reviewedAt: new Date()
                   }
@@ -313,11 +314,14 @@ exports.getPendingDeposits = async (req, res) => {
 
 exports.reviewDeposit = async (req, res) => {
       try {
-            const { transactionId, status } = req.body; // 'APPROVED' or 'REJECTED'
+            const { transactionId, status, rejectionReason } = req.body; // 'APPROVED' or 'REJECTED'
 
             const tx = await prisma.transaction.update({
                   where: { id: parseInt(transactionId) },
-                  data: { status }
+                  data: {
+                        status,
+                        rejectionReason: status === 'REJECTED' ? rejectionReason : null
+                  }
             });
 
             // If approved, actually fund the wallet and activate user

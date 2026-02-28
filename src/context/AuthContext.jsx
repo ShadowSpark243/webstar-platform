@@ -55,7 +55,11 @@ export const AuthProvider = ({ children }) => {
                   return { success: true };
             } catch (error) {
                   console.error('Login Error:', error.response?.data || error.message);
-                  return { success: false, message: error.response?.data?.message || 'Login failed.' };
+                  return {
+                        success: false,
+                        message: error.response?.data?.message || 'Login failed.',
+                        fieldErrors: error.response?.data?.errors || []
+                  };
             }
       };
 
@@ -72,7 +76,11 @@ export const AuthProvider = ({ children }) => {
                   return { success: true };
             } catch (error) {
                   console.error('Registration Error:', error.response?.data || error.message);
-                  return { success: false, message: error.response?.data?.message || 'Registration failed.' };
+                  return {
+                        success: false,
+                        message: error.response?.data?.message || 'Registration failed.',
+                        fieldErrors: error.response?.data?.errors || []
+                  };
             }
       };
 

@@ -2,10 +2,25 @@ const express = require('express');
 const router = express.Router();
 const authController = require('../controllers/authController');
 const { protect } = require('../middleware/authMiddleware');
+const { body } = require('express-validator');
+const { validateRequest } = require('../middleware/validationMiddleware');
 
-router.post('/register', authController.register);
-router.post('/login', authController.login);
+router.post('/register', [
+      body('fullName').trim().notEmpty().withMessage('Full name is required'),
+      body('email').isEmail().normalizeEmail().withMessage('A valid email is required'),
+      body('username').trim().isLength({ min: 3 }).isAlphanumeric().withMessage('Username must be at least 3 alphanumeric characters'),
+      body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
+      body('phone').optional({ checkFalsy: true }).isMobilePhone().withMessage('Please provide a valid phone number'),
+      body('referralCode').optional({ checkFalsy: true }).trim().isString()
+], validateRequest, authController.register);
+
+router.post('/login', [
+      body('email').isEmail().normalizeEmail().withMessage('A valid email is required'),
+      body('password').notEmpty().withMessage('Password is required')
+], validateRequest, authController.login);
+
 // router.get('/setup-admin', authController.createSuperAdmin); // REMOVED — use seed script instead
 router.get('/me', protect, authController.getMe);
 
 module.exports = router;
+

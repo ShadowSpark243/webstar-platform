@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Mail, Lock, Phone, UserPlus, LogIn, CheckCircle } from 'lucide-react';
+import { X, User, Mail, Lock, Phone, UserPlus, LogIn, CheckCircle, Loader2 } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AuthModal.css';
@@ -20,6 +20,7 @@ const AuthModal = () => {
       const [phone, setPhone] = useState('');
       const [referralCode, setReferralCode] = useState('');
       const [refFromUrl, setRefFromUrl] = useState(false);
+      const [fieldErrors, setFieldErrors] = useState({});
 
       // On mount — check URL for ?ref=CODE and pre-fill + switch to register
       useEffect(() => {
@@ -37,6 +38,7 @@ const AuthModal = () => {
       const handleSubmit = async (e) => {
             e.preventDefault();
             setError('');
+            setFieldErrors({});
             setIsSubmitting(true);
 
             let result;
@@ -47,7 +49,14 @@ const AuthModal = () => {
             }
 
             if (!result.success) {
-                  setError(result.message);
+                  setError(result.fieldErrors?.length > 0 ? 'Please fix the errors below.' : result.message);
+                  if (result.fieldErrors?.length > 0) {
+                        const errObj = {};
+                        result.fieldErrors.forEach(err => {
+                              if (!errObj[err.path]) errObj[err.path] = err.msg;
+                        });
+                        setFieldErrors(errObj);
+                  }
             } else {
                   navigate('/dashboard');
             }
@@ -80,19 +89,19 @@ const AuthModal = () => {
                                     <div className="auth-tabs">
                                           <button
                                                 className={`auth-tab ${isLoginView ? 'active' : ''}`}
-                                                onClick={() => { setIsLoginView(true); setError(''); }}
+                                                onClick={() => { setIsLoginView(true); setError(''); setFieldErrors({}); }}
                                           >
                                                 <LogIn size={18} /> Login
                                           </button>
                                           <button
                                                 className={`auth-tab ${!isLoginView ? 'active' : ''}`}
-                                                onClick={() => { setIsLoginView(false); setError(''); }}
+                                                onClick={() => { setIsLoginView(false); setError(''); setFieldErrors({}); }}
                                           >
                                                 <UserPlus size={18} /> Register
                                           </button>
                                     </div>
 
-                                    {error && (
+                                    {error && !Object.keys(fieldErrors).length && (
                                           <div className="auth-error-message">
                                                 {error}
                                           </div>
@@ -103,72 +112,72 @@ const AuthModal = () => {
                                                 <>
                                                       <div className="form-group">
                                                             <label>Full Name</label>
-                                                            <div className="input-with-icon">
+                                                            <div className={`input-with-icon ${fieldErrors.fullName ? 'input-error' : ''}`}>
                                                                   <User size={18} className="input-icon" />
                                                                   <input
                                                                         type="text"
                                                                         placeholder="John Doe"
-                                                                        required
                                                                         value={fullName}
                                                                         onChange={(e) => setFullName(e.target.value)}
                                                                   />
                                                             </div>
+                                                            {fieldErrors.fullName && <div className="field-error-text">{fieldErrors.fullName}</div>}
                                                       </div>
                                                       <div className="form-group">
                                                             <label>Username</label>
-                                                            <div className="input-with-icon">
+                                                            <div className={`input-with-icon ${fieldErrors.username ? 'input-error' : ''}`}>
                                                                   <User size={18} className="input-icon" />
                                                                   <input
                                                                         type="text"
                                                                         placeholder="johndoe123"
-                                                                        required
                                                                         value={username}
                                                                         onChange={(e) => setUsername(e.target.value)}
                                                                   />
                                                             </div>
+                                                            {fieldErrors.username && <div className="field-error-text">{fieldErrors.username}</div>}
                                                       </div>
                                                       <div className="form-group">
                                                             <label>Phone Number</label>
-                                                            <div className="input-with-icon">
+                                                            <div className={`input-with-icon ${fieldErrors.phone ? 'input-error' : ''}`}>
                                                                   <Phone size={18} className="input-icon" />
                                                                   <input
                                                                         type="tel"
                                                                         placeholder="+91 98765 43210"
-                                                                        required
                                                                         value={phone}
                                                                         onChange={(e) => setPhone(e.target.value)}
                                                                   />
                                                             </div>
+                                                            {fieldErrors.phone && <div className="field-error-text">{fieldErrors.phone}</div>}
                                                       </div>
                                                 </>
                                           )}
 
                                           <div className="form-group">
                                                 <label>Email Address</label>
-                                                <div className="input-with-icon">
+                                                <div className={`input-with-icon ${fieldErrors.email ? 'input-error' : ''}`}>
                                                       <Mail size={18} className="input-icon" />
                                                       <input
                                                             type="email"
                                                             placeholder="you@example.com"
-                                                            required
                                                             value={email}
                                                             onChange={(e) => setEmail(e.target.value)}
                                                       />
                                                 </div>
+                                                {fieldErrors.email && <div className="field-error-text">{fieldErrors.email}</div>}
                                           </div>
 
                                           <div className="form-group">
                                                 <label>Password</label>
-                                                <div className="input-with-icon">
+                                                <div className={`input-with-icon ${fieldErrors.password ? 'input-error' : ''}`}>
                                                       <Lock size={18} className="input-icon" />
                                                       <input
                                                             type="password"
                                                             placeholder="••••••••"
-                                                            required
                                                             value={password}
                                                             onChange={(e) => setPassword(e.target.value)}
                                                       />
                                                 </div>
+                                                {fieldErrors.password && <div className="field-error-text">{fieldErrors.password}</div>}
                                           </div>
 
                                           {!isLoginView && (
@@ -176,17 +185,18 @@ const AuthModal = () => {
                                                       <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
                                                             Referral Code {refFromUrl ? <span style={{ color: '#4ade80', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><CheckCircle size={12} /> Applied</span> : '(Optional)'}
                                                       </label>
-                                                      <div className="input-with-icon">
+                                                      <div className={`input-with-icon ${fieldErrors.referralCode ? 'input-error' : ''}`}>
                                                             {refFromUrl ? <CheckCircle size={18} className="input-icon" style={{ color: '#4ade80' }} /> : <UserPlus size={18} className="input-icon" />}
                                                             <input
                                                                   type="text"
-                                                                  placeholder="e.g. WS-ARYAN"
+                                                                  placeholder="Optional"
                                                                   value={referralCode}
                                                                   onChange={(e) => !refFromUrl && setReferralCode(e.target.value.toUpperCase())}
                                                                   readOnly={refFromUrl}
                                                                   style={refFromUrl ? { color: '#4ade80', fontWeight: 700, cursor: 'not-allowed', letterSpacing: '0.1em' } : {}}
                                                             />
                                                       </div>
+                                                      {fieldErrors.referralCode && <div className="field-error-text">{fieldErrors.referralCode}</div>}
                                                       <small className="form-help-text">
                                                             {refFromUrl ? '✅ Referral code automatically applied from your invite link.' : 'Leave blank if you don\'t have a referral code.'}
                                                       </small>
@@ -194,7 +204,7 @@ const AuthModal = () => {
                                           )}
 
                                           <button type="submit" className="btn btn-primary auth-submit" disabled={isSubmitting}>
-                                                {isSubmitting ? 'Processing...' : (isLoginView ? 'Login to Dashboard' : 'Create Account')}
+                                                {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : (isLoginView ? 'Login to Dashboard' : 'Create Account')}
                                           </button>
                                     </form>
                               </motion.div>

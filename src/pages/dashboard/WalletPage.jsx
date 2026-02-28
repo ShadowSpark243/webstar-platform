@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2 } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 import TransactionDetailsModal from '../../components/TransactionDetailsModal';
 import './Dashboard.css';
@@ -22,6 +22,11 @@ const WalletPage = () => {
       const [searchQuery, setSearchQuery] = useState('');
       const [txSearchQuery, setTxSearchQuery] = useState('');
       const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+      // Deposit Review State
+      const [depositConfirmModal, setDepositConfirmModal] = useState(null); // { transactionId, status, amount, userName }
+      const [depositRejectionReason, setDepositRejectionReason] = useState('');
+      const [processingReview, setProcessingReview] = useState(false);
 
       const fetchData = async () => {
             setLoadingHistory(true);
@@ -50,13 +55,32 @@ const WalletPage = () => {
             fetchData();
       }, [user?.role]);
 
-      const handleReviewDeposit = async (transactionId, status) => {
+      const handleReviewDepositClick = (dep, status, e) => {
+            e.stopPropagation();
+            setDepositConfirmModal({ transactionId: dep.id, status, amount: dep.amount, userName: dep.user.fullName });
+            setDepositRejectionReason('');
+      };
+
+      const executeDepositReview = async () => {
+            if (!depositConfirmModal) return;
+            if (depositConfirmModal.status === 'REJECTED' && !depositRejectionReason.trim()) {
+                  alert("Please provide a reason for rejection.");
+                  return;
+            }
+            setProcessingReview(true);
             try {
-                  await api.put('/admin/deposits/review', { transactionId, status });
-                  alert(`Deposit ${status} successfully!`);
+                  await api.put('/admin/deposits/review', {
+                        transactionId: depositConfirmModal.transactionId,
+                        status: depositConfirmModal.status,
+                        rejectionReason: depositRejectionReason
+                  });
+                  setDepositConfirmModal(null);
+                  setDepositRejectionReason('');
                   fetchData();
             } catch (error) {
-                  alert('Failed to process deposit review');
+                  alert('Failed to process deposit review: ' + (error.response?.data?.message || error.message));
+            } finally {
+                  setProcessingReview(false);
             }
       };
 
@@ -205,7 +229,7 @@ const WalletPage = () => {
                                                 </div>
 
                                                 <button type="submit" className="btn btn-primary" disabled={isSubmitting || !depositAmount || !utrNumber}>
-                                                      {isSubmitting ? 'Processing...' : 'Submit Request'}
+                                                      {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : 'Submit Request'}
                                                 </button>
                                           </form>
                                     </div>
@@ -255,13 +279,78 @@ const WalletPage = () => {
                                                             <td style={{ padding: '1rem 1.5rem', color: '#3b82f6', letterSpacing: '1px', fontSize: '0.9rem' }} onClick={() => setSelectedUserId(dep.userId)}>{dep.bankReference}</td>
                                                             <td style={{ padding: '1rem 1.5rem', fontWeight: 700 }} onClick={() => setSelectedUserId(dep.userId)}>₹{dep.amount.toLocaleString('en-IN')}</td>
                                                             <td style={{ padding: '1rem 1.5rem', display: 'flex', gap: '0.5rem' }}>
-                                                                  <button onClick={(e) => { e.stopPropagation(); handleReviewDeposit(dep.id, 'APPROVED') }} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Verify & Credit</button>
-                                                                  <button onClick={(e) => { e.stopPropagation(); handleReviewDeposit(dep.id, 'REJECTED') }} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', borderColor: '#ef4444', color: '#ef4444' }}>Reject</button>
+                                                                  <button onClick={(e) => handleReviewDepositClick(dep, 'APPROVED', e)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Verify & Credit</button>
+                                                                  <button onClick={(e) => handleReviewDepositClick(dep, 'REJECTED', e)} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', borderColor: '#ef4444', color: '#ef4444' }}>Reject</button>
                                                             </td>
                                                       </tr>
                                                 ))}
                                           </tbody>
                                     </table>
+                              </div>
+                        </div>
+                  )}
+
+                  {/* Deposit Review Confirmation Modal */}
+                  {depositConfirmModal && (
+                        <div
+                              onClick={() => setDepositConfirmModal(null)}
+                              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000, padding: '1rem' }}
+                        >
+                              <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #111 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', width: '100%', maxWidth: '420px', overflow: 'hidden', animation: 'fadeIn 0.2s ease' }}
+                              >
+                                    <div style={{ height: '3px', background: depositConfirmModal.status === 'APPROVED' ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #f87171, #ef4444)' }} />
+                                    <div style={{ padding: '1.5rem' }}>
+                                          <h3 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '1.1rem', fontWeight: 700 }}>
+                                                {depositConfirmModal.status === 'APPROVED' ? '✅ Verify Content Deposit' : '❌ Reject Deposit'}
+                                          </h3>
+                                          <p style={{ margin: '0 0 1.5rem 0', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: 1.5 }}>
+                                                Are you sure you want to <strong style={{ color: depositConfirmModal.status === 'APPROVED' ? '#10b981' : '#ef4444' }}>{depositConfirmModal.status === 'APPROVED' ? 'approve' : 'reject'}</strong> a deposit of <strong style={{ color: 'white' }}>₹{depositConfirmModal.amount.toLocaleString('en-IN')}</strong> for <strong style={{ color: 'white' }}>{depositConfirmModal.userName}</strong>?
+                                                {depositConfirmModal.status === 'APPROVED' ? ' This will instantly credit their wallet.' : ' This will mark the transaction as rejected.'}
+                                          </p>
+
+                                          {depositConfirmModal.status === 'REJECTED' && (
+                                                <div style={{ marginBottom: '1.5rem' }}>
+                                                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Reason for Rejection *</label>
+                                                      <textarea
+                                                            placeholder="State the reason (e.g., Invalid UTR, Name Mismatch)"
+                                                            value={depositRejectionReason}
+                                                            onChange={(e) => setDepositRejectionReason(e.target.value)}
+                                                            rows="3"
+                                                            style={{
+                                                                  width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
+                                                                  color: 'white', borderRadius: '0.5rem', outline: 'none', resize: 'vertical', fontFamily: 'inherit', fontSize: '0.9rem'
+                                                            }}
+                                                      />
+                                                </div>
+                                          )}
+
+                                          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
+                                                <button
+                                                      onClick={() => setDepositConfirmModal(null)}
+                                                      disabled={processingReview}
+                                                      style={{ padding: '0.6rem 1.25rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
+                                                >
+                                                      Cancel
+                                                </button>
+                                                <button
+                                                      onClick={executeDepositReview}
+                                                      disabled={processingReview}
+                                                      style={{
+                                                            padding: '0.6rem 1.25rem',
+                                                            background: depositConfirmModal.status === 'APPROVED' ? '#10b981' : '#ef4444',
+                                                            border: 'none', color: 'white', borderRadius: '0.5rem',
+                                                            cursor: processingReview ? 'not-allowed' : 'pointer',
+                                                            fontWeight: 600, fontSize: '0.85rem',
+                                                            opacity: processingReview ? 0.6 : 1,
+                                                            display: 'flex', alignItems: 'center', gap: '0.5rem'
+                                                      }}
+                                                >
+                                                      {processingReview ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : `Confirm ${depositConfirmModal.status === 'APPROVED' ? 'Approve' : 'Reject'}`}
+                                                </button>
+                                          </div>
+                                    </div>
                               </div>
                         </div>
                   )}
