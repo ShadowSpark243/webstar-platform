@@ -182,6 +182,7 @@ const AdminLedger = () => {
                                                             <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>User Identity</th>
                                                             <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Bank Reference (UTR)</th>
                                                             <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Requested Capital</th>
+                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Proof</th>
                                                             <th style={{ padding: '1rem 1.5rem', fontWeight: 600, textAlign: 'right' }}>Actions</th>
                                                       </tr>
                                                 </thead>
@@ -195,12 +196,27 @@ const AdminLedger = () => {
                                                                   onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(16, 185, 129, 0.05)' })}
                                                                   onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
                                                             >
-                                                                  <td style={{ padding: '1.25rem 1.5rem' }} onClick={() => setSelectedUserId(dep.userId)}>
-                                                                        <div style={{ fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><User size={14} className="text-blue-400" /> {dep.user.fullName}</div>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.2rem' }}>{dep.user.email}</div>
+                                                                  <td style={{ padding: '1.25rem 1.5rem' }} onClick={() => setSelectedTransaction(dep)}>
+                                                                        <div style={{ fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><User size={14} className="text-blue-400" /> {dep.user?.fullName}</div>
+                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.2rem' }}>{dep.user?.email}</div>
                                                                   </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem', color: '#3b82f6', letterSpacing: '1px', fontSize: '0.9rem', fontWeight: 500 }} onClick={() => setSelectedUserId(dep.userId)}>{dep.bankReference}</td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem', fontWeight: 700, color: '#10b981', fontSize: '1.1rem' }} onClick={() => setSelectedUserId(dep.userId)}>₹{dep.amount.toLocaleString('en-IN')}</td>
+                                                                  <td style={{ padding: '1.25rem 1.5rem', color: '#3b82f6', letterSpacing: '1px', fontSize: '0.9rem', fontWeight: 500 }} onClick={() => setSelectedTransaction(dep)}>{dep.bankReference}</td>
+                                                                  <td style={{ padding: '1.25rem 1.5rem', fontWeight: 700, color: '#10b981', fontSize: '1.1rem' }} onClick={() => setSelectedTransaction(dep)}>₹{dep.amount?.toLocaleString('en-IN')}</td>
+                                                                  <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                                        {dep.receiptUrl ? (
+                                                                              <a
+                                                                                    href={dep.receiptUrl}
+                                                                                    target="_blank"
+                                                                                    rel="noopener noreferrer"
+                                                                                    style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none' }}
+                                                                                    onClick={(e) => e.stopPropagation()}
+                                                                              >
+                                                                                    <ArrowUpRight size={14} /> View Receipt
+                                                                              </a>
+                                                                        ) : (
+                                                                              <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)' }}>No Proof</span>
+                                                                        )}
+                                                                  </td>
                                                                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                                                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
                                                                               <button onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'APPROVED') }} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#10b981', border: 'none' }}>Credit Funds</button>

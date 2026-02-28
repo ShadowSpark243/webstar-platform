@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { Film, Plus, Search, Edit2, Trash2, TrendingUp, Users, Calendar, Target, X, IndianRupee, Clock, BarChart3, Clapperboard, Loader2 } from 'lucide-react';
+import { Film, Plus, Search, Edit2, Trash2, TrendingUp, Users, Calendar, Target, X, IndianRupee, Clock, BarChart3, Clapperboard, Loader2, Info, ChevronDown } from 'lucide-react';
 import './AdminProjects.css';
 
 const statusConfig = {
@@ -15,9 +15,9 @@ const emptyProject = {
 };
 
 const formatINR = (n) => {
-      if (n >= 10000000) return `₹${(n / 10000000).toFixed(1)}Cr`;
-      if (n >= 100000) return `₹${(n / 100000).toFixed(1)}L`;
-      return `₹${Number(n).toLocaleString('en-IN')}`;
+      if (n >= 10000000) return `₹${(n / 10000000).toFixed(1)} Cr`;
+      if (n >= 100000) return `₹${(n / 100000).toFixed(1)} L`;
+      return `₹${Number(n).toLocaleString('en-IN')} `;
 };
 
 const AdminProjects = () => {
@@ -31,6 +31,8 @@ const AdminProjects = () => {
       const [confirmDelete, setConfirmDelete] = useState(null);
       const [errorMsg, setErrorMsg] = useState('');
       const [successMsg, setSuccessMsg] = useState('');
+      const [showInvestorsModal, setShowInvestorsModal] = useState(null); // project object
+      const [expandedUserId, setExpandedUserId] = useState(null);
 
       const fetchProjects = async () => {
             try {
@@ -88,7 +90,7 @@ const AdminProjects = () => {
             setErrorMsg('');
             try {
                   if (editingProject) {
-                        await api.put(`/admin/projects/${editingProject.id}`, form);
+                        await api.put(`/ admin / projects / ${editingProject.id} `, form);
                         setSuccessMsg(`"${form.title}" updated successfully!`);
                   } else {
                         await api.post('/admin/projects', form);
@@ -107,7 +109,7 @@ const AdminProjects = () => {
             if (!confirmDelete) return;
             setProcessing(true);
             try {
-                  await api.delete(`/admin/projects/${confirmDelete.id}`);
+                  await api.delete(`/ admin / projects / ${confirmDelete.id} `);
                   setSuccessMsg(`"${confirmDelete.title}" deleted.`);
                   setConfirmDelete(null);
                   fetchProjects();
@@ -121,8 +123,8 @@ const AdminProjects = () => {
 
       const handleStatusChange = async (projectId, newStatus) => {
             try {
-                  await api.put(`/admin/projects/${projectId}`, { status: newStatus });
-                  setSuccessMsg(`Status → ${statusConfig[newStatus]?.label || newStatus}`);
+                  await api.put(`/ admin / projects / ${projectId} `, { status: newStatus });
+                  setSuccessMsg(`Status → ${statusConfig[newStatus]?.label || newStatus} `);
                   fetchProjects();
             } catch (err) {
                   console.error('Status update failed:', err);
@@ -181,8 +183,8 @@ const AdminProjects = () => {
                   {/* Stats Grid */}
                   <div className="ap-stats-grid">
                         {stats.map((s, i) => (
-                              <div key={i} className="ap-stat-card" style={{ background: s.gradient, borderColor: `${s.color}22` }}>
-                                    <div className="ap-stat-icon" style={{ color: s.color, background: `${s.color}15` }}>{s.icon}</div>
+                              <div key={i} className="ap-stat-card" style={{ background: s.gradient, borderColor: `${s.color} 22` }}>
+                                    <div className="ap-stat-icon" style={{ color: s.color, background: `${s.color} 15` }}>{s.icon}</div>
                                     <div className="ap-stat-info">
                                           <span className="ap-stat-value">{s.value}</span>
                                           <span className="ap-stat-label">{s.label}</span>
@@ -220,7 +222,7 @@ const AdminProjects = () => {
                                                                   <Film size={28} />
                                                             </div>
                                                       </div>
-                                                      <div className="ap-card-badge" style={{ background: sc.bg, color: sc.color, boxShadow: `0 0 12px ${sc.glow}` }}>
+                                                      <div className="ap-card-badge" style={{ background: sc.bg, color: sc.color, boxShadow: `0 0 12px ${sc.glow} ` }}>
                                                             {sc.label}
                                                       </div>
                                                 </div>
@@ -241,7 +243,7 @@ const AdminProjects = () => {
                                                                   <span>Target: {formatINR(p.targetAmount)}</span>
                                                             </div>
                                                             <div className="ap-card-progress-track">
-                                                                  <div className="ap-card-progress-fill" style={{ width: `${progress}%` }} />
+                                                                  <div className="ap-card-progress-fill" style={{ width: `${progress}% ` }} />
                                                             </div>
                                                             <span className="ap-card-progress-pct">{progress.toFixed(1)}% funded</span>
                                                       </div>
@@ -272,13 +274,36 @@ const AdminProjects = () => {
                                                             <div className="ap-metric">
                                                                   <Users size={14} />
                                                                   <div>
-                                                                        <span className="ap-metric-value">{p._count?.investments || 0}</span>
+                                                                        <span className="ap-metric-value">{new Set(p.investments?.map(i => i.userId)).size || 0}</span>
                                                                         <span className="ap-metric-label">Investors</span>
                                                                   </div>
                                                             </div>
                                                       </div>
-                                                </div>
 
+                                                      {p._count?.investments > 0 && (
+                                                            <button
+                                                                  onClick={() => setShowInvestorsModal(p)}
+                                                                  style={{
+                                                                        width: '100%',
+                                                                        marginTop: '1rem',
+                                                                        padding: '0.5rem',
+                                                                        background: 'rgba(59, 130, 246, 0.1)',
+                                                                        border: '1px solid rgba(59, 130, 246, 0.2)',
+                                                                        borderRadius: '0.4rem',
+                                                                        color: '#3b82f6',
+                                                                        fontSize: '0.75rem',
+                                                                        fontWeight: 600,
+                                                                        cursor: 'pointer',
+                                                                        display: 'flex',
+                                                                        alignItems: 'center',
+                                                                        justifyContent: 'center',
+                                                                        gap: '0.4rem'
+                                                                  }}
+                                                            >
+                                                                  <Users size={14} /> View {new Set(p.investments?.map(i => i.userId)).size} Investors
+                                                            </button>
+                                                      )}
+                                                </div>
                                                 {/* Card Footer — Actions */}
                                                 <div className="ap-card-footer">
                                                       <select
@@ -286,7 +311,7 @@ const AdminProjects = () => {
                                                             onClick={(e) => e.stopPropagation()}
                                                             onChange={(e) => handleStatusChange(p.id, e.target.value)}
                                                             className="ap-status-select"
-                                                            style={{ background: sc.bg, color: sc.color, borderColor: `${sc.color}44` }}
+                                                            style={{ background: sc.bg, color: sc.color, borderColor: `${sc.color} 44` }}
                                                       >
                                                             <option value="COMING_SOON">Coming Soon</option>
                                                             <option value="OPEN">Open</option>
@@ -307,100 +332,195 @@ const AdminProjects = () => {
                               })}
                         </div>
                   )}
-
                   {/* ═══════ Create / Edit Project Modal ═══════ */}
-                  {showModal && (
-                        <div className="ap-modal-overlay" onClick={() => setShowModal(false)}>
-                              <div className="ap-modal" onClick={(e) => e.stopPropagation()}>
-                                    <div className="ap-modal-accent" />
-                                    <div className="ap-modal-content">
-                                          <div className="ap-modal-header">
-                                                <h2>{editingProject ? '✏️ Edit Project' : '🎬 Create New Project'}</h2>
-                                                <button onClick={() => setShowModal(false)} className="ap-modal-close"><X size={20} /></button>
+                  {
+                        showModal && (
+                              <div className="ap-modal-overlay" onClick={() => setShowModal(false)}>
+                                    <div className="ap-modal" onClick={(e) => e.stopPropagation()}>
+                                          <div className="ap-modal-accent" />
+                                          <div className="ap-modal-content">
+                                                <div className="ap-modal-header">
+                                                      <h2>{editingProject ? '✏️ Edit Project' : '🎬 Create New Project'}</h2>
+                                                      <button onClick={() => setShowModal(false)} className="ap-modal-close"><X size={20} /></button>
+                                                </div>
+
+                                                {errorMsg && <div className="ap-alert ap-alert-error">{errorMsg}</div>}
+
+                                                <form onSubmit={handleSubmit} className="ap-form">
+                                                      <div className="ap-form-group ap-form-full">
+                                                            <label>Project Title *</label>
+                                                            <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Kalyug Chronicles Season 2" />
+                                                      </div>
+                                                      <div className="ap-form-group ap-form-full">
+                                                            <label>Description *</label>
+                                                            <textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe the project..." rows={3} />
+                                                      </div>
+                                                      <div className="ap-form-group">
+                                                            <label>Genre *</label>
+                                                            <input required value={form.genre} onChange={(e) => setForm({ ...form, genre: e.target.value })} placeholder="e.g. Web Series" />
+                                                      </div>
+                                                      <div className="ap-form-group">
+                                                            <label>Image URL</label>
+                                                            <input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://..." />
+                                                      </div>
+                                                      <div className="ap-form-group">
+                                                            <label>Target Amount (₹) *</label>
+                                                            <input required type="number" min="0" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} placeholder="e.g. 50000000" />
+                                                      </div>
+                                                      <div className="ap-form-group">
+                                                            <label>Min Investment (₹) *</label>
+                                                            <input required type="number" min="0" value={form.minInvestment} onChange={(e) => setForm({ ...form, minInvestment: e.target.value })} placeholder="e.g. 100000" />
+                                                      </div>
+                                                      <div className="ap-form-group">
+                                                            <label>ROI Percentage (%) *</label>
+                                                            <input required type="number" min="0" step="0.1" value={form.roiPercentage} onChange={(e) => setForm({ ...form, roiPercentage: e.target.value })} placeholder="e.g. 25" />
+                                                      </div>
+                                                      <div className="ap-form-group">
+                                                            <label>Duration (Months) *</label>
+                                                            <input required type="number" min="1" value={form.durationMonths} onChange={(e) => setForm({ ...form, durationMonths: e.target.value })} placeholder="e.g. 12" />
+                                                      </div>
+                                                      <div className="ap-form-group">
+                                                            <label>Status</label>
+                                                            <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
+                                                                  <option value="COMING_SOON">Coming Soon</option>
+                                                                  <option value="OPEN">Open</option>
+                                                                  <option value="FUNDED">Funded</option>
+                                                                  <option value="COMPLETED">Completed</option>
+                                                            </select>
+                                                      </div>
+
+                                                      <div className="ap-form-actions">
+                                                            <button type="button" onClick={() => setShowModal(false)} disabled={processing} className="ap-btn-secondary">Cancel</button>
+                                                            <button type="submit" disabled={processing} className="ap-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                                                                  {processing ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : editingProject ? 'Update Project' : 'Create Project'}
+                                                            </button>
+                                                      </div>
+                                                </form>
                                           </div>
-
-                                          {errorMsg && <div className="ap-alert ap-alert-error">{errorMsg}</div>}
-
-                                          <form onSubmit={handleSubmit} className="ap-form">
-                                                <div className="ap-form-group ap-form-full">
-                                                      <label>Project Title *</label>
-                                                      <input required value={form.title} onChange={(e) => setForm({ ...form, title: e.target.value })} placeholder="e.g. Kalyug Chronicles Season 2" />
-                                                </div>
-                                                <div className="ap-form-group ap-form-full">
-                                                      <label>Description *</label>
-                                                      <textarea required value={form.description} onChange={(e) => setForm({ ...form, description: e.target.value })} placeholder="Describe the project..." rows={3} />
-                                                </div>
-                                                <div className="ap-form-group">
-                                                      <label>Genre *</label>
-                                                      <input required value={form.genre} onChange={(e) => setForm({ ...form, genre: e.target.value })} placeholder="e.g. Web Series" />
-                                                </div>
-                                                <div className="ap-form-group">
-                                                      <label>Image URL</label>
-                                                      <input value={form.imageUrl} onChange={(e) => setForm({ ...form, imageUrl: e.target.value })} placeholder="https://..." />
-                                                </div>
-                                                <div className="ap-form-group">
-                                                      <label>Target Amount (₹) *</label>
-                                                      <input required type="number" min="0" value={form.targetAmount} onChange={(e) => setForm({ ...form, targetAmount: e.target.value })} placeholder="e.g. 50000000" />
-                                                </div>
-                                                <div className="ap-form-group">
-                                                      <label>Min Investment (₹) *</label>
-                                                      <input required type="number" min="0" value={form.minInvestment} onChange={(e) => setForm({ ...form, minInvestment: e.target.value })} placeholder="e.g. 100000" />
-                                                </div>
-                                                <div className="ap-form-group">
-                                                      <label>ROI Percentage (%) *</label>
-                                                      <input required type="number" min="0" step="0.1" value={form.roiPercentage} onChange={(e) => setForm({ ...form, roiPercentage: e.target.value })} placeholder="e.g. 25" />
-                                                </div>
-                                                <div className="ap-form-group">
-                                                      <label>Duration (Months) *</label>
-                                                      <input required type="number" min="1" value={form.durationMonths} onChange={(e) => setForm({ ...form, durationMonths: e.target.value })} placeholder="e.g. 12" />
-                                                </div>
-                                                <div className="ap-form-group">
-                                                      <label>Status</label>
-                                                      <select value={form.status} onChange={(e) => setForm({ ...form, status: e.target.value })}>
-                                                            <option value="COMING_SOON">Coming Soon</option>
-                                                            <option value="OPEN">Open</option>
-                                                            <option value="FUNDED">Funded</option>
-                                                            <option value="COMPLETED">Completed</option>
-                                                      </select>
-                                                </div>
-
-                                                <div className="ap-form-actions">
-                                                      <button type="button" onClick={() => setShowModal(false)} disabled={processing} className="ap-btn-secondary">Cancel</button>
-                                                      <button type="submit" disabled={processing} className="ap-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                                                            {processing ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : editingProject ? 'Update Project' : 'Create Project'}
-                                                      </button>
-                                                </div>
-                                          </form>
                                     </div>
                               </div>
-                        </div>
-                  )}
+                        )
+                  }
 
                   {/* ═══════ Delete Confirmation Modal ═══════ */}
-                  {confirmDelete && (
-                        <div className="ap-modal-overlay" onClick={() => setConfirmDelete(null)}>
-                              <div className="ap-modal ap-modal-sm" onClick={(e) => e.stopPropagation()}>
-                                    <div className="ap-modal-accent ap-modal-accent-danger" />
-                                    <div className="ap-modal-content">
-                                          <div className="ap-delete-icon-wrap">
-                                                <Trash2 size={28} />
-                                          </div>
-                                          <h3 className="ap-delete-title">Delete Project</h3>
-                                          <p className="ap-delete-text">
-                                                Are you sure you want to permanently delete <strong>{confirmDelete.title}</strong>? This action cannot be undone.
-                                          </p>
-                                          {errorMsg && <div className="ap-alert ap-alert-error">{errorMsg}</div>}
-                                          <div className="ap-form-actions ap-form-actions-center">
-                                                <button onClick={() => { setConfirmDelete(null); setErrorMsg(''); }} className="ap-btn-secondary">Cancel</button>
-                                                <button onClick={handleDelete} disabled={processing} className="ap-btn-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
-                                                      {processing ? <><Loader2 size={16} className="animate-spin" /> Deleting...</> : 'Delete Forever'}
-                                                </button>
+                  {
+                        confirmDelete && (
+                              <div className="ap-modal-overlay" onClick={() => setConfirmDelete(null)}>
+                                    <div className="ap-modal ap-modal-sm" onClick={(e) => e.stopPropagation()}>
+                                          <div className="ap-modal-accent ap-modal-accent-danger" />
+                                          <div className="ap-modal-content">
+                                                <div className="ap-delete-icon-wrap">
+                                                      <Trash2 size={28} />
+                                                </div>
+                                                <h3 className="ap-delete-title">Delete Project</h3>
+                                                <p className="ap-delete-text">
+                                                      Are you sure you want to permanently delete <strong>{confirmDelete.title}</strong>? This action cannot be undone.
+                                                </p>
+                                                {errorMsg && <div className="ap-alert ap-alert-error">{errorMsg}</div>}
+                                                <div className="ap-form-actions ap-form-actions-center">
+                                                      <button onClick={() => { setConfirmDelete(null); setErrorMsg(''); }} className="ap-btn-secondary">Cancel</button>
+                                                      <button onClick={handleDelete} disabled={processing} className="ap-btn-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                                                            {processing ? <><Loader2 size={16} className="animate-spin" /> Deleting...</> : 'Delete Forever'}
+                                                      </button>
+                                                </div>
                                           </div>
                                     </div>
                               </div>
-                        </div>
-                  )}
-            </div>
+                        )
+                  }
+
+                  {/* ═══════ View Investors Modal ═══════ */}
+                  {
+                        showInvestorsModal && (
+                              <div className="ap-modal-overlay" onClick={() => setShowInvestorsModal(null)}>
+                                    <div className="ap-modal" onClick={(e) => e.stopPropagation()} style={{ maxWidth: '600px' }}>
+                                          <div className="ap-modal-accent" style={{ background: '#3b82f6' }} />
+                                          <div className="ap-modal-content">
+                                                <div className="ap-modal-header">
+                                                      <div>
+                                                            <h2 style={{ margin: 0 }}>👥 Project Investors</h2>
+
+                                                            <p style={{ margin: '0.25rem 0 0 0', fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>{showInvestorsModal.title} · Total Raised: {formatINR(showInvestorsModal.raisedAmount)}</p>
+                                                      </div>
+                                                      <button onClick={() => setShowInvestorsModal(null)} className="ap-modal-close"><X size={20} /></button>
+                                                </div>
+
+                                                <div style={{ marginTop: '1.5rem', maxHeight: '450px', overflowY: 'auto' }}>
+                                                      {showInvestorsModal.investments?.length > 0 ? (() => {
+                                                            const grouped = showInvestorsModal.investments.reduce((acc, inv) => {
+                                                                  const uid = inv.userId;
+                                                                  if (!acc[uid]) {
+                                                                        acc[uid] = {
+                                                                              user: inv.user,
+                                                                              total: 0,
+                                                                              txs: []
+                                                                        };
+                                                                  }
+                                                                  acc[uid].total += inv.amount;
+                                                                  acc[uid].txs.push(inv);
+                                                                  return acc;
+                                                            }, {});
+
+                                                            return (
+                                                                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                                                                        <thead>
+                                                                              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                                                                    <th style={{ padding: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>Investor</th>
+                                                                                    <th style={{ padding: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>Total Investment</th>
+                                                                                    <th style={{ padding: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Details</th>
+                                                                              </tr>
+                                                                        </thead>
+                                                                        <tbody>
+                                                                              {Object.entries(grouped).map(([uid, data]) => (
+                                                                                    <React.Fragment key={uid}>
+                                                                                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', background: expandedUserId === uid ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }} onClick={() => setExpandedUserId(expandedUserId === uid ? null : uid)}>
+                                                                                                <td style={{ padding: '0.75rem' }}>
+                                                                                                      <div style={{ fontWeight: 600, color: 'white' }}>{data.user?.fullName}</div>
+                                                                                                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>@{data.user?.username}</div>
+                                                                                                </td>
+                                                                                                <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 700, color: '#10b981' }}>
+                                                                                                      ₹{data.total.toLocaleString()}
+                                                                                                </td>
+                                                                                                <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                                                                                                      <ChevronDown size={14} style={{ transform: expandedUserId === uid ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: 'rgba(255,255,255,0.3)' }} />
+                                                                                                </td>
+                                                                                          </tr>
+                                                                                          {expandedUserId === uid && (
+                                                                                                <tr>
+                                                                                                      <td colSpan="3" style={{ padding: '0.5rem 0.75rem 1rem 1.5rem', background: 'rgba(0,0,0,0.1)' }}>
+                                                                                                            <div style={{ borderLeft: '2px solid rgba(59, 130, 246, 0.3)', paddingLeft: '1rem' }}>
+                                                                                                                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Transaction History ({data.txs.length})</div>
+                                                                                                                  {data.txs.map((tx, idx) => (
+                                                                                                                        <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.85rem' }}>
+                                                                                                                              <span style={{ color: 'rgba(255,255,255,0.6)' }}>{new Date(tx.createdAt).toLocaleDateString()} {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
+                                                                                                                              <span style={{ fontWeight: 600, color: 'white' }}>₹{tx.amount.toLocaleString()}</span>
+                                                                                                                        </div>
+                                                                                                                  ))}
+                                                                                                            </div>
+                                                                                                      </td>
+                                                                                                </tr>
+                                                                                          )}
+                                                                                    </React.Fragment>
+                                                                              ))}
+                                                                        </tbody>
+                                                                  </table>
+                                                            );
+                                                      })() : (
+                                                            <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.3)' }}>
+                                                                  No investments recorded for this project yet.
+                                                            </div>
+                                                      )}
+                                                </div>
+
+                                                <div className="ap-form-actions" style={{ marginTop: '2rem' }}>
+                                                      <button onClick={() => setShowInvestorsModal(null)} className="ap-btn-secondary" style={{ width: '100%' }}>Close Window</button>
+                                                </div>
+                                          </div>
+                                    </div>
+                              </div>
+                        )
+                  }
+            </div >
       );
 };
 

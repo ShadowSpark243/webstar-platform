@@ -1,11 +1,19 @@
 const prisma = require('../utils/db');
 
+const { uploadToS3, generatePresignedUrl } = require('../utils/s3');
+
 exports.requestDeposit = async (req, res) => {
       try {
             const { amount, utrNumber } = req.body;
+            const file = req.file;
 
             if (!utrNumber || amount < 1000) {
                   return res.status(400).json({ success: false, message: 'Invalid deposit request. Min ₹1000.' });
+            }
+
+            let receiptUrl = null;
+            if (file) {
+                  receiptUrl = await uploadToS3(file.buffer, file.originalname, file.mimetype);
             }
 
             const transaction = await prisma.transaction.create({
@@ -15,13 +23,15 @@ exports.requestDeposit = async (req, res) => {
                         amount: parseFloat(amount),
                         status: 'PENDING',
                         bankReference: utrNumber,
-                        description: 'Manual Bank Deposit'
+                        description: 'Manual Bank Deposit',
+                        receiptUrl: receiptUrl
                   }
             });
 
             res.status(201).json({ success: true, message: 'Deposit request submitted for Admin review.', transaction });
       } catch (error) {
-            res.status(500).json({ success: false, message: error.message });
+            console.error('Deposit Request Error:', error);
+            res.status(500).json({ success: false, message: 'Failed to process deposit request.' });
       }
 };
 
@@ -40,6 +50,20 @@ exports.getWalletHistory = async (req, res) => {
                   }),
                   prisma.transaction.count({ where: { userId: req.user.id } })
             ]);
+
+            // Add presigned URLs for receipts
+            for (const item of history) {
+                  if (item.receiptUrl) {
+                        try {
+                              const keyMatch = item.receiptUrl.split(`${process.env.S3_BUCKET_NAME}/`);
+                              if (keyMatch.length > 1) {
+                                    item.receiptUrl = await generatePresignedUrl(keyMatch[1]);
+                              }
+                        } catch (e) {
+                              console.error('Failed to presign user history receipt:', e);
+                        }
+                  }
+            }
 
             res.status(200).json({
                   success: true,
@@ -113,6 +137,20 @@ exports.getDashboardData = async (req, res) => {
 
             // Rank progress
             const rankProgress = getRankProgress(user?.teamVolume || 0);
+
+            // Add presigned URLs for recent receipts
+            for (const tx of recentTx) {
+                  if (tx.receiptUrl) {
+                        try {
+                              const keyMatch = tx.receiptUrl.split(`${process.env.S3_BUCKET_NAME}/`);
+                              if (keyMatch.length > 1) {
+                                    tx.receiptUrl = await generatePresignedUrl(keyMatch[1]);
+                              }
+                        } catch (e) {
+                              console.error('Failed to presign dashboard receipt:', e);
+                        }
+                  }
+            }
 
             res.status(200).json({
                   success: true,
@@ -225,7 +263,6 @@ exports.investInProject = async (req, res) => {
 };
 
 
-const { uploadToS3 } = require('../utils/s3');
 
 exports.submitKyc = async (req, res) => {
       try {

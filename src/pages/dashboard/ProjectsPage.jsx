@@ -14,6 +14,8 @@ const ProjectsPage = () => {
       const [isProcessing, setIsProcessing] = useState(false);
       const [confirmInvest, setConfirmInvest] = useState(false);
       const [resultModal, setResultModal] = useState(null); // { success: bool, message: string }
+      const [myInvestments, setMyInvestments] = useState([]);
+      const [loadingPortfolio, setLoadingPortfolio] = useState(true);
 
       const fetchProjects = async () => {
             try {
@@ -26,7 +28,21 @@ const ProjectsPage = () => {
             }
       };
 
-      useEffect(() => { fetchProjects(); }, []);
+      const fetchMyInvestments = async () => {
+            try {
+                  const res = await api.get('/wallet/my-investments');
+                  if (res.data.success) setMyInvestments(res.data.investments);
+            } catch (err) {
+                  console.error('Failed to fetch my investments:', err);
+            } finally {
+                  setLoadingPortfolio(false);
+            }
+      };
+
+      useEffect(() => {
+            fetchProjects();
+            fetchMyInvestments();
+      }, []);
 
       const openDetails = (project) => {
             setSelectedProject(project);
@@ -76,6 +92,7 @@ const ProjectsPage = () => {
                         setSelectedProject(null);
                         setResultModal({ success: true, message: 'Investment successful! 5-Level Commission has been distributed to your network.' });
                         fetchProjects();
+                        fetchMyInvestments();
                   }
             } catch (error) {
                   setResultModal({ success: false, message: error.response?.data?.message || error.message });
@@ -104,6 +121,55 @@ const ProjectsPage = () => {
                                     <p>₹{user?.walletBalance?.toLocaleString('en-IN') || '0'}</p>
                               </div>
                         </div>
+                  </div>
+
+                  {/* My Portfolio Section */}
+                  <section style={{ marginBottom: '3rem' }}>
+                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                              <TrendingUp className="text-primary" size={24} />
+                              <h2 style={{ fontSize: '1.5rem', margin: 0 }}>My Portfolio</h2>
+                        </div>
+
+                        {loadingPortfolio ? (
+                              <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Loading portfolio...</div>
+                        ) : myInvestments.length === 0 ? (
+                              <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', borderRadius: '1rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
+                                    <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0 }}>You haven't participated in any projects yet.</p>
+                              </div>
+                        ) : (
+                              <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(300px, 1fr))', gap: '1.25rem' }}>
+                                    {myInvestments.map(inv => (
+                                          <div key={inv.id} className="glass-panel" style={{ padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
+                                                <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
+                                                      <div>
+                                                            <h4 style={{ margin: 0, fontSize: '1.1rem', color: 'white' }}>{inv.project?.title}</h4>
+                                                            <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>{inv.project?.genre}</span>
+                                                      </div>
+                                                      <div style={{ textAlign: 'right' }}>
+                                                            <div style={{ color: '#10b981', fontWeight: 700, fontSize: '1.1rem' }}>₹{inv.amount.toLocaleString('en-IN')}</div>
+                                                            <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Invested</div>
+                                                      </div>
+                                                </div>
+
+                                                <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '0.75rem', borderRadius: '0.75rem' }}>
+                                                      <div>
+                                                            <p style={{ margin: 0, fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Expected Return</p>
+                                                            <p style={{ margin: '0.1rem 0 0', fontSize: '0.9rem', fontWeight: 600, color: '#3b82f6' }}>₹{inv.expectedReturn.toLocaleString('en-IN')}</p>
+                                                      </div>
+                                                      <div>
+                                                            <p style={{ margin: 0, fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Status</p>
+                                                            <p style={{ margin: '0.1rem 0 0', fontSize: '0.9rem', fontWeight: 600, color: inv.status === 'ACTIVE' ? '#10b981' : '#f59e0b' }}>{inv.status}</p>
+                                                      </div>
+                                                </div>
+                                          </div>
+                                    ))}
+                              </div>
+                        )}
+                  </section>
+
+                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
+                        <Film className="text-primary" size={24} />
+                        <h2 style={{ fontSize: '1.5rem', margin: 0 }}>Available Opportunities</h2>
                   </div>
 
                   {projects.length === 0 ? (

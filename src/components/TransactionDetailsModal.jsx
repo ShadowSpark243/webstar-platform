@@ -152,6 +152,22 @@ const TransactionDetailsModal = ({ transaction, onClose, onInspectUser }) => {
                                     {transaction.bankReference && (
                                           <DetailRow icon={<Hash size={14} />} label="Bank UTR" value={transaction.bankReference} highlight />
                                     )}
+                                    {transaction.receiptUrl && (
+                                          <DetailRow
+                                                icon={<FileText size={14} color="#10b981" />}
+                                                label="Payment Receipt"
+                                                value={
+                                                      <a
+                                                            href={transaction.receiptUrl}
+                                                            target="_blank"
+                                                            rel="noopener noreferrer"
+                                                            style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none' }}
+                                                      >
+                                                            View Screenshot <ExternalLink size={12} />
+                                                      </a>
+                                                }
+                                          />
+                                    )}
                                     {transaction.bankAccountInfo && (
                                           <DetailRow icon={<Landmark size={14} />} label="Bank Info" value={transaction.bankAccountInfo} />
                                     )}

@@ -139,8 +139,15 @@ exports.getUserDetails = async (req, res) => {
                   where: { id: parseInt(id) },
                   include: {
                         kycDocuments: true,
-                        investments: true,
-                        transactions: { orderBy: { createdAt: 'desc' }, take: 10 },
+                        investments: {
+                              include: {
+                                    project: {
+                                          select: { title: true, status: true, genre: true }
+                                    }
+                              },
+                              orderBy: { createdAt: 'desc' }
+                        },
+                        transactions: { orderBy: { createdAt: 'desc' }, take: 20 },
                         networkLevelStats: { orderBy: { level: 'asc' } },
                         referrals: { select: { id: true, fullName: true, status: true, teamVolume: true } },
                         referredBy: { select: { fullName: true, username: true } }
@@ -169,6 +176,10 @@ exports.getUserDetails = async (req, res) => {
 
             // Replace the single object with an array for frontend compatibility
             user.kycDocuments = kycDocsArray;
+
+            // Calculate unique projects count for reporting
+            const uniqueProjects = new Set(user.investments.map(inv => inv.projectId));
+            user.uniqueProjectsCount = uniqueProjects.size;
 
             res.status(200).json({ success: true, user });
       } catch (error) {
@@ -306,6 +317,21 @@ exports.getPendingDeposits = async (req, res) => {
                   include: { user: { select: { fullName: true, email: true } } },
                   orderBy: { createdAt: 'asc' }
             });
+
+            // Add presigned URLs for receipts
+            for (const dep of deposits) {
+                  if (dep.receiptUrl) {
+                        try {
+                              const keyMatch = dep.receiptUrl.split(`${process.env.S3_BUCKET_NAME}/`);
+                              if (keyMatch.length > 1) {
+                                    dep.receiptUrl = await generatePresignedUrl(keyMatch[1]);
+                              }
+                        } catch (e) {
+                              console.error('Failed to presign deposit receipt:', e);
+                        }
+                  }
+            }
+
             res.status(200).json({ success: true, deposits });
       } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -399,6 +425,21 @@ exports.getAllTransactions = async (req, res) => {
                   orderBy: { createdAt: 'desc' },
                   take: 500 // Limit to prevent massive payload
             });
+
+            // Add presigned URLs for receipts in ledger
+            for (const tx of transactions) {
+                  if (tx.receiptUrl) {
+                        try {
+                              const keyMatch = tx.receiptUrl.split(`${process.env.S3_BUCKET_NAME}/`);
+                              if (keyMatch.length > 1) {
+                                    tx.receiptUrl = await generatePresignedUrl(keyMatch[1]);
+                              }
+                        } catch (e) {
+                              console.error('Failed to presign ledger receipt:', e);
+                        }
+                  }
+            }
+
             res.status(200).json({ success: true, transactions });
       } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -411,10 +452,18 @@ exports.getAllTransactions = async (req, res) => {
 exports.getAllProjects = async (req, res) => {
       try {
             const projects = await prisma.project.findMany({
-                  orderBy: { createdAt: 'desc' },
                   include: {
-                        _count: { select: { investments: true } }
-                  }
+                        _count: { select: { investments: true } },
+                        investments: {
+                              include: {
+                                    user: {
+                                          select: { id: true, fullName: true, username: true, email: true }
+                                    }
+                              },
+                              orderBy: { createdAt: 'desc' }
+                        }
+                  },
+                  orderBy: { createdAt: 'desc' }
             });
             res.status(200).json({ success: true, projects });
       } catch (error) {

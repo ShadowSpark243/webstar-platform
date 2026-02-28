@@ -10,6 +10,7 @@ const WalletPage = () => {
       const { user } = useAuth();
       const [depositAmount, setDepositAmount] = useState('');
       const [utrNumber, setUtrNumber] = useState('');
+      const [receiptFile, setReceiptFile] = useState(null);
       const [isSubmitting, setIsSubmitting] = useState(false);
 
       // Live Database State
@@ -92,14 +93,21 @@ const WalletPage = () => {
 
             try {
                   const amount = parseFloat(depositAmount);
-                  await api.post('/wallet/deposit', {
-                        amount: amount,
-                        utrNumber: utrNumber
+                  const formData = new FormData();
+                  formData.append('amount', amount);
+                  formData.append('utrNumber', utrNumber);
+                  if (receiptFile) {
+                        formData.append('receiptImage', receiptFile);
+                  }
+
+                  await api.post('/wallet/deposit', formData, {
+                        headers: { 'Content-Type': 'multipart/form-data' }
                   });
 
                   setDepositAmount('');
                   setUtrNumber('');
-                  alert(`Deposit request for ₹${amount.toLocaleString('en-IN')} submitted successfully! An admin will verify the UTR and credit your account shortly.`);
+                  setReceiptFile(null);
+                  alert(`Deposit request for ₹${amount.toLocaleString('en-IN')} submitted successfully! An admin will verify the receipt and credit your account shortly.`);
                   fetchData(); // Refresh history
             } catch (error) {
                   alert('Deposit request failed: ' + (error.response?.data?.message || error.message));
@@ -233,7 +241,28 @@ const WalletPage = () => {
                                                       />
                                                 </div>
 
-                                                <button type="submit" className="btn btn-primary" disabled={isSubmitting || !depositAmount || !utrNumber}>
+                                                <div className="form-group">
+                                                      <label>Payment Receipt / Screenshot</label>
+                                                      <input
+                                                            type="file"
+                                                            required
+                                                            accept="image/*,.pdf"
+                                                            onChange={(e) => setReceiptFile(e.target.files[0])}
+                                                            style={{
+                                                                  width: '100%',
+                                                                  padding: '0.875rem 1rem',
+                                                                  background: 'rgba(255, 255, 255, 0.05)',
+                                                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                  color: 'white',
+                                                                  borderRadius: '0.75rem'
+                                                            }}
+                                                      />
+                                                      <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
+                                                            Upload a screenshot of your payment confirmation for faster verification.
+                                                      </p>
+                                                </div>
+
+                                                <button type="submit" className="btn btn-primary" disabled={isSubmitting || !depositAmount || !utrNumber || !receiptFile}>
                                                       {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : 'Submit Request'}
                                                 </button>
                                           </form>
@@ -281,7 +310,16 @@ const WalletPage = () => {
                                                                   <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6' }}><User size={16} /> {dep.user.fullName}</div>
                                                                   <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginLeft: '1.5rem' }}>{dep.user.email}</span>
                                                             </td>
-                                                            <td style={{ padding: '1rem 1.5rem', color: '#3b82f6', letterSpacing: '1px', fontSize: '0.9rem' }} onClick={() => setSelectedUserId(dep.userId)}>{dep.bankReference}</td>
+                                                            <td style={{ padding: '1rem 1.5rem', color: '#3b82f6', letterSpacing: '1px', fontSize: '0.9rem' }} onClick={() => setSelectedUserId(dep.userId)}>
+                                                                  {dep.bankReference}
+                                                                  {dep.receiptUrl && (
+                                                                        <div style={{ marginTop: '0.3rem' }}>
+                                                                              <a href={dep.receiptUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
+                                                                                    <ArrowUpRight size={12} /> View Receipt
+                                                                              </a>
+                                                                        </div>
+                                                                  )}
+                                                            </td>
                                                             <td style={{ padding: '1rem 1.5rem', fontWeight: 700 }} onClick={() => setSelectedUserId(dep.userId)}>₹{dep.amount.toLocaleString('en-IN')}</td>
                                                             <td style={{ padding: '1rem 1.5rem', display: 'flex', gap: '0.5rem' }}>
                                                                   <button onClick={(e) => handleReviewDepositClick(dep, 'APPROVED', e)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Verify & Credit</button>

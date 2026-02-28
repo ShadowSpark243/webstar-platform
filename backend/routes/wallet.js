@@ -21,7 +21,7 @@ const upload = multer({
 
 router.use(protect); // Secure all wallet endpoints
 
-router.post('/deposit', walletController.requestDeposit);
+router.post('/deposit', upload.single('receiptImage'), walletController.requestDeposit);
 router.get('/history', walletController.getWalletHistory);
 router.get('/my-investments', walletController.getMyInvestments);
 router.get('/dashboard', walletController.getDashboardData);
