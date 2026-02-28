@@ -15,7 +15,16 @@ exports.register = async (req, res) => {
             });
 
             if (existingUser) {
-                  return res.status(400).json({ success: false, message: 'Email, Phone, or Username already registered.' });
+                  const errors = [];
+                  if (existingUser.email === email) errors.push({ path: 'email', msg: 'This email is already registered.' });
+                  if (existingUser.phone === phone) errors.push({ path: 'phone', msg: 'This phone number is already attached to another account.' });
+                  if (existingUser.username === username) errors.push({ path: 'username', msg: 'This username is already taken. Please choose another.' });
+
+                  return res.status(400).json({
+                        success: false,
+                        message: 'Please fix the errors below.',
+                        fieldErrors: errors
+                  });
             }
 
             // 2. Hash Password securely using bcrypt

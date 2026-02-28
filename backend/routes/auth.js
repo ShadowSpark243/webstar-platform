@@ -10,7 +10,7 @@ router.post('/register', [
       body('email').isEmail().normalizeEmail().withMessage('A valid email is required'),
       body('username').trim().isLength({ min: 3 }).isAlphanumeric().withMessage('Username must be at least 3 alphanumeric characters'),
       body('password').isLength({ min: 8 }).withMessage('Password must be at least 8 characters long'),
-      body('phone').optional({ checkFalsy: true }).isMobilePhone().withMessage('Please provide a valid phone number'),
+      body('phone').optional({ checkFalsy: true }).matches(/^\+91 \d{10}$/).withMessage('Please provide a valid Indian phone number (+91 XXXXXXXXXX)'),
       body('referralCode').optional({ checkFalsy: true }).trim().isString()
 ], validateRequest, authController.register);
 

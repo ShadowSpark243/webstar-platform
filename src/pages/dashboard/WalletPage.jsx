@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2 } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2, Filter } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 import TransactionDetailsModal from '../../components/TransactionDetailsModal';
 import './Dashboard.css';
@@ -21,6 +21,8 @@ const WalletPage = () => {
       const [selectedUserId, setSelectedUserId] = useState(null);
       const [searchQuery, setSearchQuery] = useState('');
       const [txSearchQuery, setTxSearchQuery] = useState('');
+      const [txTypeFilter, setTxTypeFilter] = useState('ALL');
+      const [txStatusFilter, setTxStatusFilter] = useState('ALL');
       const [selectedTransaction, setSelectedTransaction] = useState(null);
 
       // Deposit Review State
@@ -113,6 +115,9 @@ const WalletPage = () => {
       );
 
       const filteredTransactions = transactions.filter(tx => {
+            if (txTypeFilter !== 'ALL' && tx.type !== txTypeFilter) return false;
+            if (txStatusFilter !== 'ALL' && tx.status !== txStatusFilter) return false;
+
             if (!txSearchQuery) return true;
             const lowerQ = txSearchQuery.toLowerCase();
             const matchTx = tx.description?.toLowerCase().includes(lowerQ) || tx.status?.toLowerCase().includes(lowerQ);
@@ -359,16 +364,48 @@ const WalletPage = () => {
                   <div className="dashboard-card glass-panel" style={{ marginTop: '2rem', padding: 0 }}>
                         <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
                               <h2 className="card-title" style={{ margin: 0 }}>Transaction Ledger</h2>
-                              <div style={{ position: 'relative', maxWidth: '300px', width: '100%' }}>
-                                    <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
-                                    <input
-                                          type="text"
-                                          placeholder="Search transactions..."
-                                          value={txSearchQuery}
-                                          onChange={(e) => setTxSearchQuery(e.target.value)}
-                                          className="dashboard-input"
-                                          style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem' }}
-                                    />
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                          <Filter size={16} style={{ color: 'rgba(255,255,255,0.5)', marginLeft: '0.5rem' }} />
+                                          <select
+                                                value={txTypeFilter}
+                                                onChange={(e) => setTxTypeFilter(e.target.value)}
+                                                style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.85rem', cursor: 'pointer' }}
+                                          >
+                                                <option value="ALL" style={{ background: '#1a1a2e' }}>All Types</option>
+                                                <option value="DEPOSIT" style={{ background: '#1a1a2e' }}>Deposit</option>
+                                                <option value="WITHDRAWAL" style={{ background: '#1a1a2e' }}>Withdrawal</option>
+                                                <option value="INVESTMENT" style={{ background: '#1a1a2e' }}>Investment</option>
+                                                <option value="RETURN" style={{ background: '#1a1a2e' }}>ROI Return</option>
+                                                <option value="COMMISSION" style={{ background: '#1a1a2e' }}>Commission</option>
+                                                <option value="BONUS" style={{ background: '#1a1a2e' }}>Bonus</option>
+                                          </select>
+
+                                          <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }}></div>
+
+                                          <select
+                                                value={txStatusFilter}
+                                                onChange={(e) => setTxStatusFilter(e.target.value)}
+                                                style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.85rem', cursor: 'pointer' }}
+                                          >
+                                                <option value="ALL" style={{ background: '#1a1a2e' }}>All Status</option>
+                                                <option value="APPROVED" style={{ background: '#1a1a2e' }}>Approved / Success</option>
+                                                <option value="PENDING" style={{ background: '#1a1a2e' }}>Pending</option>
+                                                <option value="REJECTED" style={{ background: '#1a1a2e' }}>Rejected</option>
+                                          </select>
+                                    </div>
+
+                                    <div style={{ position: 'relative', maxWidth: '250px', width: '100%' }}>
+                                          <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
+                                          <input
+                                                type="text"
+                                                placeholder="Search transactions..."
+                                                value={txSearchQuery}
+                                                onChange={(e) => setTxSearchQuery(e.target.value)}
+                                                className="dashboard-input"
+                                                style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem', fontSize: '0.9rem' }}
+                                          />
+                                    </div>
                               </div>
                         </div>
 

@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import { Upload, CheckCircle, Clock, ShieldCheck, Check, X, AlertOctagon } from 'lucide-react';
+import { Upload, CheckCircle, Clock, ShieldCheck, Check, X, AlertOctagon, Loader2 } from 'lucide-react';
 import './Dashboard.css';
 
 
@@ -153,8 +153,8 @@ const KycPage = () => {
                                                 </div>
                                           </div>
 
-                                          <button type="submit" className="btn btn-primary" disabled={isUploading || !uploadedFile}>
-                                                {isUploading ? 'Uploading...' : (showReKyc ? 'Re-submit Documents' : 'Submit Documents')}
+                                          <button type="submit" className="btn btn-primary" disabled={isUploading || !uploadedFile} style={{ display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                                {isUploading ? <><Loader2 size={18} className="animate-spin" /> Uploading...</> : (showReKyc ? 'Re-submit Documents' : 'Submit Documents')}
                                           </button>
                                     </form>
                               </div>
