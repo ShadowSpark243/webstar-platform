@@ -1,0 +1,147 @@
+/* AboutSection.css */
+.about-section {
+      position: relative;
+      padding: var(--section-padding);
+}
+
+.about-layout {
+      display: flex;
+      flex-direction: column;
+      gap: 4rem;
+      margin-bottom: 6rem;
+}
+
+.about-content {
+      flex: 1;
+}
+
+.about-text {
+      color: var(--text-muted);
+      font-size: 1.125rem;
+      margin-bottom: 1.5rem;
+}
+
+.about-stats-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 1.5rem;
+      margin-top: 2rem;
+}
+
+.about-stat-panel {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      text-align: center;
+}
+
+.about-stat-value {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 2rem;
+      color: #fff;
+      margin-bottom: 0.25rem;
+}
+
+.about-stat-label {
+      font-size: 0.875rem;
+      color: var(--text-muted);
+      text-transform: uppercase;
+      letter-spacing: 1px;
+      font-weight: 600;
+}
+
+.about-image-container {
+      flex: 1;
+      position: relative;
+}
+
+.about-image-glow {
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      bottom: 0;
+      background: var(--primary-glow);
+      filter: blur(100px);
+      border-radius: 50%;
+      z-index: 0;
+}
+
+.about-image {
+      border-radius: var(--border-radius-lg);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      position: relative;
+      z-index: 10;
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+      width: 100%;
+      height: auto;
+}
+
+.about-floating-card {
+      position: absolute;
+      bottom: -2rem;
+      left: -2rem;
+      z-index: 20;
+      display: none;
+      align-items: center;
+      gap: 1rem;
+      padding: 1.5rem;
+}
+
+.about-floating-icon {
+      width: 3rem;
+      height: 3rem;
+      border-radius: 50%;
+      background: rgba(34, 197, 94, 0.2);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border: 1px solid rgba(34, 197, 94, 0.3);
+      color: #4ade80;
+}
+
+.about-floating-data {
+      color: #fff;
+      font-weight: 700;
+      font-size: 1.25rem;
+}
+
+.about-floating-label {
+      color: var(--text-muted);
+      font-size: 0.75rem;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+}
+
+.feature-title {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1.25rem;
+      color: #fff;
+      margin-bottom: 0.75rem;
+}
+
+.feature-desc {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+      .about-floating-card {
+            display: flex;
+      }
+
+      .about-stats-grid {
+            grid-template-columns: repeat(2, 1fr);
+      }
+}
+
+@media (min-width: 1024px) {
+      .about-layout {
+            flex-direction: row;
+            align-items: center;
+      }
+}

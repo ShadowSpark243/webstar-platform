@@ -1,0 +1,167 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "mysql"
+  url      = env("DATABASE_URL")
+}
+
+model User {
+  id            Int           @id @default(autoincrement())
+  fullName      String
+  email         String        @unique
+  username      String        @unique
+  phone         String?       @unique
+  password      String
+  referralCode  String        @unique
+  referredById  Int?
+  walletBalance          Float              @default(0)
+  totalInvested          Float              @default(0)
+  teamVolume             Float              @default(0)
+  totalTeamMembers       Int                @default(0)
+  totalActiveTeamMembers Int                @default(0)
+  totalTeamCommission    Float              @default(0)
+  rank                   String             @default("Starter")
+  role                   Role               @default(USER)
+  status                 Status             @default(INACTIVE)
+  kycStatus              KYC                @default(UNVERIFIED)
+  createdAt     DateTime      @default(now())
+  updatedAt     DateTime      @updatedAt
+  inviterCode   String?
+  inviter       String?
+  kycImageUrl   String?
+  investments   Investment[]
+  kycDocuments           KycDocument?
+  transactions           Transaction[]
+  networkLevelStats      NetworkLevelStat[]
+  referredBy             User?              @relation("Referrals", fields: [referredById], references: [id])
+  referrals              User[]             @relation("Referrals")
+
+  @@index([referredById], map: "User_referredById_fkey")
+}
+
+model NetworkLevelStat {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  level      Int
+  count      Int      @default(0)
+  active     Int      @default(0)
+  volume     Float    @default(0)
+  commission Float    @default(0)
+  percent    String   // e.g., "5%", "2%", "0.5%"
+  user       User     @relation(fields: [userId], references: [id])
+
+  @@unique([userId, level])
+  @@index([userId])
+}
+
+model KycDocument {
+  id             Int       @id @default(autoincrement())
+  userId         Int       @unique
+  documentType   String
+  documentNumber String
+  documentUrl    String
+  status         KYC       @default(PENDING)
+  reviewedBy     Int?
+  reviewedAt     DateTime?
+  createdAt      DateTime  @default(now())
+  email          String?
+  fullName       String?
+  phone          String?
+  username       String?
+  user           User      @relation(fields: [userId], references: [id])
+}
+
+model Transaction {
+  id              Int      @id @default(autoincrement())
+  userId          Int
+  type            TxType
+  amount          Float
+  status          TxStatus @default(PENDING)
+  description     String?
+  bankReference   String?
+  bankAccountInfo String?
+  createdAt       DateTime @default(now())
+  updatedAt       DateTime @updatedAt
+  user            User     @relation(fields: [userId], references: [id])
+
+  @@index([userId], map: "Transaction_userId_fkey")
+}
+
+model Project {
+  id             Int          @id @default(autoincrement())
+  title          String
+  description    String       @db.Text
+  genre          String
+  imageUrl       String
+  targetAmount   Float
+  raisedAmount   Float        @default(0)
+  minInvestment  Float
+  roiPercentage  Float
+  durationMonths Int
+  status         ProjStatus   @default(OPEN)
+  createdAt      DateTime     @default(now())
+  updatedAt      DateTime     @updatedAt
+  investments    Investment[]
+}
+
+model Investment {
+  id             Int       @id @default(autoincrement())
+  userId         Int
+  projectId      Int
+  amount         Float
+  expectedReturn Float
+  status         InvStatus @default(ACTIVE)
+  createdAt      DateTime  @default(now())
+  project        Project   @relation(fields: [projectId], references: [id])
+  user           User      @relation(fields: [userId], references: [id])
+
+  @@index([projectId], map: "Investment_projectId_fkey")
+  @@index([userId], map: "Investment_userId_fkey")
+}
+
+enum Role {
+  USER
+  ADMIN
+}
+
+enum Status {
+  INACTIVE
+  ACTIVE
+  BANNED
+}
+
+enum KYC {
+  UNVERIFIED
+  PENDING
+  VERIFIED
+  REJECTED
+}
+
+enum TxType {
+  DEPOSIT
+  WITHDRAWAL
+  INVESTMENT
+  COMMISSION
+  REFUND
+}
+
+enum TxStatus {
+  PENDING
+  APPROVED
+  REJECTED
+}
+
+enum ProjStatus {
+  COMING_SOON
+  OPEN
+  FUNDED
+  COMPLETED
+}
+
+enum InvStatus {
+  ACTIVE
+  PAID_OUT
+  CANCELLED
+}

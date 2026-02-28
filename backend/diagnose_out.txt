@@ -1,0 +1,23 @@
+ERROR: 
+Invalid `prisma.kycDocument.findMany()` invocation in
+C:\Users\Aryan\Music\Anti\ott-investment-platform\backend\diagnose.js:8:51
+
+  5 async function diagnose() {
+  6       let log = '';
+  7       try {
+→ 8             const docs = await prisma.kycDocument.findMany(
+Inconsistent query result: Field user is required to return data, got `null` instead.
+Stack: PrismaClientUnknownRequestError: 
+Invalid `prisma.kycDocument.findMany()` invocation in
+C:\Users\Aryan\Music\Anti\ott-investment-platform\backend\diagnose.js:8:51
+
+  5 async function diagnose() {
+  6       let log = '';
+  7       try {
+→ 8             const docs = await prisma.kycDocument.findMany(
+Inconsistent query result: Field user is required to return data, got `null` instead.
+    at ei.handleRequestError (C:\Users\Aryan\Music\Anti\ott-investment-platform\backend\node_modules\@prisma\client\runtime\library.js:121:7458)
+    at ei.handleAndLogRequestError (C:\Users\Aryan\Music\Anti\ott-investment-platform\backend\node_modules\@prisma\client\runtime\library.js:121:6593)
+    at ei.request (C:\Users\Aryan\Music\Anti\ott-investment-platform\backend\node_modules\@prisma\client\runtime\library.js:121:6300)
+    at async a (C:\Users\Aryan\Music\Anti\ott-investment-platform\backend\node_modules\@prisma\client\runtime\library.js:130:9551)
+    at async diagnose (C:\Users\Aryan\Music\Anti\ott-investment-platform\backend\diagnose.js:8:26)

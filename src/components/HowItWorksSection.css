@@ -1,0 +1,125 @@
+/* HowItWorksSection.css */
+.hiw-section {
+      position: relative;
+      padding: var(--section-padding);
+      background-color: var(--bg-darker);
+}
+
+.hiw-line {
+      display: none;
+      position: absolute;
+      top: 120px;
+      left: 10%;
+      right: 10%;
+      height: 2px;
+      background: linear-gradient(to right, transparent, rgba(245, 158, 11, 0.5), transparent);
+      z-index: 0;
+}
+
+.hiw-grid {
+      position: relative;
+      z-index: 10;
+      display: grid;
+      gap: 2rem;
+      grid-template-columns: 1fr;
+}
+
+.hiw-step {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+}
+
+.hiw-icon-wrapper {
+      position: relative;
+      margin-bottom: 2rem;
+      cursor: default;
+}
+
+.hiw-icon-bg {
+      width: 6rem;
+      height: 6rem;
+      border-radius: 50%;
+      background: var(--glass-bg);
+      backdrop-filter: var(--glass-blur);
+      -webkit-backdrop-filter: var(--glass-blur);
+      border: var(--glass-border);
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      transition: all 0.3s ease;
+      z-index: 2;
+      position: relative;
+}
+
+.hiw-icon-wrapper:hover .hiw-icon-bg {
+      transform: scale(1.1);
+      border-color: var(--primary);
+      background: rgba(245, 158, 11, 0.1);
+}
+
+.hiw-icon-glow {
+      position: absolute;
+      inset: 0;
+      background: rgba(245, 158, 11, 0.2);
+      filter: blur(20px);
+      border-radius: 50%;
+      transform: scale(1.5);
+      opacity: 0;
+      transition: opacity 0.3s ease;
+      z-index: 1;
+}
+
+.hiw-icon-wrapper:hover .hiw-icon-glow {
+      opacity: 1;
+}
+
+.hiw-number {
+      position: absolute;
+      top: -10px;
+      right: -10px;
+      width: 2rem;
+      height: 2rem;
+      border-radius: 50%;
+      background: var(--primary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: #000;
+      font-weight: 700;
+      font-size: 0.875rem;
+      z-index: 3;
+}
+
+.hiw-title {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.25rem;
+      color: #fff;
+      margin-bottom: 0.75rem;
+}
+
+.hiw-desc {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      max-width: 300px;
+      line-height: 1.6;
+}
+
+@media (min-width: 768px) {
+      .hiw-grid {
+            grid-template-columns: repeat(2, 1fr);
+      }
+}
+
+@media (min-width: 1024px) {
+      .hiw-grid {
+            grid-template-columns: repeat(4, 1fr);
+      }
+
+      .hiw-line {
+            display: block;
+      }
+}

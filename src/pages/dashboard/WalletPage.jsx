@@ -1,0 +1,374 @@
+import React, { useState, useEffect } from 'react';
+import { useAuth } from '../../context/AuthContext';
+import api from '../../utils/api';
+import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search } from 'lucide-react';
+import UserDetailsModal from '../../components/UserDetailsModal';
+import TransactionDetailsModal from '../../components/TransactionDetailsModal';
+import './Dashboard.css';
+
+const WalletPage = () => {
+      const { user } = useAuth();
+      const [depositAmount, setDepositAmount] = useState('');
+      const [utrNumber, setUtrNumber] = useState('');
+      const [isSubmitting, setIsSubmitting] = useState(false);
+
+      // Live Database State
+      const [transactions, setTransactions] = useState([]);
+      const [loadingHistory, setLoadingHistory] = useState(true);
+
+      // Admin State
+      const [depositQueue, setDepositQueue] = useState([]);
+      const [selectedUserId, setSelectedUserId] = useState(null);
+      const [searchQuery, setSearchQuery] = useState('');
+      const [txSearchQuery, setTxSearchQuery] = useState('');
+      const [selectedTransaction, setSelectedTransaction] = useState(null);
+
+      const fetchData = async () => {
+            setLoadingHistory(true);
+            try {
+                  const historyUrl = user?.role === 'ADMIN' ? '/admin/transactions' : '/wallet/history';
+                  const res = await api.get(historyUrl);
+
+                  if (res.data.success) {
+                        setTransactions(user?.role === 'ADMIN' ? res.data.transactions : res.data.history);
+                  }
+
+                  if (user?.role === 'ADMIN') {
+                        const adminRes = await api.get('/admin/deposits');
+                        if (adminRes.data.success) {
+                              setDepositQueue(adminRes.data.deposits);
+                        }
+                  }
+            } catch (error) {
+                  console.error('Failed to fetch wallet data:', error);
+            } finally {
+                  setLoadingHistory(false);
+            }
+      };
+
+      useEffect(() => {
+            fetchData();
+      }, [user?.role]);
+
+      const handleReviewDeposit = async (transactionId, status) => {
+            try {
+                  await api.put('/admin/deposits/review', { transactionId, status });
+                  alert(`Deposit ${status} successfully!`);
+                  fetchData();
+            } catch (error) {
+                  alert('Failed to process deposit review');
+            }
+      };
+
+      const handleDeposit = async (e) => {
+            e.preventDefault();
+            setIsSubmitting(true);
+
+            try {
+                  const amount = parseFloat(depositAmount);
+                  await api.post('/wallet/deposit', {
+                        amount: amount,
+                        utrNumber: utrNumber
+                  });
+
+                  setDepositAmount('');
+                  setUtrNumber('');
+                  alert(`Deposit request for ₹${amount.toLocaleString('en-IN')} submitted successfully! An admin will verify the UTR and credit your account shortly.`);
+                  fetchData(); // Refresh history
+            } catch (error) {
+                  alert('Deposit request failed: ' + (error.response?.data?.message || error.message));
+            } finally {
+                  setIsSubmitting(false);
+            }
+      };
+
+      const filteredDeposits = depositQueue.filter(dep =>
+            dep.user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            dep.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            dep.bankReference.toLowerCase().includes(searchQuery.toLowerCase())
+      );
+
+      const filteredTransactions = transactions.filter(tx => {
+            if (!txSearchQuery) return true;
+            const lowerQ = txSearchQuery.toLowerCase();
+            const matchTx = tx.description?.toLowerCase().includes(lowerQ) || tx.status?.toLowerCase().includes(lowerQ);
+            const matchUser = tx.user && (
+                  tx.user.fullName?.toLowerCase().includes(lowerQ) ||
+                  tx.user.email?.toLowerCase().includes(lowerQ) ||
+                  tx.user.username?.toLowerCase().includes(lowerQ)
+            );
+            return matchTx || matchUser;
+      });
+
+      return (
+            <div className="dashboard-page">
+                  <header className="page-header">
+                        <div>
+                              <h1 className="page-title">{user?.role === 'ADMIN' ? 'Wallet' : 'My Wallet'}</h1>
+                              <p className="page-subtitle">{user?.role === 'ADMIN' ? 'Manage system funds and manual deposits.' : 'Manage your funds and make manual deposits.'}</p>
+                        </div>
+                  </header>
+
+                  {/* Current Balance Card */}
+                  <div className="stat-card glass-panel" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                        <div>
+                              <span className="stat-title">Current Balance</span>
+                              <h3 className="stat-value" style={{ fontSize: '2.5rem', marginTop: '0.5rem' }}>
+                                    ₹{user?.walletBalance?.toLocaleString('en-IN') || '0'}
+                              </h3>
+                        </div>
+                        <div className="stat-icon-wrapper primary" style={{ padding: '1rem' }}>
+                              <WalletIcon size={48} />
+                        </div>
+                  </div>
+
+                  <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+
+                        {/* Standard Users see the forms */}
+                        {user?.role !== 'ADMIN' && (
+                              <>
+                                    {/* Bank Details Section */}
+                                    <div className="dashboard-card glass-panel">
+                                          <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <Landmark className="text-primary" /> Company Bank Details
+                                          </h2>
+                                          <p className="text-muted" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                                                Transfer the amount to the account below, then submit a deposit request with your UTR/Reference number.
+                                          </p>
+
+                                          <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1.5rem', borderRadius: '0.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                                <div>
+                                                      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Bank Name</span>
+                                                      <p style={{ margin: 0, fontWeight: 500 }}>HDFC Bank Ltd</p>
+                                                </div>
+                                                <div>
+                                                      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Account Name</span>
+                                                      <p style={{ margin: 0, fontWeight: 500 }}>The Anytime Mediatec Pvt Ltd</p>
+                                                </div>
+                                                <div>
+                                                      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Account Number</span>
+                                                      <p style={{ margin: 0, fontWeight: 600, color: '#3b82f6', letterSpacing: '1px' }}>50200012345678</p>
+                                                </div>
+                                                <div>
+                                                      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>IFSC Code</span>
+                                                      <p style={{ margin: 0, fontWeight: 500 }}>HDFC0001234</p>
+                                                </div>
+                                          </div>
+                                    </div>
+
+                                    {/* Deposit Form */}
+                                    <div className="dashboard-card glass-panel">
+                                          <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                <ArrowDownToLine className="text-green-400" /> Submit Deposit Request
+                                          </h2>
+
+                                          <form onSubmit={handleDeposit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                                <div className="form-group">
+                                                      <label>Amount Transferred (₹)</label>
+                                                      <input
+                                                            type="number"
+                                                            required
+                                                            min="1000"
+                                                            placeholder="E.g. 100000"
+                                                            className="dashboard-input"
+                                                            value={depositAmount}
+                                                            onChange={(e) => setDepositAmount(e.target.value)}
+                                                            style={{
+                                                                  width: '100%',
+                                                                  padding: '0.875rem 1rem',
+                                                                  background: 'rgba(255, 255, 255, 0.05)',
+                                                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                  color: 'white',
+                                                                  borderRadius: '0.75rem'
+                                                            }}
+                                                      />
+                                                </div>
+
+                                                <div className="form-group">
+                                                      <label>UTR / Transaction Reference Number</label>
+                                                      <input
+                                                            type="text"
+                                                            required
+                                                            placeholder="E.g. UPI1234567890"
+                                                            className="dashboard-input"
+                                                            value={utrNumber}
+                                                            onChange={(e) => setUtrNumber(e.target.value)}
+                                                            style={{
+                                                                  width: '100%',
+                                                                  padding: '0.875rem 1rem',
+                                                                  background: 'rgba(255, 255, 255, 0.05)',
+                                                                  border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                  color: 'white',
+                                                                  borderRadius: '0.75rem'
+                                                            }}
+                                                      />
+                                                </div>
+
+                                                <button type="submit" className="btn btn-primary" disabled={isSubmitting || !depositAmount || !utrNumber}>
+                                                      {isSubmitting ? 'Processing...' : 'Submit Request'}
+                                                </button>
+                                          </form>
+                                    </div>
+                              </>
+                        )}
+                  </div>
+
+                  {/* Admin Pending Manual Deposits */}
+                  {user?.role === 'ADMIN' && (
+                        <div className="dashboard-card glass-panel" style={{ padding: 0, overflow: 'hidden', marginTop: '2rem' }}>
+                              <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <h2 className="card-title" style={{ margin: 0 }}>Pending Manual Deposits (Admin view)</h2>
+                                    <div style={{ position: 'relative', maxWidth: '300px', width: '100%' }}>
+                                          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
+                                          <input
+                                                type="text"
+                                                placeholder="Search by name, email or UTR..."
+                                                value={searchQuery}
+                                                onChange={(e) => setSearchQuery(e.target.value)}
+                                                className="dashboard-input"
+                                                style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem' }}
+                                          />
+                                    </div>
+                              </div>
+                              <div style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', display: 'block', WebkitOverflowScrolling: 'touch' }}>
+                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                          <thead>
+                                                <tr style={{ background: 'rgba(0,0,0,0.2)', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>
+                                                      <th style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>User info</th>
+                                                      <th style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>Bank UTR / Reference</th>
+                                                      <th style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>Amount (₹)</th>
+                                                      <th style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>Action</th>
+                                                </tr>
+                                          </thead>
+                                          <tbody>
+                                                {filteredDeposits.length === 0 ? <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>No pending deposit requests found.</td></tr> : filteredDeposits.map((dep) => (
+                                                      <tr
+                                                            key={dep.id}
+                                                            style={{ borderTop: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
+                                                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
+                                                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
+                                                      >
+                                                            <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }} onClick={() => setSelectedUserId(dep.userId)}>
+                                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6' }}><User size={16} /> {dep.user.fullName}</div>
+                                                                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginLeft: '1.5rem' }}>{dep.user.email}</span>
+                                                            </td>
+                                                            <td style={{ padding: '1rem 1.5rem', color: '#3b82f6', letterSpacing: '1px', fontSize: '0.9rem' }} onClick={() => setSelectedUserId(dep.userId)}>{dep.bankReference}</td>
+                                                            <td style={{ padding: '1rem 1.5rem', fontWeight: 700 }} onClick={() => setSelectedUserId(dep.userId)}>₹{dep.amount.toLocaleString('en-IN')}</td>
+                                                            <td style={{ padding: '1rem 1.5rem', display: 'flex', gap: '0.5rem' }}>
+                                                                  <button onClick={(e) => { e.stopPropagation(); handleReviewDeposit(dep.id, 'APPROVED') }} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Verify & Credit</button>
+                                                                  <button onClick={(e) => { e.stopPropagation(); handleReviewDeposit(dep.id, 'REJECTED') }} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', borderColor: '#ef4444', color: '#ef4444' }}>Reject</button>
+                                                            </td>
+                                                      </tr>
+                                                ))}
+                                          </tbody>
+                                    </table>
+                              </div>
+                        </div>
+                  )}
+
+                  {/* Transaction History */}
+                  <div className="dashboard-card glass-panel" style={{ marginTop: '2rem', padding: 0 }}>
+                        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
+                              <h2 className="card-title" style={{ margin: 0 }}>Transaction Ledger</h2>
+                              <div style={{ position: 'relative', maxWidth: '300px', width: '100%' }}>
+                                    <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
+                                    <input
+                                          type="text"
+                                          placeholder="Search transactions..."
+                                          value={txSearchQuery}
+                                          onChange={(e) => setTxSearchQuery(e.target.value)}
+                                          className="dashboard-input"
+                                          style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem' }}
+                                    />
+                              </div>
+                        </div>
+
+                        {loadingHistory ? (
+                              <div style={{ color: 'rgba(255,255,255,0.5)', padding: '2rem', textAlign: 'center' }}>Loading history...</div>
+                        ) : filteredTransactions.length > 0 ? (
+                              <div className="transaction-list">
+                                    {filteredTransactions.map(tx => (
+                                          <div
+                                                key={tx.id}
+                                                className="transaction-item"
+                                                onClick={() => setSelectedTransaction(tx)}
+                                                style={{
+                                                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
+                                                      padding: '0.875rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.04)',
+                                                      cursor: 'pointer', transition: 'background 0.15s', gap: '0.75rem'
+                                                }}
+                                          >
+                                                <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', minWidth: 0, flex: 1 }}>
+                                                      <div style={{
+                                                            background: tx.status === 'REJECTED' ? 'rgba(255, 255, 255, 0.05)' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'),
+                                                            color: tx.status === 'REJECTED' ? '#9ca3af' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? '#10b981' : '#ef4444'),
+                                                            padding: '0.55rem', borderRadius: '50%', flexShrink: 0
+                                                      }}>
+                                                            {['DEPOSIT', 'COMMISSION'].includes(tx.type) ? <ArrowDownToLine size={18} /> : <ArrowUpRight size={18} />}
+                                                      </div>
+                                                      <div style={{ minWidth: 0, flex: 1 }}>
+                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
+                                                                  <span style={{
+                                                                        fontWeight: 600, fontSize: '0.88rem',
+                                                                        color: tx.status === 'REJECTED' ? '#9ca3af' : 'white',
+                                                                        textDecoration: tx.status === 'REJECTED' ? 'line-through' : 'none',
+                                                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
+                                                                        maxWidth: '180px'
+                                                                  }}>
+                                                                        {tx.description || tx.type}
+                                                                  </span>
+                                                                  <span style={{
+                                                                        fontSize: '0.65rem', padding: '0.1rem 0.4rem',
+                                                                        borderRadius: '0.75rem', fontWeight: 600, flexShrink: 0,
+                                                                        background: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.15)' : tx.status === 'PENDING' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
+                                                                        color: tx.status === 'APPROVED' ? '#10b981' : tx.status === 'PENDING' ? '#f59e0b' : '#ef4444'
+                                                                  }}>
+                                                                        {tx.status}
+                                                                  </span>
+                                                            </div>
+                                                            <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
+                                                                  {new Date(tx.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
+                                                            </p>
+                                                      </div>
+                                                </div>
+                                                <div style={{
+                                                      color: tx.status === 'REJECTED' ? '#6b7280' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? '#10b981' : '#f87171'),
+                                                      fontWeight: 700, fontSize: 'clamp(0.85rem, 3vw, 1rem)',
+                                                      textDecoration: tx.status === 'REJECTED' ? 'line-through' : 'none',
+                                                      whiteSpace: 'nowrap', flexShrink: 0, textAlign: 'right'
+                                                }}>
+                                                      {tx.status === 'REJECTED' ? '' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? '+' : '-')}₹{Math.abs(tx.amount).toLocaleString('en-IN')}
+                                                </div>
+                                          </div>
+                                    ))}
+                              </div>
+                        ) : (
+                              <div className="empty-state" style={{ padding: '3rem', textAlign: 'center' }}>
+                                    <WalletIcon size={48} className="text-muted mb-4" style={{ margin: '0 auto 1rem auto' }} />
+                                    <p style={{ color: 'rgba(255,255,255,0.6)' }}>No transactions found.</p>
+                              </div>
+                        )}
+                  </div>
+
+                  {/* Transaction Details Modal */}
+                  {selectedTransaction && (
+                        <TransactionDetailsModal
+                              transaction={selectedTransaction}
+                              onClose={() => setSelectedTransaction(null)}
+                              onInspectUser={user?.role === 'ADMIN' ? (userId) => setSelectedUserId(userId) : undefined}
+                        />
+                  )}
+
+                  {/* Unified User Details Modal (Admin Only) */}
+                  {selectedUserId && (
+                        <UserDetailsModal
+                              userId={selectedUserId}
+                              onClose={() => setSelectedUserId(null)}
+                              onUpdate={fetchData}
+                        />
+                  )}
+            </div>
+      );
+};
+
+export default WalletPage;

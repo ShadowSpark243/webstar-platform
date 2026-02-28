@@ -1,0 +1,200 @@
+/* CompensationSection.css */
+.comp-section {
+      position: relative;
+      padding: var(--section-padding);
+      background-color: var(--bg-dark);
+      overflow: hidden;
+}
+
+.comp-bg-glow {
+      position: absolute;
+      top: 0;
+      right: 0;
+      width: 500px;
+      height: 500px;
+      background: rgba(139, 92, 246, 0.1);
+      border-radius: 50%;
+      filter: blur(120px);
+      pointer-events: none;
+}
+
+.comp-panel {
+      position: relative;
+      overflow: hidden;
+}
+
+.comp-panel-icon-bg {
+      position: absolute;
+      top: 0;
+      right: 0;
+      padding: 1rem;
+      opacity: 0.05;
+}
+
+.comp-title-flex {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+}
+
+.comp-text {
+      color: var(--text-muted);
+      font-size: 0.875rem;
+      margin-bottom: 1.5rem;
+      line-height: 1.6;
+}
+
+.comp-table {
+      background: var(--bg-darker);
+      border-radius: var(--border-radius-md);
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      overflow: hidden;
+}
+
+.comp-table-row {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      font-size: 0.8rem;
+      color: var(--text-muted);
+      transition: background 0.3s ease;
+}
+
+.comp-table-row:hover {
+      background: rgba(255, 255, 255, 0.05);
+}
+
+.comp-table-header {
+      background: rgba(255, 255, 255, 0.05);
+      color: #fff;
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+}
+
+.comp-table-footer {
+      background: rgba(245, 158, 11, 0.1);
+      color: #fff;
+      font-weight: 700;
+      border-top: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.comp-percent {
+      font-weight: 700;
+      color: var(--primary);
+}
+
+.comp-alert {
+      margin-bottom: 1.5rem;
+      padding: 1rem;
+      background: rgba(245, 158, 11, 0.1);
+      border-left: 4px solid var(--primary);
+      border-radius: var(--border-radius-md);
+      display: flex;
+      align-items: flex-start;
+      gap: 1rem;
+}
+
+.comp-alert-text {
+      font-size: 0.8rem;
+      color: rgba(245, 158, 11, 0.9);
+      font-weight: 500;
+      font-style: italic;
+      margin: 0;
+}
+
+.comp-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+}
+
+.comp-list-item {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+      color: var(--text-muted);
+      font-size: 0.875rem;
+}
+
+.comp-split-header {
+      text-align: center;
+      margin-bottom: 2.5rem;
+}
+
+.comp-split-title {
+      font-family: var(--font-heading);
+      font-weight: 700;
+      font-size: 1.875rem;
+      margin-bottom: 0.75rem;
+}
+
+.comp-split-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: 2rem;
+      position: relative;
+}
+
+.comp-split-divider {
+      display: none;
+      position: absolute;
+      left: 50%;
+      top: 0;
+      bottom: 0;
+      width: 1px;
+      background: rgba(255, 255, 255, 0.1);
+      transform: translateX(-50%);
+}
+
+.comp-pool {
+      text-align: center;
+      padding: 1rem;
+}
+
+.comp-pool-circle {
+      width: 4rem;
+      height: 4rem;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 1rem auto;
+      font-weight: 700;
+      font-size: 1.25rem;
+}
+
+.comp-pool-circle.accent {
+      background: rgba(139, 92, 246, 0.2);
+      border: 1px solid var(--accent);
+      color: var(--accent);
+}
+
+.comp-pool-circle.primary {
+      background: rgba(245, 158, 11, 0.2);
+      border: 1px solid var(--primary);
+      color: var(--primary);
+}
+
+.comp-pool-title {
+      font-family: var(--font-heading);
+      font-weight: 600;
+      font-size: 1.125rem;
+      color: #fff;
+      margin-bottom: 0.5rem;
+}
+
+@media (min-width: 768px) {
+      .comp-split-grid {
+            grid-template-columns: repeat(2, 1fr);
+      }
+
+      .comp-split-divider {
+            display: block;
+      }
+}
