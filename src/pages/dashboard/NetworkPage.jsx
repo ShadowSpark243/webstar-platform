@@ -126,7 +126,7 @@ const NetworkPage = () => {
       const [selectedUserId, setSelectedUserId] = useState(null);
       const [rankProgress, setRankProgress] = useState(null);
 
-      const referralLink = `https://webstar.com/join?ref=${user?.referralCode || 'LOAD...'}`;
+      const referralLink = `${window.location.origin}/?ref=${user?.referralCode || ''}`;
 
       const handleCopy = () => {
             navigator.clipboard.writeText(referralLink);

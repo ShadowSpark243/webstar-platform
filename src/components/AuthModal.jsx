@@ -1,6 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
-import { X, User, Mail, Lock, Phone, UserPlus, LogIn } from 'lucide-react';
+import { X, User, Mail, Lock, Phone, UserPlus, LogIn, CheckCircle } from 'lucide-react';
 import { useNavigate } from 'react-router-dom';
 import { useAuth } from '../context/AuthContext';
 import './AuthModal.css';
@@ -19,6 +19,18 @@ const AuthModal = () => {
       const [password, setPassword] = useState('');
       const [phone, setPhone] = useState('');
       const [referralCode, setReferralCode] = useState('');
+      const [refFromUrl, setRefFromUrl] = useState(false);
+
+      // On mount — check URL for ?ref=CODE and pre-fill + switch to register
+      useEffect(() => {
+            const params = new URLSearchParams(window.location.search);
+            const ref = params.get('ref');
+            if (ref) {
+                  setReferralCode(ref.toUpperCase());
+                  setRefFromUrl(true);
+                  setIsLoginView(false); // Auto-switch to Register tab
+            }
+      }, []);
 
       if (!isAuthModalOpen) return null;
 
@@ -161,17 +173,23 @@ const AuthModal = () => {
 
                                           {!isLoginView && (
                                                 <div className="form-group">
-                                                      <label>Referral Code (Optional)</label>
+                                                      <label style={{ display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                            Referral Code {refFromUrl ? <span style={{ color: '#4ade80', fontSize: '0.75rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><CheckCircle size={12} /> Applied</span> : '(Optional)'}
+                                                      </label>
                                                       <div className="input-with-icon">
-                                                            <UserPlus size={18} className="input-icon" />
+                                                            {refFromUrl ? <CheckCircle size={18} className="input-icon" style={{ color: '#4ade80' }} /> : <UserPlus size={18} className="input-icon" />}
                                                             <input
                                                                   type="text"
-                                                                  placeholder="WS-ADMIN"
+                                                                  placeholder="e.g. WS-ARYAN"
                                                                   value={referralCode}
-                                                                  onChange={(e) => setReferralCode(e.target.value)}
+                                                                  onChange={(e) => !refFromUrl && setReferralCode(e.target.value.toUpperCase())}
+                                                                  readOnly={refFromUrl}
+                                                                  style={refFromUrl ? { color: '#4ade80', fontWeight: 700, cursor: 'not-allowed', letterSpacing: '0.1em' } : {}}
                                                             />
                                                       </div>
-                                                      <small className="form-help-text">Leave as WS-ADMIN if you don't have one.</small>
+                                                      <small className="form-help-text">
+                                                            {refFromUrl ? '✅ Referral code automatically applied from your invite link.' : 'Leave blank if you don\'t have a referral code.'}
+                                                      </small>
                                                 </div>
                                           )}
 

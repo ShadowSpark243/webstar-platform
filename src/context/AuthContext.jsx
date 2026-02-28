@@ -32,6 +32,18 @@ export const AuthProvider = ({ children }) => {
             fetchUser();
       }, []);
 
+      // Auto-open modal when referral link is visited (?ref=CODE) and user is not logged in
+      useEffect(() => {
+            const params = new URLSearchParams(window.location.search);
+            if (params.get('ref')) {
+                  const timer = setTimeout(() => {
+                        const token = localStorage.getItem('webstar_token');
+                        if (!token) setIsAuthModalOpen(true);
+                  }, 600); // Wait for auth check to finish first
+                  return () => clearTimeout(timer);
+            }
+      }, []);
+
       const login = async (email, password) => {
             try {
                   const response = await api.post('/auth/login', { email, password });
