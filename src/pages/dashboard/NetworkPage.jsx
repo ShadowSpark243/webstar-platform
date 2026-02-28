@@ -235,12 +235,32 @@ const NetworkPage = () => {
                         </div>
 
                         <div className="dashboard-card glass-panel" style={{ padding: '2rem', display: 'flex', flexDirection: 'column', justifyContent: 'center' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1.5rem' }}>
-                                    <div>
-                                          <p style={{ margin: '0 0 0.5rem 0', color: 'rgba(255,255,255,0.6)', fontSize: '1rem', textTransform: 'uppercase', letterSpacing: '1px' }}>Current Rank</p>
-                                          <h2 style={{ margin: 0, color: rankProgress?.current?.color || '#3b82f6', fontSize: '2.5rem', fontWeight: 800 }}>{currentRankName}</h2>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', gap: '1rem' }}>
+                                    <div style={{ minWidth: 0 }}>
+                                          <p style={{ margin: '0 0 0.25rem 0', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '1px', fontWeight: 600 }}>Current Rank</p>
+                                          <h2 style={{
+                                                margin: 0,
+                                                color: rankProgress?.current?.color || '#3b82f6',
+                                                fontSize: window.innerWidth < 768 ? '1.5rem' : '2rem',
+                                                fontWeight: 800,
+                                                lineHeight: 1.1,
+                                                whiteSpace: 'nowrap',
+                                                overflow: 'hidden',
+                                                textOverflow: 'ellipsis'
+                                          }}>
+                                                {currentRankName}
+                                          </h2>
                                     </div>
-                                    <div className="avatar-circle" style={{ width: '56px', height: '56px', fontSize: '1.5rem' }}>{rankProgress?.current?.icon || 'R'}</div>
+                                    <div className="avatar-circle" style={{
+                                          flexShrink: 0,
+                                          width: window.innerWidth < 768 ? '48px' : '64px',
+                                          height: window.innerWidth < 768 ? '48px' : '64px',
+                                          fontSize: window.innerWidth < 768 ? '1.2rem' : '1.75rem',
+                                          background: `linear-gradient(135deg, ${rankProgress?.current?.color || '#3b82f6'}, #8b5cf6)`,
+                                          boxShadow: `0 4px 12px ${rankProgress?.current?.color}44`
+                                    }}>
+                                          {rankProgress?.current?.icon || 'R'}
+                                    </div>
                               </div>
                               <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden', marginBottom: '1rem' }}>
                                     <div style={{ width: `${isMaxRank ? 100 : progressPercent}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)' }}></div>

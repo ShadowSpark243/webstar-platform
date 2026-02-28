@@ -197,8 +197,10 @@
 .ov-sl {
       display: block;
       font-size: .62rem;
-      color: rgba(255, 255, 255, .4);
-      margin-top: .1rem;
+      color: rgba(255, 255, 255, .3);
+      margin-top: .15rem;
+      text-transform: uppercase;
+      letter-spacing: .02em;
 }
 
 .ov-s1 {
@@ -528,12 +530,15 @@
       display: block;
       font-size: .55rem;
       color: rgba(255, 255, 255, .28);
+      margin-top: .1rem;
 }
 
 .ov-inv-nv {
+      display: block;
       font-size: .75rem;
-      font-weight: 600;
-      color: #e2e8f0;
+      font-weight: 700;
+      color: #fff;
+      line-height: 1.2;
 }
 
 .ov-green {
@@ -717,8 +722,8 @@
 
 @media (max-width: 768px) {
       .ov-hero {
-            padding: .9rem 1rem;
-            gap: .75rem;
+            padding: 1rem;
+            margin-bottom: 0.75rem;
       }
 
       .ov-name {
@@ -739,50 +744,39 @@
       .ov-stats {
             grid-template-columns: 1fr 1fr;
             gap: .5rem;
+            margin-bottom: 0.75rem;
       }
 
       .ov-stat {
-            padding: .65rem .75rem;
+            padding: .75rem;
             gap: .5rem;
+            flex-direction: column;
+            align-items: flex-start;
       }
 
       .ov-sv {
-            font-size: .95rem;
+            font-size: 1rem;
       }
 
       .ov-sl {
-            font-size: .58rem;
+            font-size: .55rem;
       }
 
       .ov-stat-ic {
-            width: 14px;
-            height: 14px;
+            display: none;
       }
 
       .ov-rank {
-            padding: .85rem;
-      }
-
-      .ov-rank-badge {
-            width: 40px;
-            height: 40px;
+            padding: 1rem;
+            margin-bottom: 1rem;
       }
 
       .ov-rank-val {
-            font-size: 1.05rem;
+            font-size: 1rem;
       }
 
       .ov-rank-bar {
             height: 6px;
-      }
-
-      .ov-rank-bar-labels {
-            font-size: .62rem;
-      }
-
-      .ov-rank-next-chip {
-            font-size: .62rem;
-            padding: .2rem .5rem;
       }
 
       .ov-inv-grid {
@@ -793,35 +787,24 @@
             height: 85px;
       }
 
-      .ov-sec-hdr h2 {
-            font-size: .85rem;
+      .ov-inv-nums {
+            grid-template-columns: 1fr 1fr;
+            gap: 0.4rem;
+      }
+
+      .ov-inv-nums>div {
+            padding: 0.5rem;
+            background: rgba(0, 0, 0, 0.15);
       }
 
       .ov-col-side {
             padding: .75rem;
       }
-
-      .ov-tx-desc {
-            font-size: .68rem;
-      }
-
-      .ov-tx-amt {
-            font-size: .7rem;
-      }
 }
 
 @media (max-width: 430px) {
       .ov-hero {
-            padding: .75rem .85rem;
-            border-radius: .75rem;
-      }
-
-      .ov-name {
-            font-size: 1.05rem;
-      }
-
-      .ov-greet {
-            font-size: .68rem;
+            padding: 0.85rem;
       }
 
       .ov-stats {
@@ -829,101 +812,44 @@
       }
 
       .ov-stat {
-            padding: .55rem .65rem;
-            gap: .4rem;
+            padding: .65rem;
             border-radius: .6rem;
       }
 
       .ov-sv {
-            font-size: .85rem;
-      }
-
-      .ov-stat-ic {
-            display: none;
+            font-size: .9rem;
       }
 
       .ov-rank {
-            padding: .75rem;
-            border-radius: .75rem;
-      }
-
-      .ov-rank-badge {
-            width: 36px;
-            height: 36px;
-      }
-
-      .ov-rank-badge svg {
-            width: 16px;
-            height: 16px;
-      }
-
-      .ov-rank-val {
-            font-size: .95rem;
-      }
-
-      .ov-rank-lbl {
-            font-size: .58rem;
-      }
-
-      .ov-rank-bar {
-            height: 5px;
-      }
-
-      .ov-rank-bar-labels {
-            font-size: .6rem;
-            display: flex;
-            justify-content: space-between;
-            align-items: center;
-            margin-top: .35rem;
-            gap: .5rem;
-      }
-
-      @media (max-width: 380px) {
-            .ov-rank-bar-labels {
-                  flex-direction: column;
-                  align-items: flex-start;
-                  gap: .15rem;
-            }
-      }
-
-      .ov-rank-upcoming {
-            gap: .35rem;
-      }
-
-      .ov-rank-up-item {
-            padding: .3rem .45rem;
-      }
-
-      .ov-rank-up-name {
-            font-size: .65rem;
-      }
-
-      .ov-rank-up-vol {
-            font-size: .58rem;
-      }
-
-      .ov-inv-body {
-            padding: .7rem;
-      }
-
-      .ov-inv-body h4 {
-            font-size: .8rem;
+            padding: .85rem;
       }
 
       .ov-inv-nums {
-            gap: .3rem;
+            gap: 0.35rem;
       }
 
       .ov-inv-nums>div {
-            padding: .3rem .35rem;
+            padding: 0.4rem 0.5rem;
       }
 
       .ov-inv-nv {
-            font-size: .68rem;
+            font-size: 0.7rem;
       }
 
-      .ov-kyc {
-            font-size: .72rem;
-            padding: .55rem .75rem;
+      .ov-inv-nl {
+            font-size: 0.5rem;
+      }
+
+      .ov-rank-bar-labels {
+            font-size: .58rem;
+            margin-top: .35rem;
+      }
+}
+
+@media (max-width: 380px) {
+      .ov-rank-bar-labels {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: .15rem;
       }
 }

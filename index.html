@@ -6,6 +6,24 @@
   <link rel="icon" type="image/svg+xml" href="/vite.svg" />
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
   <title>WEBSTAR</title>
+  <!-- Polyfill to fix "className.indexOf is not a function" error from browser extensions (IDM/Grammarly/etc) -->
+  <script>
+    (function () {
+      if (window.SVGElement) {
+        const originalClassName = Object.getOwnPropertyDescriptor(SVGElement.prototype, 'className');
+        Object.defineProperty(SVGElement.prototype, 'className', {
+          get: function () {
+            const val = this.getAttribute('class');
+            if (typeof val === 'string') return val;
+            return (originalClassName && originalClassName.get) ? originalClassName.get.call(this).baseVal : '';
+          },
+          set: function (val) {
+            this.setAttribute('class', val);
+          }
+        });
+      }
+    })();
+  </script>
 </head>
 
 <body>
