@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { ShieldCheck, Search, FileText, User } from 'lucide-react';
+import { ShieldCheck, Search, FileText, User, Loader2 } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 
 const AdminKyc = () => {
@@ -290,10 +290,11 @@ const AdminKyc = () => {
                                                             border: 'none', color: 'white', borderRadius: '0.5rem',
                                                             cursor: processing ? 'not-allowed' : 'pointer',
                                                             fontWeight: 600, fontSize: '0.85rem',
-                                                            opacity: processing ? 0.6 : 1
+                                                            opacity: processing ? 0.6 : 1,
+                                                            display: 'flex', alignItems: 'center', gap: '0.5rem'
                                                       }}
                                                 >
-                                                      {processing ? 'Processing...' : `Confirm ${confirmModal.status === 'VERIFIED' ? 'Approve' : 'Reject'}`}
+                                                      {processing ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : `Confirm ${confirmModal.status === 'VERIFIED' ? 'Approve' : 'Reject'}`}
                                                 </button>
                                           </div>
                                     </div>

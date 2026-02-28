@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { Film, Plus, Search, Edit2, Trash2, TrendingUp, Users, Calendar, Target, X, IndianRupee, Clock, BarChart3, Clapperboard } from 'lucide-react';
+import { Film, Plus, Search, Edit2, Trash2, TrendingUp, Users, Calendar, Target, X, IndianRupee, Clock, BarChart3, Clapperboard, Loader2 } from 'lucide-react';
 import './AdminProjects.css';
 
 const statusConfig = {
@@ -366,8 +366,8 @@ const AdminProjects = () => {
 
                                                 <div className="ap-form-actions">
                                                       <button type="button" onClick={() => setShowModal(false)} disabled={processing} className="ap-btn-secondary">Cancel</button>
-                                                      <button type="submit" disabled={processing} className="ap-btn-primary">
-                                                            {processing ? 'Saving...' : editingProject ? 'Update Project' : 'Create Project'}
+                                                      <button type="submit" disabled={processing} className="ap-btn-primary" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                                                            {processing ? <><Loader2 size={16} className="animate-spin" /> Saving...</> : editingProject ? 'Update Project' : 'Create Project'}
                                                       </button>
                                                 </div>
                                           </form>
@@ -392,8 +392,8 @@ const AdminProjects = () => {
                                           {errorMsg && <div className="ap-alert ap-alert-error">{errorMsg}</div>}
                                           <div className="ap-form-actions ap-form-actions-center">
                                                 <button onClick={() => { setConfirmDelete(null); setErrorMsg(''); }} className="ap-btn-secondary">Cancel</button>
-                                                <button onClick={handleDelete} disabled={processing} className="ap-btn-danger">
-                                                      {processing ? 'Deleting...' : 'Delete Forever'}
+                                                <button onClick={handleDelete} disabled={processing} className="ap-btn-danger" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', justifyContent: 'center' }}>
+                                                      {processing ? <><Loader2 size={16} className="animate-spin" /> Deleting...</> : 'Delete Forever'}
                                                 </button>
                                           </div>
                                     </div>

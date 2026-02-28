@@ -1,13 +1,14 @@
 import React, { useState, useEffect } from 'react';
 import {
       X, User, ShieldCheck, Ban, Wallet, Network,
-      CreditCard, Clock, CheckCircle, FileText, ArrowDownToLine, ArrowUpRight, Users
+      CreditCard, Clock, CheckCircle, FileText, ArrowDownToLine, ArrowUpRight, Users, Loader2
 } from 'lucide-react';
 import api from '../utils/api';
 
 const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
       const [user, setUser] = useState(null);
       const [loading, setLoading] = useState(true);
+      const [actionLoading, setActionLoading] = useState(false);
 
       const fetchUser = async () => {
             try {
@@ -34,11 +35,14 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
             if (!window.confirm(`Are you sure you want to change this user's status to ${newStatus}?`)) return;
 
             try {
+                  setActionLoading(true);
                   await api.put(`/admin/users/${user.id}/status`, { status: newStatus });
                   fetchUser();
                   if (onUpdate) onUpdate();
             } catch (err) {
                   alert("Failed to update status");
+            } finally {
+                  setActionLoading(false);
             }
       };
 
@@ -53,11 +57,14 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
             }
 
             try {
+                  setActionLoading(true);
                   await api.put('/admin/kyc/review', { docId, status, rejectionReason });
                   fetchUser();
                   if (onUpdate) onUpdate();
             } catch (err) {
                   alert("Failed to process KYC review");
+            } finally {
+                  setActionLoading(false);
             }
       };
 
@@ -72,11 +79,14 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
             }
 
             try {
+                  setActionLoading(true);
                   await api.put('/admin/deposits/review', { transactionId, status, rejectionReason });
                   fetchUser();
                   if (onUpdate) onUpdate();
             } catch (err) {
                   alert("Failed to process deposit review");
+            } finally {
+                  setActionLoading(false);
             }
       };
 
@@ -126,8 +136,9 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
 
                                           {/* Action Buttons */}
                                           <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                <button onClick={handleStatusToggle} className="btn" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', gap: '0.5rem', alignItems: 'center', background: user.status === 'ACTIVE' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', color: user.status === 'ACTIVE' ? '#ef4444' : '#10b981', border: `1px solid ${user.status === 'ACTIVE' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}` }}>
-                                                      {user.status === 'ACTIVE' ? <><Ban size={16} /> Ban User</> : user.status === 'INACTIVE' ? <><CheckCircle size={16} /> Activate User</> : <><CheckCircle size={16} /> Unban User</>}
+                                                <button onClick={handleStatusToggle} disabled={actionLoading} className="btn" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', display: 'flex', gap: '0.5rem', alignItems: 'center', background: user.status === 'ACTIVE' ? 'rgba(239,68,68,0.1)' : 'rgba(16,185,129,0.1)', color: user.status === 'ACTIVE' ? '#ef4444' : '#10b981', border: `1px solid ${user.status === 'ACTIVE' ? 'rgba(239,68,68,0.3)' : 'rgba(16,185,129,0.3)'}` }}>
+                                                      {actionLoading ? <Loader2 size={16} className="animate-spin" /> : (user.status === 'ACTIVE' ? <Ban size={16} /> : <CheckCircle size={16} />)}
+                                                      {actionLoading ? 'Updating...' : (user.status === 'ACTIVE' ? 'Ban User' : user.status === 'INACTIVE' ? 'Activate User' : 'Unban User')}
                                                 </button>
                                           </div>
                                     </div>
@@ -204,8 +215,12 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
 
                                                                         {doc.status === 'PENDING' && (
                                                                               <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                                    <button onClick={() => handleKycReview(doc.id, 'VERIFIED')} className="btn btn-primary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem', background: '#10b981', border: 'none' }}>Approve</button>
-                                                                                    <button onClick={() => handleKycReview(doc.id, 'REJECTED')} className="btn btn-outline" style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem', color: '#ef4444', borderColor: '#ef4444' }}>Reject</button>
+                                                                                    <button onClick={() => handleKycReview(doc.id, 'VERIFIED')} disabled={actionLoading} className="btn btn-primary" style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem', background: '#10b981', border: 'none', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                                          {actionLoading ? <Loader2 size={14} className="animate-spin" /> : 'Approve'}
+                                                                                    </button>
+                                                                                    <button onClick={() => handleKycReview(doc.id, 'REJECTED')} disabled={actionLoading} className="btn btn-outline" style={{ flex: 1, padding: '0.4rem', fontSize: '0.8rem', color: '#ef4444', borderColor: '#ef4444', display: 'flex', justifyContent: 'center', alignItems: 'center' }}>
+                                                                                          {actionLoading ? <Loader2 size={14} className="animate-spin" /> : 'Reject'}
+                                                                                    </button>
                                                                               </div>
                                                                         )}
                                                                   </div>
@@ -299,8 +314,12 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
                                                                               <td style={{ padding: '0.75rem' }}>
                                                                                     {tx.type === 'DEPOSIT' && tx.status === 'PENDING' && (
                                                                                           <div style={{ display: 'flex', gap: '0.5rem' }}>
-                                                                                                <button onClick={() => handleDepositReview(tx.id, 'APPROVED')} title="Approve" style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', padding: 0 }}><CheckCircle size={18} /></button>
-                                                                                                <button onClick={() => handleDepositReview(tx.id, 'REJECTED')} title="Reject" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}><X size={18} /></button>
+                                                                                                <button onClick={() => handleDepositReview(tx.id, 'APPROVED')} disabled={actionLoading} title="Approve" style={{ background: 'none', border: 'none', color: '#10b981', cursor: 'pointer', padding: 0 }}>
+                                                                                                      {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <CheckCircle size={18} />}
+                                                                                                </button>
+                                                                                                <button onClick={() => handleDepositReview(tx.id, 'REJECTED')} disabled={actionLoading} title="Reject" style={{ background: 'none', border: 'none', color: '#ef4444', cursor: 'pointer', padding: 0 }}>
+                                                                                                      {actionLoading ? <Loader2 size={18} className="animate-spin" /> : <X size={18} />}
+                                                                                                </button>
                                                                                           </div>
                                                                                     )}
                                                                               </td>
