@@ -47,20 +47,26 @@ const AdminLedger = () => {
             fetchData();
       }, []);
 
-      const [confirmModal, setConfirmModal] = useState({ isOpen: false, depositId: null, status: null, isLoading: false });
+      const [confirmModal, setConfirmModal] = useState({ isOpen: false, depositId: null, status: null, isLoading: false, rejectionReason: '' });
 
       const handleReviewClick = (depositId, status) => {
-            setConfirmModal({ isOpen: true, depositId, status, isLoading: false });
+            setConfirmModal({ isOpen: true, depositId, status, isLoading: false, rejectionReason: '' });
       };
 
       const executeReview = async () => {
-            const { depositId, status } = confirmModal;
+            const { depositId, status, rejectionReason } = confirmModal;
+
+            if (status === 'REJECTED' && (!rejectionReason || !rejectionReason.trim())) {
+                  alert("Please provide a reason for rejection.");
+                  return;
+            }
+
             setConfirmModal(prev => ({ ...prev, isLoading: true }));
             try {
-                  const res = await api.put('/admin/deposits/review', { transactionId: parseInt(depositId), status });
+                  const res = await api.put('/admin/deposits/review', { transactionId: parseInt(depositId), status, rejectionReason });
                   if (res.data.success) {
                         alert(`Success: Deposit has been ${status === 'APPROVED' ? 'Approved' : 'Rejected'} and the database is updated.`);
-                        setConfirmModal({ isOpen: false, depositId: null, status: null, isLoading: false });
+                        setConfirmModal({ isOpen: false, depositId: null, status: null, isLoading: false, rejectionReason: '' });
                         fetchData(); // Refresh both deposits and ledger
                   }
             } catch (error) {
@@ -322,12 +328,25 @@ const AdminLedger = () => {
                         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <div className="dashboard-card glass-panel" style={{ width: '90%', maxWidth: '400px', padding: '2rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
                                     <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'white', marginBottom: '1rem' }}>Confirm {confirmModal.status === 'APPROVED' ? 'Approval' : 'Rejection'}</h3>
-                                    <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '2rem', lineHeight: '1.5' }}>
+                                    <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
                                           Are you sure you want to <strong>{confirmModal.status}</strong> this transaction? This action will securely update the user's wallet database and process all internal network aggregates natively.
                                     </p>
+
+                                    {confirmModal.status === 'REJECTED' && (
+                                          <div style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
+                                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Reason for Rejection *</label>
+                                                <textarea
+                                                      placeholder="e.g. Invalid UTR, Name mismatch..."
+                                                      style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '0.5rem', minHeight: '80px', resize: 'vertical' }}
+                                                      value={confirmModal.rejectionReason || ''}
+                                                      onChange={(e) => setConfirmModal({ ...confirmModal, rejectionReason: e.target.value })}
+                                                />
+                                          </div>
+                                    )}
+
                                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                                           <button
-                                                onClick={() => setConfirmModal({ isOpen: false, depositId: null, status: null, isLoading: false })}
+                                                onClick={() => setConfirmModal({ isOpen: false, depositId: null, status: null, isLoading: false, rejectionReason: '' })}
                                                 className="btn btn-outline"
                                                 style={{ padding: '0.75rem 1.5rem', flex: 1 }}
                                                 disabled={confirmModal.isLoading}

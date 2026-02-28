@@ -165,6 +165,19 @@
       animation: fadeIn 0.3s ease;
 }
 
+.input-success input {
+      border-color: #10b981 !important;
+      background: rgba(16, 185, 129, 0.05) !important;
+}
+
+.input-success input:focus {
+      box-shadow: 0 0 0 2px rgba(16, 185, 129, 0.2) !important;
+}
+
+.input-success .input-icon {
+      color: #10b981 !important;
+}
+
 @keyframes fadeIn {
       from {
             opacity: 0;

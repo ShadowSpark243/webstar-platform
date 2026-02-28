@@ -43,9 +43,17 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
       };
 
       const handleKycReview = async (docId, status) => {
-            if (!window.confirm(`Are you sure you want to ${status} this KYC document?`)) return;
+            let rejectionReason = null;
+            if (status === 'REJECTED') {
+                  rejectionReason = window.prompt("Reason for rejecting this KYC document:");
+                  if (rejectionReason === null) return;
+                  if (!rejectionReason.trim()) return alert("Rejection reason is required.");
+            } else {
+                  if (!window.confirm(`Are you sure you want to ${status} this KYC document?`)) return;
+            }
+
             try {
-                  await api.put('/admin/kyc/review', { docId, status });
+                  await api.put('/admin/kyc/review', { docId, status, rejectionReason });
                   fetchUser();
                   if (onUpdate) onUpdate();
             } catch (err) {
@@ -54,9 +62,17 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
       };
 
       const handleDepositReview = async (transactionId, status) => {
-            if (!window.confirm(`Are you sure you want to ${status} this transaction?`)) return;
+            let rejectionReason = null;
+            if (status === 'REJECTED') {
+                  rejectionReason = window.prompt("Reason for rejecting this deposit:");
+                  if (rejectionReason === null) return;
+                  if (!rejectionReason.trim()) return alert("Rejection reason is required.");
+            } else {
+                  if (!window.confirm(`Are you sure you want to ${status} this transaction?`)) return;
+            }
+
             try {
-                  await api.put('/admin/deposits/review', { transactionId, status });
+                  await api.put('/admin/deposits/review', { transactionId, status, rejectionReason });
                   fetchUser();
                   if (onUpdate) onUpdate();
             } catch (err) {

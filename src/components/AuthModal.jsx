@@ -17,10 +17,27 @@ const AuthModal = () => {
       const [username, setUsername] = useState('');
       const [email, setEmail] = useState('');
       const [password, setPassword] = useState('');
-      const [phone, setPhone] = useState('');
+      const [phone, setPhone] = useState('+91 ');
       const [referralCode, setReferralCode] = useState('');
       const [refFromUrl, setRefFromUrl] = useState(false);
       const [fieldErrors, setFieldErrors] = useState({});
+
+      // Real-time validations
+      const isFullNameValid = fullName.trim().length >= 3;
+      const isUsernameValid = username.trim().length >= 3 && /^[a-zA-Z0-9_]+$/.test(username.trim());
+      const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      const isPasswordValid = password.length >= 8;
+      const isPhoneValid = /^\+91 [0-9]{10}$/.test(phone);
+
+      const handlePhoneChange = (e) => {
+            let val = e.target.value;
+            if (!val.startsWith('+91 ')) {
+                  val = '+91 ';
+            }
+            const digits = val.slice(4).replace(/\D/g, '').slice(0, 10);
+            setPhone('+91 ' + digits);
+            if (fieldErrors.phone) setFieldErrors(prev => ({ ...prev, phone: null }));
+      };
 
       // On mount — check URL for ?ref=CODE and pre-fill + switch to register
       useEffect(() => {
@@ -112,39 +129,39 @@ const AuthModal = () => {
                                                 <>
                                                       <div className="form-group">
                                                             <label>Full Name</label>
-                                                            <div className={`input-with-icon ${fieldErrors.fullName ? 'input-error' : ''}`}>
+                                                            <div className={`input-with-icon ${fieldErrors.fullName ? 'input-error' : (fullName.length > 0 && isFullNameValid ? 'input-success' : '')}`}>
                                                                   <User size={18} className="input-icon" />
                                                                   <input
                                                                         type="text"
                                                                         placeholder="John Doe"
                                                                         value={fullName}
-                                                                        onChange={(e) => setFullName(e.target.value)}
+                                                                        onChange={(e) => { setFullName(e.target.value); if (fieldErrors.fullName) setFieldErrors(prev => ({ ...prev, fullName: null })); }}
                                                                   />
                                                             </div>
                                                             {fieldErrors.fullName && <div className="field-error-text">{fieldErrors.fullName}</div>}
                                                       </div>
                                                       <div className="form-group">
                                                             <label>Username</label>
-                                                            <div className={`input-with-icon ${fieldErrors.username ? 'input-error' : ''}`}>
+                                                            <div className={`input-with-icon ${fieldErrors.username ? 'input-error' : (username.length > 0 && isUsernameValid ? 'input-success' : '')}`}>
                                                                   <User size={18} className="input-icon" />
                                                                   <input
                                                                         type="text"
                                                                         placeholder="johndoe123"
                                                                         value={username}
-                                                                        onChange={(e) => setUsername(e.target.value)}
+                                                                        onChange={(e) => { setUsername(e.target.value); if (fieldErrors.username) setFieldErrors(prev => ({ ...prev, username: null })); }}
                                                                   />
                                                             </div>
                                                             {fieldErrors.username && <div className="field-error-text">{fieldErrors.username}</div>}
                                                       </div>
                                                       <div className="form-group">
                                                             <label>Phone Number</label>
-                                                            <div className={`input-with-icon ${fieldErrors.phone ? 'input-error' : ''}`}>
+                                                            <div className={`input-with-icon ${fieldErrors.phone ? 'input-error' : (phone.length > 4 && isPhoneValid ? 'input-success' : '')}`}>
                                                                   <Phone size={18} className="input-icon" />
                                                                   <input
                                                                         type="tel"
-                                                                        placeholder="+91 98765 43210"
+                                                                        placeholder="+91 9876543210"
                                                                         value={phone}
-                                                                        onChange={(e) => setPhone(e.target.value)}
+                                                                        onChange={handlePhoneChange}
                                                                   />
                                                             </div>
                                                             {fieldErrors.phone && <div className="field-error-text">{fieldErrors.phone}</div>}
@@ -154,13 +171,13 @@ const AuthModal = () => {
 
                                           <div className="form-group">
                                                 <label>Email Address</label>
-                                                <div className={`input-with-icon ${fieldErrors.email ? 'input-error' : ''}`}>
+                                                <div className={`input-with-icon ${fieldErrors.email ? 'input-error' : (email.length > 0 && isEmailValid ? 'input-success' : '')}`}>
                                                       <Mail size={18} className="input-icon" />
                                                       <input
                                                             type="email"
                                                             placeholder="you@example.com"
                                                             value={email}
-                                                            onChange={(e) => setEmail(e.target.value)}
+                                                            onChange={(e) => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: null })); }}
                                                       />
                                                 </div>
                                                 {fieldErrors.email && <div className="field-error-text">{fieldErrors.email}</div>}
@@ -168,13 +185,13 @@ const AuthModal = () => {
 
                                           <div className="form-group">
                                                 <label>Password</label>
-                                                <div className={`input-with-icon ${fieldErrors.password ? 'input-error' : ''}`}>
+                                                <div className={`input-with-icon ${fieldErrors.password ? 'input-error' : (password.length > 0 && isPasswordValid ? 'input-success' : '')}`}>
                                                       <Lock size={18} className="input-icon" />
                                                       <input
                                                             type="password"
                                                             placeholder="••••••••"
                                                             value={password}
-                                                            onChange={(e) => setPassword(e.target.value)}
+                                                            onChange={(e) => { setPassword(e.target.value); if (fieldErrors.password) setFieldErrors(prev => ({ ...prev, password: null })); }}
                                                       />
                                                 </div>
                                                 {fieldErrors.password && <div className="field-error-text">{fieldErrors.password}</div>}
