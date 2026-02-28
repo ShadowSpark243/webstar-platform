@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { Search, User, ArrowDownToLine, ArrowUpRight, Activity, Wallet, Briefcase, Network } from 'lucide-react';
+import { Search, User, ArrowDownToLine, ArrowUpRight, Activity, Wallet, Briefcase, Network, Filter, Loader2 } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 import TransactionDetailsModal from '../../components/TransactionDetailsModal';
 
@@ -12,7 +12,8 @@ const AdminLedger = () => {
 
       const [searchQuery, setSearchQuery] = useState('');
       const [txSearchQuery, setTxSearchQuery] = useState('');
-      const [activeTab, setActiveTab] = useState('ALL');
+      const [txTypeFilter, setTxTypeFilter] = useState('ALL');
+      const [txStatusFilter, setTxStatusFilter] = useState('ALL');
       const [selectedUserId, setSelectedUserId] = useState(null);
       const [selectedTransaction, setSelectedTransaction] = useState(null);
 
@@ -88,11 +89,10 @@ const AdminLedger = () => {
 
             if (!matchesSearch) return false;
 
-            if (activeTab === 'DEPOSITS') return t.type === 'DEPOSIT';
-            if (activeTab === 'COMMISSIONS') return t.type === 'COMMISSION';
-            if (activeTab === 'INVESTMENTS') return t.type === 'INVESTMENT';
+            const matchesType = txTypeFilter === 'ALL' || t.type === txTypeFilter;
+            const matchesStatus = txStatusFilter === 'ALL' || t.status === txStatusFilter;
 
-            return true;
+            return matchesType && matchesStatus;
       });
 
       // High-Level Financial Metrics
@@ -197,7 +197,7 @@ const AdminLedger = () => {
                                                 </thead>
                                                 <tbody>
                                                       {filteredDeposits.length === 0 ? (
-                                                            <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)' }}>No pending deposit requests found in the queue.</td></tr>
+                                                            <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)' }}>No pending deposit requests found in the queue.</td></tr>
                                                       ) : filteredDeposits.map((dep) => (
                                                             <tr
                                                                   key={dep.id}
@@ -273,67 +273,50 @@ const AdminLedger = () => {
 
                         {/* Complete Transaction History */}
                         <div className="dashboard-card glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                              <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                                          <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <Activity size={20} className="text-secondary" /> Operational Ledger
-                                          </h2>
-                                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-end' }}>
-                                                <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
-                                                      <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
-                                                      <input
-                                                            type="text"
-                                                            placeholder="Search ledger..."
-                                                            value={txSearchQuery}
-                                                            onChange={(e) => setTxSearchQuery(e.target.value)}
-                                                            style={{
-                                                                  width: '100%',
-                                                                  padding: '0.65rem 1rem 0.65rem 2.5rem',
-                                                                  background: 'rgba(255,255,255,0.03)',
-                                                                  border: '1px solid rgba(255,255,255,0.08)',
-                                                                  color: 'white',
-                                                                  borderRadius: '2rem',
-                                                                  outline: 'none',
-                                                                  fontSize: '0.85rem'
-                                                            }}
-                                                      />
-                                                </div>
-                                          </div>
-                                    </div>
+                              <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }} className="wallet-header-flex">
+                                    <h2 className="card-title" style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                          <Activity size={20} className="text-secondary" /> Operational Ledger
+                                    </h2>
+                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', flex: '1 1 300px', justifyContent: 'flex-end' }} className="wallet-actions-flex">
+                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', flex: '1 1 auto', maxWidth: '100%' }}>
+                                                <Filter size={16} style={{ color: 'rgba(255,255,255,0.5)', marginLeft: '0.5rem' }} />
+                                                <select
+                                                      value={txTypeFilter}
+                                                      onChange={(e) => setTxTypeFilter(e.target.value)}
+                                                      style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.8rem', cursor: 'pointer', flex: 1, minWidth: '80px' }}
+                                                >
+                                                      <option value="ALL" style={{ background: '#1a1a2e' }}>All Types</option>
+                                                      <option value="DEPOSIT" style={{ background: '#1a1a2e' }}>Deposit</option>
+                                                      <option value="WITHDRAWAL" style={{ background: '#1a1a2e' }}>Withdrawal</option>
+                                                      <option value="INVESTMENT" style={{ background: '#1a1a2e' }}>Investment</option>
+                                                      <option value="RETURN" style={{ background: '#1a1a2e' }}>ROI Return</option>
+                                                      <option value="COMMISSION" style={{ background: '#1a1a2e' }}>Commission</option>
+                                                      <option value="BONUS" style={{ background: '#1a1a2e' }}>Bonus</option>
+                                                </select>
 
-                                    {/* Operational Tabs & Stats */}
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1.5rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                                          <div style={{ display: 'flex', background: 'rgba(0,0,0,0.3)', padding: '0.3rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                {['ALL', 'DEPOSITS', 'COMMISSIONS', 'INVESTMENTS'].map(tab => (
-                                                      <button
-                                                            key={tab}
-                                                            onClick={() => setActiveTab(tab)}
-                                                            style={{
-                                                                  padding: '0.5rem 1.25rem',
-                                                                  background: activeTab === tab ? '#8b5cf6' : 'transparent',
-                                                                  color: activeTab === tab ? 'white' : 'rgba(255,255,255,0.5)',
-                                                                  border: 'none',
-                                                                  borderRadius: '0.3rem',
-                                                                  fontSize: '0.85rem',
-                                                                  fontWeight: 600,
-                                                                  cursor: 'pointer',
-                                                                  transition: 'all 0.2s'
-                                                            }}
-                                                      >
-                                                            {tab === 'ALL' ? 'All Transactions' : tab.charAt(0) + tab.slice(1).toLowerCase()}
-                                                      </button>
-                                                ))}
+                                                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }}></div>
+
+                                                <select
+                                                      value={txStatusFilter}
+                                                      onChange={(e) => setTxStatusFilter(e.target.value)}
+                                                      style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.8rem', cursor: 'pointer', flex: 1, minWidth: '80px' }}
+                                                >
+                                                      <option value="ALL" style={{ background: '#1a1a2e' }}>All Status</option>
+                                                      <option value="APPROVED" style={{ background: '#1a1a2e' }}>Approved / Success</option>
+                                                      <option value="PENDING" style={{ background: '#1a1a2e' }}>Pending</option>
+                                                      <option value="REJECTED" style={{ background: '#1a1a2e' }}>Rejected</option>
+                                                </select>
                                           </div>
 
-                                          <div style={{ display: 'flex', gap: '2rem' }}>
-                                                <div style={{ textAlign: 'right' }}>
-                                                      <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>Total Deposits</div>
-                                                      <div style={{ color: '#10b981', fontWeight: 600, fontSize: '1rem' }}>₹{totalCollected.toLocaleString('en-IN')}</div>
-                                                </div>
-                                                <div style={{ textAlign: 'right' }}>
-                                                      <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>Commissions Volume</div>
-                                                      <div style={{ color: '#8b5cf6', fontWeight: 600, fontSize: '1rem' }}>₹{totalCommissionsPaid.toLocaleString('en-IN')}</div>
-                                                </div>
+                                          <div style={{ position: 'relative', maxWidth: '100%', width: '100%', flex: '1 1 200px' }}>
+                                                <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
+                                                <input
+                                                      type="text"
+                                                      placeholder="Search transactions..."
+                                                      value={txSearchQuery}
+                                                      onChange={(e) => setTxSearchQuery(e.target.value)}
+                                                      style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.22rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem', fontSize: '0.85rem', outline: 'none' }}
+                                                />
                                           </div>
                                     </div>
                               </div>
@@ -386,9 +369,9 @@ const AdminLedger = () => {
                                     </div>
                               )}
                         </div>
-
                   </div>
 
+                  {/* Modals */}
                   {confirmModal.isOpen && (
                         <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
                               <div className="dashboard-card glass-panel" style={{ width: '90%', maxWidth: '400px', padding: '2rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
