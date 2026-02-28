@@ -196,8 +196,8 @@ const Overview = () => {
                                                                   <div className="ov-inv-bar"><div style={{ width: `${prog}%` }} /></div>
                                                                   <div className="ov-inv-nums">
                                                                         <div><span className="ov-inv-nv">{fmtINR(item.amount)}</span><span className="ov-inv-nl">Invested</span></div>
-                                                                        <div><span className="ov-inv-nv ov-green">{fmtINR(item.expectedReturn)}</span><span className="ov-inv-nl">Return</span></div>
                                                                         <div><span className="ov-inv-nv ov-green">+{fmtINR(profit)}</span><span className="ov-inv-nl">Profit</span></div>
+                                                                        <div><span className="ov-inv-nv ov-green">{fmtINR(item.expectedReturn)}</span><span className="ov-inv-nl">Return</span></div>
                                                                         <div><span className="ov-inv-nv">{prog.toFixed(0)}%</span><span className="ov-inv-nl">Funded</span></div>
                                                                   </div>
                                                                   <span className="ov-inv-dt"><Clock size={10} /> {new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>

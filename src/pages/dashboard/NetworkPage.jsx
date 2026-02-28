@@ -241,7 +241,7 @@ const NetworkPage = () => {
                                           <h2 style={{
                                                 margin: 0,
                                                 color: rankProgress?.current?.color || '#3b82f6',
-                                                fontSize: window.innerWidth < 768 ? '1.5rem' : '2rem',
+                                                fontSize: window.innerWidth < 768 ? '1.3rem' : '1.8rem',
                                                 fontWeight: 800,
                                                 lineHeight: 1.1,
                                                 whiteSpace: 'nowrap',

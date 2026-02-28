@@ -248,7 +248,7 @@
       display: flex;
       align-items: center;
       gap: .75rem;
-      flex-wrap: wrap;
+      flex-wrap: nowrap;
 }
 
 .ov-rank-badge {
@@ -278,8 +278,11 @@
 
 .ov-rank-val {
       margin: .1rem 0 0;
-      font-size: 1.15rem;
+      font-size: 1.1rem;
       font-weight: 800;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
 }
 
 .ov-rank-next-chip {
@@ -404,6 +407,7 @@
       width: 100%;
       max-width: 100%;
       box-sizing: border-box;
+      overflow: hidden;
 }
 
 .ov-sec-hdr {
