@@ -141,6 +141,17 @@ a {
   min-width: 0;
 }
 
+@media (max-width: 768px) {
+  .glass-panel {
+    padding: 1.25rem;
+    border-radius: 12px;
+  }
+
+  .section-title {
+    font-size: 1.75rem !important;
+  }
+}
+
 .dashboard-card {
   max-width: 100%;
   min-width: 0;
@@ -355,4 +366,68 @@ a {
   height: 1px;
   background: linear-gradient(to right, transparent, rgba(255, 255, 255, 0.1), transparent);
   margin: 2rem 0;
+}
+
+/* Responsive Utilities */
+.mobile-hide {
+  display: block;
+}
+
+.mobile-show {
+  display: none;
+}
+
+@media (max-width: 768px) {
+  .mobile-hide {
+    display: none !important;
+  }
+
+  .mobile-show {
+    display: block !important;
+  }
+}
+
+/* Admin Card List for Mobile */
+.admin-card-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+  padding: 1rem;
+}
+
+.admin-card {
+  background: rgba(255, 255, 255, 0.03);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  border-radius: 0.75rem;
+  padding: 1.25rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.75rem;
+  transition: all 0.2s;
+}
+
+.admin-card:hover {
+  background: rgba(255, 255, 255, 0.05);
+  border-color: rgba(255, 255, 255, 0.15);
+}
+
+.admin-card-row {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 1rem;
+}
+
+.admin-card-label {
+  font-size: 0.75rem;
+  color: rgba(255, 255, 255, 0.5);
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  font-weight: 600;
+}
+
+.admin-card-value {
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: white;
 }

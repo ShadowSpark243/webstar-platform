@@ -70,20 +70,20 @@ const AdminKyc = () => {
 
       return (
             <div>
-                  <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '2rem' }}>
-                        <div>
-                              <h1 className="admin-page-title"><ShieldCheck size={32} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.5rem', color: '#10b981' }} /> Verification Queue</h1>
-                              <p className="admin-page-subtitle" style={{ marginBottom: 0 }}>Review and manage user identity document submissions.</p>
+                  <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
+                        <div style={{ flex: '1 1 300px' }}>
+                              <h1 className="admin-page-title" style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}><ShieldCheck size={28} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.5rem', color: '#10b981' }} /> Verification Queue</h1>
+                              <p className="admin-page-subtitle" style={{ marginBottom: 0, fontSize: '0.85rem' }}>Review identity submissions.</p>
                         </div>
                         {activeTab === 'ALL' && (
-                              <div style={{ position: 'relative', width: '100%', maxWidth: '300px' }}>
-                                    <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
+                              <div style={{ position: 'relative', width: '100%', maxWidth: '300px', flex: '1 1 200px' }}>
+                                    <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
                                     <input
                                           type="text"
-                                          placeholder="Search user database..."
+                                          placeholder="Search database..."
                                           value={searchQuery}
                                           onChange={(e) => setSearchQuery(e.target.value)}
-                                          style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '0.5rem', outline: 'none' }}
+                                          style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '0.5rem', outline: 'none', fontSize: '0.85rem' }}
                                     />
                               </div>
                         )}
@@ -105,134 +105,216 @@ const AdminKyc = () => {
                   </div>
 
                   <div className="dashboard-card glass-panel" style={{ padding: 0, overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', display: 'block', WebkitOverflowScrolling: 'touch' }}>
+                        <div style={{ width: '100%', maxWidth: '100%', display: 'block' }}>
                               {activeTab === 'ALL' ? (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                          <thead>
-                                                <tr style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                                      <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>User</th>
-                                                      <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Contact</th>
-                                                      <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Joined</th>
-                                                      <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>KYC Status</th>
-                                                      <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem', textAlign: 'right' }}>Action</th>
-                                                </tr>
-                                          </thead>
-                                          <tbody>
-                                                {filteredUsers.length === 0 ? (
-                                                      <tr>
-                                                            <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
-                                                                  No users found matching your search.
-                                                            </td>
-                                                      </tr>
-                                                ) : filteredUsers.map((usr) => (
-                                                      <tr
-                                                            key={usr.id}
-                                                            onClick={() => setSelectedUserId(usr.id)}
-                                                            style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
-                                                            onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.03)' })}
-                                                            onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
-                                                      >
-                                                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                  <div style={{ fontWeight: 600, color: 'white' }}>{usr.fullName}</div>
-                                                                  <div style={{ fontSize: '0.8rem', color: '#8b5cf6', marginTop: '0.2rem' }}>@{usr.username || String(usr.id).padStart(5, '0')}</div>
-                                                            </td>
-                                                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                  <div style={{ color: 'white' }}>{usr.email}</div>
-                                                                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{usr.phone || 'N/A'}</div>
-                                                            </td>
-                                                            <td style={{ padding: '1.25rem 1.5rem', color: '#e2e8f0' }}>{new Date(usr.createdAt).toLocaleDateString()}</td>
-                                                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                  <span style={{
-                                                                        padding: '0.25rem 0.6rem',
-                                                                        borderRadius: '1rem',
-                                                                        fontSize: '0.8rem',
-                                                                        fontWeight: 600,
-                                                                        background: usr.kycStatus === 'VERIFIED' ? 'rgba(16, 185, 129, 0.15)'
-                                                                              : usr.kycStatus === 'REJECTED' ? 'rgba(239, 68, 68, 0.15)'
-                                                                                    : usr.kycStatus === 'PENDING' ? 'rgba(245, 158, 11, 0.15)'
-                                                                                          : 'rgba(255, 255, 255, 0.05)',
-                                                                        color: usr.kycStatus === 'VERIFIED' ? '#10b981'
-                                                                              : usr.kycStatus === 'REJECTED' ? '#ef4444'
-                                                                                    : usr.kycStatus === 'PENDING' ? '#f59e0b'
-                                                                                          : 'gray'
-                                                                  }}>
-                                                                        {usr.kycStatus}
-                                                                  </span>
-                                                            </td>
-                                                            <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                                                                  <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6', fontSize: '0.9rem', fontWeight: 500 }}>
-                                                                        <User size={16} /> Inspect
+                                    <>
+                                          {/* Desktop Table View */}
+                                          <div className="mobile-hide">
+                                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                                      <thead>
+                                                            <tr style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>User</th>
+                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Contact</th>
+                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Joined</th>
+                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>KYC Status</th>
+                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem', textAlign: 'right' }}>Action</th>
+                                                            </tr>
+                                                      </thead>
+                                                      <tbody>
+                                                            {filteredUsers.length === 0 ? (
+                                                                  <tr>
+                                                                        <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
+                                                                              No users found matching your search.
+                                                                        </td>
+                                                                  </tr>
+                                                            ) : filteredUsers.map((usr) => (
+                                                                  <tr
+                                                                        key={usr.id}
+                                                                        onClick={() => setSelectedUserId(usr.id)}
+                                                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
+                                                                        onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.03)' })}
+                                                                        onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
+                                                                  >
+                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                                              <div style={{ fontWeight: 600, color: 'white' }}>{usr.fullName}</div>
+                                                                              <div style={{ fontSize: '0.8rem', color: '#8b5cf6', marginTop: '0.2rem' }}>@{usr.username || String(usr.id).padStart(5, '0')}</div>
+                                                                        </td>
+                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                                              <div style={{ color: 'white' }}>{usr.email}</div>
+                                                                              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{usr.phone || 'N/A'}</div>
+                                                                        </td>
+                                                                        <td style={{ padding: '1.25rem 1.5rem', color: '#e2e8f0' }}>{new Date(usr.createdAt).toLocaleDateString()}</td>
+                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                                              <span style={{
+                                                                                    padding: '0.25rem 0.6rem',
+                                                                                    borderRadius: '1rem',
+                                                                                    fontSize: '0.8rem',
+                                                                                    fontWeight: 600,
+                                                                                    background: usr.kycStatus === 'VERIFIED' ? 'rgba(16, 185, 129, 0.15)'
+                                                                                          : usr.kycStatus === 'REJECTED' ? 'rgba(239, 68, 68, 0.15)'
+                                                                                                : usr.kycStatus === 'PENDING' ? 'rgba(245, 158, 11, 0.15)'
+                                                                                                      : 'rgba(255, 255, 255, 0.05)',
+                                                                                    color: usr.kycStatus === 'VERIFIED' ? '#10b981'
+                                                                                          : usr.kycStatus === 'REJECTED' ? '#ef4444'
+                                                                                                : usr.kycStatus === 'PENDING' ? '#f59e0b'
+                                                                                                      : 'gray'
+                                                                              }}>
+                                                                                    {usr.kycStatus}
+                                                                              </span>
+                                                                        </td>
+                                                                        <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
+                                                                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6', fontSize: '0.9rem', fontWeight: 500 }}>
+                                                                                    <User size={16} /> Inspect
+                                                                              </div>
+                                                                        </td>
+                                                                  </tr>
+                                                            ))}
+                                                      </tbody>
+                                                </table>
+                                          </div>
+
+                                          {/* Mobile Card View */}
+                                          <div className="mobile-show">
+                                                <div className="admin-card-list">
+                                                      {filteredUsers.length === 0 ? (
+                                                            <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>No users found.</div>
+                                                      ) : filteredUsers.map((usr) => (
+                                                            <div key={usr.id} className="admin-card" onClick={() => setSelectedUserId(usr.id)}>
+                                                                  <div className="admin-card-row">
+                                                                        <div>
+                                                                              <div style={{ fontWeight: 700, color: 'white', fontSize: '1rem' }}>{usr.fullName}</div>
+                                                                              <div style={{ fontSize: '0.75rem', color: '#8b5cf6' }}>@{usr.username || String(usr.id).padStart(5, '0')}</div>
+                                                                        </div>
+                                                                        <div style={{ textAlign: 'right' }}>
+                                                                              <div className="admin-card-label">Status</div>
+                                                                              <div style={{
+                                                                                    marginTop: '0.2rem',
+                                                                                    fontSize: '0.8rem',
+                                                                                    fontWeight: 700,
+                                                                                    color: usr.kycStatus === 'VERIFIED' ? '#10b981' : usr.kycStatus === 'PENDING' ? '#f59e0b' : '#ef4444'
+                                                                              }}>{usr.kycStatus}</div>
+                                                                        </div>
                                                                   </div>
-                                                            </td>
-                                                      </tr>
-                                                ))}
-                                          </tbody>
-                                    </table>
+                                                                  <div className="admin-card-row" style={{ marginTop: '0.4rem', paddingTop: '0.6rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
+                                                                              {usr.email}
+                                                                        </div>
+                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textAlign: 'right', minWidth: 'fit-content' }}>
+                                                                              {new Date(usr.createdAt).toLocaleDateString()}
+                                                                        </div>
+                                                                  </div>
+                                                            </div>
+                                                      ))}
+                                                </div>
+                                          </div>
+                                    </>
                               ) : (
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                          <thead>
-                                                <tr style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                                      <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>User</th>
-                                                      <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Document</th>
-                                                      <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Submitted On</th>
-                                                      <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem', textAlign: 'right' }}>Action</th>
-                                                </tr>
-                                          </thead>
-                                          <tbody>
-                                                {pendingDocs.length === 0 ? (
-                                                      <tr>
-                                                            <td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(16, 185, 129, 0.7)' }}>
-                                                                  ✓ The KYC Pending Queue is entirely clear.
-                                                            </td>
-                                                      </tr>
-                                                ) : pendingDocs.map((doc) => (
-                                                      <tr
-                                                            key={doc.id}
-                                                            onClick={() => setSelectedUserId(doc.userId)}
-                                                            style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
-                                                            onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.03)' })}
-                                                            onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
-                                                      >
-                                                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                  <div style={{ fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                        {doc.fullName || doc.user?.fullName}
+                                    <>
+                                          {/* Desktop Table View */}
+                                          <div className="mobile-hide">
+                                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                                      <thead>
+                                                            <tr style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>User</th>
+                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Document</th>
+                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Submitted On</th>
+                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem', textAlign: 'right' }}>Action</th>
+                                                            </tr>
+                                                      </thead>
+                                                      <tbody>
+                                                            {pendingDocs.length === 0 ? (
+                                                                  <tr>
+                                                                        <td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(16, 185, 129, 0.7)' }}>
+                                                                              ✓ The KYC Pending Queue is entirely clear.
+                                                                        </td>
+                                                                  </tr>
+                                                            ) : pendingDocs.map((doc) => (
+                                                                  <tr
+                                                                        key={doc.id}
+                                                                        onClick={() => setSelectedUserId(doc.userId)}
+                                                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
+                                                                        onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.03)' })}
+                                                                        onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
+                                                                  >
+                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                                              <div style={{ fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                                    {doc.fullName || doc.user?.fullName}
+                                                                              </div>
+                                                                              <div style={{ fontSize: '0.85rem', color: '#8b5cf6', marginTop: '0.2rem', fontWeight: 500 }}>
+                                                                                    @{doc.username || doc.user?.username}
+                                                                              </div>
+                                                                        </td>
+                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
+                                                                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, color: '#e2e8f0' }}>
+                                                                                    <FileText size={16} className="text-purple-400" />
+                                                                                    {doc.documentType}
+                                                                              </div>
+                                                                              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.2rem' }}>
+                                                                                    ID: {doc.documentNumber}
+                                                                              </div>
+                                                                        </td>
+                                                                        <td style={{ padding: '1.25rem 1.5rem', color: '#e2e8f0' }}>{new Date(doc.createdAt).toLocaleDateString()}</td>
+                                                                        <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
+                                                                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                                                    <button onClick={(e) => handleKycReview(doc.id, 'VERIFIED', doc.fullName || doc.user?.fullName || 'this user', e)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#10b981', border: 'none' }}>Approve</button>
+                                                                                    <button onClick={(e) => handleKycReview(doc.id, 'REJECTED', doc.fullName || doc.user?.fullName || 'this user', e)} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', color: '#ef4444', borderColor: '#ef4444', background: 'transparent' }}>Reject</button>
+                                                                              </div>
+                                                                        </td>
+                                                                  </tr>
+                                                            ))}
+                                                      </tbody>
+                                                </table>
+                                          </div>
+
+                                          {/* Mobile Card View for Pending Queue */}
+                                          <div className="mobile-show">
+                                                <div className="admin-card-list">
+                                                      {pendingDocs.length === 0 ? (
+                                                            <div style={{ padding: '3rem', textAlign: 'center', color: '#10b981', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '0.75rem' }}>
+                                                                  ✓ Queue is empty.
+                                                            </div>
+                                                      ) : pendingDocs.map((doc) => (
+                                                            <div key={doc.id} className="admin-card" onClick={() => setSelectedUserId(doc.userId)}>
+                                                                  <div className="admin-card-row">
+                                                                        <div>
+                                                                              <div style={{ fontWeight: 700, color: 'white', fontSize: '1rem' }}>{doc.fullName || doc.user?.fullName}</div>
+                                                                              <div style={{ fontSize: '0.75rem', color: '#8b5cf6' }}>@{doc.username || doc.user?.username}</div>
+                                                                        </div>
+                                                                        <div style={{ textAlign: 'right' }}>
+                                                                              <div className="admin-card-label">Document</div>
+                                                                              <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginTop: '0.2rem' }}>{doc.documentType}</div>
+                                                                        </div>
                                                                   </div>
-                                                                  <div style={{ fontSize: '0.85rem', color: '#8b5cf6', marginTop: '0.2rem', fontWeight: 500 }}>
-                                                                        @{doc.username || doc.user?.username}
+
+                                                                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.4rem' }}>
+                                                                        ID: <span style={{ color: 'white' }}>{doc.documentNumber}</span>
                                                                   </div>
-                                                                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.3rem' }}>
-                                                                        {doc.email || doc.user?.email}
-                                                                  </div>
-                                                                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.1rem' }}>
-                                                                        {doc.phone || doc.user?.phone || 'No Phone Hook'}
-                                                                  </div>
-                                                            </td>
-                                                            <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, color: '#e2e8f0' }}>
-                                                                        <FileText size={16} className="text-purple-400" />
-                                                                        {doc.documentType}
-                                                                  </div>
-                                                                  <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.2rem', letterSpacing: '0.5px' }}>
-                                                                        ID: {doc.documentNumber}
-                                                                  </div>
+
                                                                   {doc.presignedUrl && (
-                                                                        <a href={doc.presignedUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: '#3b82f6', marginTop: '0.3rem', display: 'inline-block', textDecoration: 'underline' }}>
+                                                                        <a href={doc.presignedUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: '0.8rem', color: '#3b82f6', marginTop: '0.4rem', display: 'inline-block', fontWeight: 600 }}>
                                                                               View Document ↗
                                                                         </a>
                                                                   )}
-                                                            </td>
-                                                            <td style={{ padding: '1.25rem 1.5rem', color: '#e2e8f0' }}>{new Date(doc.createdAt).toLocaleDateString()}</td>
-                                                            <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                                                                  <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                                                                        <button onClick={(e) => handleKycReview(doc.id, 'VERIFIED', doc.fullName || doc.user?.fullName || 'this user', e)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#10b981', border: 'none' }}>Approve</button>
-                                                                        <button onClick={(e) => handleKycReview(doc.id, 'REJECTED', doc.fullName || doc.user?.fullName || 'this user', e)} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', color: '#ef4444', borderColor: '#ef4444', background: 'transparent' }}>Reject</button>
-                                                                        <button onClick={(e) => { e.stopPropagation(); setSelectedUserId(doc.userId); }} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', color: '#3b82f6', borderColor: '#3b82f6', background: 'transparent', display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Search size={14} /> Inspect</button>
+
+                                                                  <div className="admin-card-row" style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)', gap: '0.5rem' }}>
+                                                                        <button
+                                                                              onClick={(e) => handleKycReview(doc.id, 'VERIFIED', doc.fullName || doc.user?.fullName || 'this user', e)}
+                                                                              style={{ flex: 1, padding: '0.6rem', borderRadius: '0.5rem', background: '#10b981', color: 'white', border: 'none', fontWeight: 700, fontSize: '0.8rem' }}
+                                                                        >
+                                                                              Approve
+                                                                        </button>
+                                                                        <button
+                                                                              onClick={(e) => handleKycReview(doc.id, 'REJECTED', doc.fullName || doc.user?.fullName || 'this user', e)}
+                                                                              style={{ flex: 1, padding: '0.6rem', borderRadius: '0.5rem', background: 'transparent', color: '#ef4444', border: '1px solid #ef4444', fontWeight: 700, fontSize: '0.8rem' }}
+                                                                        >
+                                                                              Reject
+                                                                        </button>
                                                                   </div>
-                                                            </td>
-                                                      </tr>
-                                                ))}
-                                          </tbody>
-                                    </table>
+                                                            </div>
+                                                      ))}
+                                                </div>
+                                          </div>
+                                    </>
                               )}
                         </div>
                   </div>

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import api from '../../utils/api';
 import { Film, Plus, Search, Edit2, Trash2, TrendingUp, Users, Calendar, Target, X, IndianRupee, Clock, BarChart3, Clapperboard, Loader2, Info, ChevronDown } from 'lucide-react';
 import './AdminProjects.css';
@@ -55,10 +55,32 @@ const AdminProjects = () => {
             }
       }, [successMsg]);
 
-      const filtered = projects.filter(p =>
-            p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            p.genre.toLowerCase().includes(searchQuery.toLowerCase())
-      );
+      const filtered = useMemo(() => {
+            return projects.filter(p =>
+                  p.title.toLowerCase().includes(searchQuery.toLowerCase()) ||
+                  p.genre.toLowerCase().includes(searchQuery.toLowerCase())
+            ).map(p => ({
+                  ...p,
+                  uniqueInvestors: new Set(p.investments?.map(i => i.userId)).size || 0
+            }));
+      }, [projects, searchQuery]);
+
+      const groupedInvestments = useMemo(() => {
+            if (!showInvestorsModal?.investments) return {};
+            return showInvestorsModal.investments.reduce((acc, inv) => {
+                  const uid = inv.userId;
+                  if (!acc[uid]) {
+                        acc[uid] = {
+                              user: inv.user,
+                              total: 0,
+                              txs: []
+                        };
+                  }
+                  acc[uid].total += inv.amount;
+                  acc[uid].txs.push(inv);
+                  return acc;
+            }, {});
+      }, [showInvestorsModal]);
 
       const openCreate = () => {
             setEditingProject(null);
@@ -274,7 +296,7 @@ const AdminProjects = () => {
                                                             <div className="ap-metric">
                                                                   <Users size={14} />
                                                                   <div>
-                                                                        <span className="ap-metric-value">{new Set(p.investments?.map(i => i.userId)).size || 0}</span>
+                                                                        <span className="ap-metric-value">{p.uniqueInvestors}</span>
                                                                         <span className="ap-metric-label">Investors</span>
                                                                   </div>
                                                             </div>
@@ -300,7 +322,7 @@ const AdminProjects = () => {
                                                                         gap: '0.4rem'
                                                                   }}
                                                             >
-                                                                  <Users size={14} /> View {new Set(p.investments?.map(i => i.userId)).size} Investors
+                                                                  <Users size={14} /> View {p.uniqueInvestors} Investors
                                                             </button>
                                                       )}
                                                 </div>
@@ -446,66 +468,91 @@ const AdminProjects = () => {
                                                 </div>
 
                                                 <div style={{ marginTop: '1.5rem', maxHeight: '450px', overflowY: 'auto' }}>
-                                                      {showInvestorsModal.investments?.length > 0 ? (() => {
-                                                            const grouped = showInvestorsModal.investments.reduce((acc, inv) => {
-                                                                  const uid = inv.userId;
-                                                                  if (!acc[uid]) {
-                                                                        acc[uid] = {
-                                                                              user: inv.user,
-                                                                              total: 0,
-                                                                              txs: []
-                                                                        };
-                                                                  }
-                                                                  acc[uid].total += inv.amount;
-                                                                  acc[uid].txs.push(inv);
-                                                                  return acc;
-                                                            }, {});
-
-                                                            return (
-                                                                  <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
-                                                                        <thead>
-                                                                              <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                                                                    <th style={{ padding: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>Investor</th>
-                                                                                    <th style={{ padding: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>Total Investment</th>
-                                                                                    <th style={{ padding: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Details</th>
-                                                                              </tr>
-                                                                        </thead>
-                                                                        <tbody>
-                                                                              {Object.entries(grouped).map(([uid, data]) => (
-                                                                                    <React.Fragment key={uid}>
-                                                                                          <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', background: expandedUserId === uid ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }} onClick={() => setExpandedUserId(expandedUserId === uid ? null : uid)}>
-                                                                                                <td style={{ padding: '0.75rem' }}>
-                                                                                                      <div style={{ fontWeight: 600, color: 'white' }}>{data.user?.fullName}</div>
-                                                                                                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>@{data.user?.username}</div>
-                                                                                                </td>
-                                                                                                <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 700, color: '#10b981' }}>
-                                                                                                      ₹{data.total.toLocaleString()}
-                                                                                                </td>
-                                                                                                <td style={{ padding: '0.75rem', textAlign: 'center' }}>
-                                                                                                      <ChevronDown size={14} style={{ transform: expandedUserId === uid ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: 'rgba(255,255,255,0.3)' }} />
-                                                                                                </td>
-                                                                                          </tr>
-                                                                                          {expandedUserId === uid && (
-                                                                                                <tr>
-                                                                                                      <td colSpan="3" style={{ padding: '0.5rem 0.75rem 1rem 1.5rem', background: 'rgba(0,0,0,0.1)' }}>
-                                                                                                            <div style={{ borderLeft: '2px solid rgba(59, 130, 246, 0.3)', paddingLeft: '1rem' }}>
-                                                                                                                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Transaction History ({data.txs.length})</div>
-                                                                                                                  {data.txs.map((tx, idx) => (
-                                                                                                                        <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.85rem' }}>
-                                                                                                                              <span style={{ color: 'rgba(255,255,255,0.6)' }}>{new Date(tx.createdAt).toLocaleDateString()} {new Date(tx.createdAt).toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}</span>
-                                                                                                                              <span style={{ fontWeight: 600, color: 'white' }}>₹{tx.amount.toLocaleString()}</span>
-                                                                                                                        </div>
-                                                                                                                  ))}
-                                                                                                            </div>
+                                                      {showInvestorsModal.investments?.length > 0 ? (
+                                                            <>
+                                                                  {/* Desktop View Table */}
+                                                                  <div className="mobile-hide">
+                                                                        <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left', fontSize: '0.9rem' }}>
+                                                                              <thead>
+                                                                                    <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
+                                                                                          <th style={{ padding: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>Investor</th>
+                                                                                          <th style={{ padding: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'right' }}>Total Investment</th>
+                                                                                          <th style={{ padding: '0.75rem', color: 'rgba(255,255,255,0.5)', textAlign: 'center' }}>Details</th>
+                                                                                    </tr>
+                                                                              </thead>
+                                                                              <tbody>
+                                                                                    {Object.entries(groupedInvestments).map(([uid, data]) => (
+                                                                                          <React.Fragment key={uid}>
+                                                                                                <tr style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', background: expandedUserId === uid ? 'rgba(59, 130, 246, 0.05)' : 'transparent' }} onClick={() => setExpandedUserId(expandedUserId === uid ? null : uid)}>
+                                                                                                      <td style={{ padding: '0.75rem' }}>
+                                                                                                            <div style={{ fontWeight: 600, color: 'white' }}>{data.user?.fullName}</div>
+                                                                                                            <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>@{data.user?.username}</div>
+                                                                                                      </td>
+                                                                                                      <td style={{ padding: '0.75rem', textAlign: 'right', fontWeight: 700, color: '#10b981' }}>
+                                                                                                            ₹{data.total.toLocaleString()}
+                                                                                                      </td>
+                                                                                                      <td style={{ padding: '0.75rem', textAlign: 'center' }}>
+                                                                                                            <ChevronDown size={14} style={{ transform: expandedUserId === uid ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: 'rgba(255,255,255,0.3)' }} />
                                                                                                       </td>
                                                                                                 </tr>
+                                                                                                {expandedUserId === uid && (
+                                                                                                      <tr>
+                                                                                                            <td colSpan="3" style={{ padding: '0.5rem 0.75rem 1rem 1.5rem', background: 'rgba(0,0,0,0.1)' }}>
+                                                                                                                  <div style={{ borderLeft: '2px solid rgba(59, 130, 246, 0.3)', paddingLeft: '1rem' }}>
+                                                                                                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.5rem', textTransform: 'uppercase' }}>Transaction History ({data.txs.length})</div>
+                                                                                                                        {data.txs.map((tx) => (
+                                                                                                                              <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.25rem', fontSize: '0.85rem' }}>
+                                                                                                                                    <span style={{ color: 'rgba(255,255,255,0.6)' }}>{new Date(tx.createdAt).toLocaleDateString()}</span>
+                                                                                                                                    <span style={{ fontWeight: 600, color: 'white' }}>₹{tx.amount.toLocaleString()}</span>
+                                                                                                                              </div>
+                                                                                                                        ))}
+                                                                                                                  </div>
+                                                                                                            </td>
+                                                                                                      </tr>
+                                                                                                )}
+                                                                                          </React.Fragment>
+                                                                                    ))}
+                                                                              </tbody>
+                                                                        </table>
+                                                                  </div>
+
+                                                                  {/* Mobile View Card List */}
+                                                                  <div className="mobile-show">
+                                                                        <div className="admin-card-list">
+                                                                              {Object.entries(groupedInvestments).map(([uid, data]) => (
+                                                                                    <div key={uid} className="admin-card" style={{ padding: '0.75rem' }} onClick={() => setExpandedUserId(expandedUserId === uid ? null : uid)}>
+                                                                                          <div className="admin-card-row">
+                                                                                                <div>
+                                                                                                      <div style={{ fontWeight: 700, color: 'white' }}>{data.user?.fullName}</div>
+                                                                                                      <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>@{data.user?.username}</div>
+                                                                                                </div>
+                                                                                                <div style={{ textAlign: 'right' }}>
+                                                                                                      <div className="admin-card-label">Total</div>
+                                                                                                      <div style={{ fontSize: '1rem', fontWeight: 800, color: '#10b981', marginTop: '0.15rem' }}>₹{data.total.toLocaleString()}</div>
+                                                                                                </div>
+                                                                                          </div>
+
+                                                                                          <div style={{ marginTop: '0.5rem', textAlign: 'center' }}>
+                                                                                                <ChevronDown size={14} style={{ transform: expandedUserId === uid ? 'rotate(180deg)' : 'none', transition: 'transform 0.2s', color: 'rgba(255,255,255,0.3)' }} />
+                                                                                          </div>
+
+                                                                                          {expandedUserId === uid && (
+                                                                                                <div style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                                                                                                      <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginBottom: '0.6rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Transactions</div>
+                                                                                                      {data.txs.map((tx) => (
+                                                                                                            <div key={tx.id} style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.4rem', fontSize: '0.8rem' }}>
+                                                                                                                  <span style={{ color: 'rgba(255,255,255,0.5)' }}>{new Date(tx.createdAt).toLocaleDateString()}</span>
+                                                                                                                  <span style={{ fontWeight: 600, color: 'white' }}>₹{tx.amount.toLocaleString()}</span>
+                                                                                                            </div>
+                                                                                                      ))}
+                                                                                                </div>
                                                                                           )}
-                                                                                    </React.Fragment>
+                                                                                    </div>
                                                                               ))}
-                                                                        </tbody>
-                                                                  </table>
-                                                            );
-                                                      })() : (
+                                                                        </div>
+                                                                  </div>
+                                                            </>
+                                                      ) : (
                                                             <div style={{ textAlign: 'center', padding: '3rem', color: 'rgba(255,255,255,0.3)' }}>
                                                                   No investments recorded for this project yet.
                                                             </div>

@@ -400,15 +400,15 @@ const WalletPage = () => {
 
                   {/* Transaction History */}
                   <div className="dashboard-card glass-panel" style={{ marginTop: '2rem', padding: 0 }}>
-                        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                              <h2 className="card-title" style={{ margin: 0 }}>Transaction Ledger</h2>
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', flex: 1, justifyContent: 'flex-end' }}>
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)' }}>
+                        <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }} className="wallet-header-flex">
+                              <h2 className="card-title" style={{ margin: 0, fontSize: '1.1rem' }}>Transaction Ledger</h2>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', flex: '1 1 300px', justifyContent: 'flex-end' }} className="wallet-actions-flex">
+                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', flex: '1 1 auto', maxWidth: '100%' }}>
                                           <Filter size={16} style={{ color: 'rgba(255,255,255,0.5)', marginLeft: '0.5rem' }} />
                                           <select
                                                 value={txTypeFilter}
                                                 onChange={(e) => setTxTypeFilter(e.target.value)}
-                                                style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.85rem', cursor: 'pointer' }}
+                                                style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.8rem', cursor: 'pointer', flex: 1, minWidth: '80px' }}
                                           >
                                                 <option value="ALL" style={{ background: '#1a1a2e' }}>All Types</option>
                                                 <option value="DEPOSIT" style={{ background: '#1a1a2e' }}>Deposit</option>
@@ -424,7 +424,7 @@ const WalletPage = () => {
                                           <select
                                                 value={txStatusFilter}
                                                 onChange={(e) => setTxStatusFilter(e.target.value)}
-                                                style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.85rem', cursor: 'pointer' }}
+                                                style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.8rem', cursor: 'pointer', flex: 1, minWidth: '80px' }}
                                           >
                                                 <option value="ALL" style={{ background: '#1a1a2e' }}>All Status</option>
                                                 <option value="APPROVED" style={{ background: '#1a1a2e' }}>Approved / Success</option>
@@ -433,7 +433,7 @@ const WalletPage = () => {
                                           </select>
                                     </div>
 
-                                    <div style={{ position: 'relative', maxWidth: '250px', width: '100%' }}>
+                                    <div style={{ position: 'relative', maxWidth: '100%', width: '100%', flex: '1 1 200px' }}>
                                           <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
                                           <input
                                                 type="text"
@@ -441,7 +441,7 @@ const WalletPage = () => {
                                                 value={txSearchQuery}
                                                 onChange={(e) => setTxSearchQuery(e.target.value)}
                                                 className="dashboard-input"
-                                                style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.2rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem', fontSize: '0.9rem' }}
+                                                style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.22rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem', fontSize: '0.85rem' }}
                                           />
                                     </div>
                               </div>

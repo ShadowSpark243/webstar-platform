@@ -15,16 +15,16 @@ const NetworkNode = ({ node, level = 0, onNodeClick, forceExpand }) => {
       }, [forceExpand]);
 
       return (
-            <div style={{ marginLeft: level > 0 ? '1.5rem' : '0', marginTop: '0.75rem' }}>
+            <div style={{ marginLeft: level > 0 ? (window.innerWidth < 768 ? '0.75rem' : '1.5rem') : '0', marginTop: '0.75rem' }}>
                   <div
                         style={{
                               position: 'relative',
                               display: 'flex',
                               flexDirection: 'column',
-                              gap: '1rem',
+                              gap: '0.75rem',
                               background: isRoot ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,255,255,0.02)',
                               border: isRoot ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(255,255,255,0.05)',
-                              padding: '1.25rem',
+                              padding: window.innerWidth < 768 ? '1rem' : '1.25rem',
                               borderRadius: '0.75rem',
                               cursor: node.children && node.children.length > 0 ? 'pointer' : 'default',
                               transition: 'all 0.2s',
@@ -63,8 +63,8 @@ const NetworkNode = ({ node, level = 0, onNodeClick, forceExpand }) => {
                         )}
 
                         {/* User Header Info */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.6rem', paddingRight: onNodeClick ? '5.5rem' : '0' }}>
-                              <div style={{ fontWeight: 700, fontSize: '1.15rem', color: isRoot ? '#3b82f6' : 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', lineHeight: 1.2 }}>
+                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', paddingRight: onNodeClick && window.innerWidth < 768 ? '0' : (onNodeClick ? '5.5rem' : '0') }}>
+                              <div style={{ fontWeight: 700, fontSize: window.innerWidth < 768 ? '1.05rem' : '1.15rem', color: isRoot ? '#3b82f6' : 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', lineHeight: 1.2 }}>
                                     {node.fullName}
                               </div>
                               <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
@@ -80,18 +80,18 @@ const NetworkNode = ({ node, level = 0, onNodeClick, forceExpand }) => {
                         </div>
 
                         {/* Stats Grid - 3 Equal Columns */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.5rem', background: 'rgba(0,0,0,0.25)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.03)', marginTop: '0.5rem' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Invested</span>
-                                    <span style={{ fontSize: '1rem', fontWeight: 700, color: 'white' }}>₹{(node.totalInvested || 0).toLocaleString('en-IN')}</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem', background: 'rgba(0,0,0,0.25)', padding: window.innerWidth < 768 ? '0.75rem' : '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.03)', marginTop: '0.25rem' }}>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center', textAlign: 'center' }}>
+                                    <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Invested</span>
+                                    <span style={{ fontSize: window.innerWidth < 768 ? '0.8rem' : '1rem', fontWeight: 700, color: 'white' }}>₹{(node.totalInvested || 0).toLocaleString('en-IN')}</span>
                               </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center', textAlign: 'center', borderLeft: '1px solid rgba(255,255,255,0.1)', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Team Vol</span>
-                                    <span style={{ fontSize: '1rem', fontWeight: 700, color: '#4ade80' }}>₹{(node.teamVolume || 0).toLocaleString('en-IN')}</span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center', textAlign: 'center', borderLeft: '1px solid rgba(255,255,255,0.1)', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
+                                    <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Team Vol</span>
+                                    <span style={{ fontSize: window.innerWidth < 768 ? '0.8rem' : '1rem', fontWeight: 700, color: '#4ade80' }}>₹{(node.teamVolume || 0).toLocaleString('en-IN')}</span>
                               </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', alignItems: 'center', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Rank</span>
-                                    <span style={{ fontSize: '0.85rem', fontWeight: 800, color: '#3b82f6' }}>{node.rank || 'N/A'}</span>
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center', textAlign: 'center' }}>
+                                    <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Rank</span>
+                                    <span style={{ fontSize: window.innerWidth < 768 ? '0.7rem' : '0.85rem', fontWeight: 800, color: '#3b82f6' }}>{node.rank || 'N/A'}</span>
                               </div>
                         </div>
 

@@ -871,9 +871,19 @@
 
       .ov-rank-bar-labels {
             font-size: .6rem;
-            flex-direction: column;
-            align-items: flex-start;
-            gap: .15rem;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-top: .35rem;
+            gap: .5rem;
+      }
+
+      @media (max-width: 380px) {
+            .ov-rank-bar-labels {
+                  flex-direction: column;
+                  align-items: flex-start;
+                  gap: .15rem;
+            }
       }
 
       .ov-rank-upcoming {
