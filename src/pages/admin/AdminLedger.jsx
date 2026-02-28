@@ -161,14 +161,23 @@ const AdminLedger = () => {
                                     <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                           <ArrowDownToLine className="text-green-400" size={20} /> Deposit Verifications Queue
                                     </h2>
-                                    <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.6rem 1rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', minWidth: '250px' }}>
-                                          <Search size={16} className="text-muted" />
+                                    <div style={{ position: 'relative', minWidth: '280px', flex: '1 1 auto' }}>
+                                          <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
                                           <input
                                                 type="text"
                                                 placeholder="Search UTR, name, or email..."
                                                 value={searchQuery}
                                                 onChange={(e) => setSearchQuery(e.target.value)}
-                                                style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%' }}
+                                                style={{
+                                                      width: '100%',
+                                                      padding: '0.65rem 1rem 0.65rem 2.5rem',
+                                                      background: 'rgba(0,0,0,0.3)',
+                                                      border: '1px solid rgba(255,255,255,0.1)',
+                                                      color: 'white',
+                                                      borderRadius: '2rem',
+                                                      outline: 'none',
+                                                      fontSize: '0.85rem'
+                                                }}
                                           />
                                     </div>
                               </div>
@@ -218,9 +227,40 @@ const AdminLedger = () => {
                                                                         )}
                                                                   </td>
                                                                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                                                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                                                                              <button onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'APPROVED') }} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#10b981', border: 'none' }}>Credit Funds</button>
-                                                                              <button onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'REJECTED') }} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', borderColor: '#ef4444', color: '#ef4444' }}>Reject</button>
+                                                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', width: '100%' }}>
+                                                                              <button
+                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'APPROVED') }}
+                                                                                    className="btn btn-primary"
+                                                                                    style={{
+                                                                                          padding: '0.55rem 0',
+                                                                                          fontSize: '0.8rem',
+                                                                                          background: '#10b981',
+                                                                                          border: 'none',
+                                                                                          flex: 1,
+                                                                                          minWidth: '100px',
+                                                                                          fontWeight: 700,
+                                                                                          borderRadius: '0.5rem'
+                                                                                    }}
+                                                                              >
+                                                                                    Credit Funds
+                                                                              </button>
+                                                                              <button
+                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'REJECTED') }}
+                                                                                    className="btn btn-outline"
+                                                                                    style={{
+                                                                                          padding: '0.55rem 0',
+                                                                                          fontSize: '0.8rem',
+                                                                                          borderColor: 'rgba(239, 68, 68, 0.5)',
+                                                                                          color: '#ef4444',
+                                                                                          background: 'rgba(239, 68, 68, 0.05)',
+                                                                                          flex: 1,
+                                                                                          minWidth: '80px',
+                                                                                          fontWeight: 700,
+                                                                                          borderRadius: '0.5rem'
+                                                                                    }}
+                                                                              >
+                                                                                    Reject
+                                                                              </button>
                                                                         </div>
                                                                   </td>
                                                             </tr>
@@ -238,15 +278,24 @@ const AdminLedger = () => {
                                           <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
                                                 <Activity size={20} className="text-secondary" /> Operational Ledger
                                           </h2>
-                                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap' }}>
-                                                <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.6rem 1rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', minWidth: '250px' }}>
-                                                      <Search size={16} className="text-muted" />
+                                          <div style={{ display: 'flex', gap: '1rem', alignItems: 'center', flexWrap: 'wrap', flex: '1 1 auto', justifyContent: 'flex-end' }}>
+                                                <div style={{ position: 'relative', width: '100%', maxWidth: '400px' }}>
+                                                      <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
                                                       <input
                                                             type="text"
                                                             placeholder="Search ledger..."
                                                             value={txSearchQuery}
                                                             onChange={(e) => setTxSearchQuery(e.target.value)}
-                                                            style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%' }}
+                                                            style={{
+                                                                  width: '100%',
+                                                                  padding: '0.65rem 1rem 0.65rem 2.5rem',
+                                                                  background: 'rgba(255,255,255,0.03)',
+                                                                  border: '1px solid rgba(255,255,255,0.08)',
+                                                                  color: 'white',
+                                                                  borderRadius: '2rem',
+                                                                  outline: 'none',
+                                                                  fontSize: '0.85rem'
+                                                            }}
                                                       />
                                                 </div>
                                           </div>
