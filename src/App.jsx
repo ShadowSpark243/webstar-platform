@@ -8,6 +8,7 @@ import WalletPage from './pages/dashboard/WalletPage'
 import ProjectsPage from './pages/dashboard/ProjectsPage'
 import NetworkPage from './pages/dashboard/NetworkPage'
 import AdminPanel from './pages/dashboard/AdminPanel' // WILL BE DELETED LATER
+import SupportPage from './pages/dashboard/SupportPage'
 
 // New Admin Layout & Pages
 import AdminLayout from './layouts/AdminLayout'
@@ -18,6 +19,7 @@ import AdminKyc from './pages/admin/AdminKyc'
 import AdminNetwork from './pages/admin/AdminNetwork'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminProjects from './pages/admin/AdminProjects'
+import AdminSupport from './pages/admin/AdminSupport'
 
 import { useAuth } from './context/AuthContext'
 
@@ -51,6 +53,7 @@ function App() {
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="network" element={<NetworkPage />} />
         <Route path="admin" element={<AdminPanel />} />
+        <Route path="support" element={<SupportPage />} />
       </Route>
 
       {/* ADMIN CONTROL CENTER ROUTES */}
@@ -69,6 +72,7 @@ function App() {
         <Route path="network" element={<AdminNetwork />} />
         <Route path="settings" element={<AdminSettings />} />
         <Route path="projects" element={<AdminProjects />} />
+        <Route path="support" element={<AdminSupport />} />
       </Route>
 
       <Route path="*" element={<Navigate to="/" />} />

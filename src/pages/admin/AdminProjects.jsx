@@ -19,7 +19,7 @@ const formatINR = (n) => {
       if (n >= 100000) return `₹${(n / 100000).toFixed(1)} L`;
       return `₹${Number(n).toLocaleString('en-IN')} `;
 };
-
+ 
 const AdminProjects = () => {
       const [projects, setProjects] = useState([]);
       const [isLoading, setIsLoading] = useState(true);

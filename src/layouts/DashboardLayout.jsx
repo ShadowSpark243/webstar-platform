@@ -9,7 +9,8 @@ import {
       LogOut,
       Menu,
       X,
-      PlaySquare
+      PlaySquare,
+      MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './DashboardLayout.css';
@@ -35,6 +36,7 @@ const DashboardLayout = () => {
             { path: '/dashboard/projects', label: 'Live Projects', icon: <Film size={20} /> },
             { path: '/dashboard/network', label: 'My Network', icon: <Network size={20} /> },
             { path: '/dashboard/kyc', label: 'KYC & Verification', icon: <ShieldCheck size={20} /> },
+            { path: '/dashboard/support', label: 'Support', icon: <MessageCircle size={20} /> },
       ];
 
       // Bounce Admins straight to their dedicated layout

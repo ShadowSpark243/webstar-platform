@@ -12,7 +12,8 @@ import {
       PlaySquare,
       ShieldAlert,
       Network,
-      Film
+      Film,
+      MessageCircle
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './AdminLayout.css';
@@ -44,6 +45,7 @@ const AdminLayout = () => {
             { path: '/admin/projects', label: 'Project Hub', icon: <Film size={20} /> },
             { path: '/admin/network', label: 'Global Network', icon: <Network size={20} /> },
             { path: '/admin/settings', label: 'System Directives', icon: <Settings size={20} /> },
+            { path: '/admin/support', label: 'Support Center', icon: <MessageCircle size={20} /> },
       ];
 
       return (
