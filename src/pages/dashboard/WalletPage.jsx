@@ -216,11 +216,11 @@ const WalletPage = () => {
                                                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
                                                             <div>
                                                                   <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>Account Number</span>
-                                                                  <p style={{ margin: 0, fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>50200012345678</p>
+                                                                  <p style={{ margin: 0, fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>1249346867</p>
                                                             </div>
                                                             <button
                                                                   onClick={() => {
-                                                                        navigator.clipboard.writeText('50200012345678');
+                                                                        navigator.clipboard.writeText('1249346867');
                                                                         setCopiedText('acc');
                                                                         setTimeout(() => setCopiedText(''), 2000);
                                                                   }}
@@ -232,11 +232,11 @@ const WalletPage = () => {
                                                       <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
                                                             <div>
                                                                   <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>IFSC Code</span>
-                                                                  <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>HDFC0001234</p>
+                                                                  <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>KKBK0001487</p>
                                                             </div>
                                                             <button
                                                                   onClick={() => {
-                                                                        navigator.clipboard.writeText('HDFC0001234');
+                                                                        navigator.clipboard.writeText('KKBK0001487');
                                                                         setCopiedText('ifsc');
                                                                         setTimeout(() => setCopiedText(''), 2000);
                                                                   }}
