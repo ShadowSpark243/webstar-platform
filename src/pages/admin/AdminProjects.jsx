@@ -112,7 +112,7 @@ const AdminProjects = () => {
             setErrorMsg('');
             try {
                   if (editingProject) {
-                        await api.put(`/ admin / projects / ${editingProject.id} `, form);
+                        await api.put(`/admin/projects/${editingProject.id}`, form);
                         setSuccessMsg(`"${form.title}" updated successfully!`);
                   } else {
                         await api.post('/admin/projects', form);
@@ -131,7 +131,7 @@ const AdminProjects = () => {
             if (!confirmDelete) return;
             setProcessing(true);
             try {
-                  await api.delete(`/ admin / projects / ${confirmDelete.id} `);
+                  await api.delete(`/admin/projects/${confirmDelete.id}`);
                   setSuccessMsg(`"${confirmDelete.title}" deleted.`);
                   setConfirmDelete(null);
                   fetchProjects();
@@ -145,8 +145,8 @@ const AdminProjects = () => {
 
       const handleStatusChange = async (projectId, newStatus) => {
             try {
-                  await api.put(`/ admin / projects / ${projectId} `, { status: newStatus });
-                  setSuccessMsg(`Status → ${statusConfig[newStatus]?.label || newStatus} `);
+                  await api.put(`/admin/projects/${projectId}`, { status: newStatus });
+                  setSuccessMsg(`Status → ${statusConfig[newStatus]?.label || newStatus}`);
                   fetchProjects();
             } catch (err) {
                   console.error('Status update failed:', err);
