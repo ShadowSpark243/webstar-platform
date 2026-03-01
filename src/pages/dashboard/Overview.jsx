@@ -164,7 +164,7 @@ const Overview = () => {
                         <div className="ov-col-main">
                               <div className="ov-sec-hdr">
                                     <h2><Layers size={16} /> My Investments</h2>
-                                    {inv.length > 0 && <button className="ov-link" onClick={() => navigate('/dashboard/projects')}>All <ArrowRight size={12} /></button>}
+                                    {inv.length > 0 && <button className="ov-link" onClick={() => navigate('/dashboard/projects', { state: { activeTab: 'portfolio' } })}>See more <ArrowRight size={12} /></button>}
                               </div>
 
                               {loading ? (
@@ -174,11 +174,11 @@ const Overview = () => {
                                           <Film size={32} />
                                           <h3>No Investments Yet</h3>
                                           <p>Start investing in OTT projects today.</p>
-                                          <button className="ov-btn ov-btn-p" onClick={() => navigate('/dashboard/projects')}><Film size={14} /> Browse Projects</button>
+                                          <button className="ov-btn ov-btn-p" onClick={() => navigate('/dashboard/projects', { state: { activeTab: 'opportunities' } })}><Film size={14} /> Browse Projects</button>
                                     </div>
                               ) : (
                                     <div className="ov-inv-grid">
-                                          {inv.map(item => {
+                                          {inv.slice(0, 3).map(item => {
                                                 const proj = item.project;
                                                 const sc = statusColors[item.status] || statusColors.ACTIVE;
                                                 const prog = proj?.targetAmount > 0 ? Math.min((proj.raisedAmount / proj.targetAmount) * 100, 100) : 0;

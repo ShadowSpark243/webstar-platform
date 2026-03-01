@@ -7,7 +7,6 @@ import KycPage from './pages/dashboard/KycPage'
 import WalletPage from './pages/dashboard/WalletPage'
 import ProjectsPage from './pages/dashboard/ProjectsPage'
 import NetworkPage from './pages/dashboard/NetworkPage'
-import AdminPanel from './pages/dashboard/AdminPanel' // WILL BE DELETED LATER
 import SupportPage from './pages/dashboard/SupportPage'
 
 // New Admin Layout & Pages
@@ -52,7 +51,6 @@ function App() {
         <Route path="wallet" element={<WalletPage />} />
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="network" element={<NetworkPage />} />
-        <Route path="admin" element={<AdminPanel />} />
         <Route path="support" element={<SupportPage />} />
       </Route>
 

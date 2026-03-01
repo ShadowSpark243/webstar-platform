@@ -1,9 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2, Filter } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2, Filter, Copy, Check } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 import TransactionDetailsModal from '../../components/TransactionDetailsModal';
+import qrImage from '../../assets/Webfilms1.jpeg';
 import './Dashboard.css';
 
 const WalletPage = () => {
@@ -12,6 +13,7 @@ const WalletPage = () => {
       const [utrNumber, setUtrNumber] = useState('');
       const [receiptFile, setReceiptFile] = useState(null);
       const [isSubmitting, setIsSubmitting] = useState(false);
+      const [copiedText, setCopiedText] = useState('');
 
       // Live Database State
       const [transactions, setTransactions] = useState([]);
@@ -164,31 +166,85 @@ const WalletPage = () => {
                         {/* Standard Users see the forms */}
                         {user?.role !== 'ADMIN' && (
                               <>
-                                    {/* Bank Details Section */}
-                                    <div className="dashboard-card glass-panel">
+                                    {/* Payment Options Section */}
+                                    <div className="dashboard-card glass-panel" style={{ gridColumn: '1 / -1' }}>
                                           <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <Landmark className="text-primary" /> Company Bank Details
+                                                <Landmark className="text-primary" /> Payment Methods
                                           </h2>
                                           <p className="text-muted" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                                                Transfer the amount to the account below, then submit a deposit request with your UTR/Reference number.
+                                                Transfer the amount via QR Code or Bank Transfer, then submit a deposit request with your UTR/Reference number.
                                           </p>
 
-                                          <div style={{ background: 'rgba(255, 255, 255, 0.05)', padding: '1.5rem', borderRadius: '0.75rem', display: 'flex', flexDirection: 'column', gap: '1rem' }}>
-                                                <div>
-                                                      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Bank Name</span>
-                                                      <p style={{ margin: 0, fontWeight: 500 }}>HDFC Bank Ltd</p>
+                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                                                {/* Left: QR Code (UPI) */}
+                                                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                                      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                            Scanner / UPI
+                                                      </h3>
+                                                      <div style={{ background: 'white', padding: '0.75rem', borderRadius: '1rem', marginBottom: '1rem', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+                                                            <img src={qrImage} alt="Payment QR Code" style={{ width: '180px', height: '180px', objectFit: 'contain', display: 'block' }} />
+                                                      </div>
+                                                      <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '0.6rem 1rem', borderRadius: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                            <span style={{ fontSize: '0.85rem', color: '#60a5fa', fontWeight: 600 }}>UPI: webfilms@kotak</span>
+                                                            <button
+                                                                  onClick={() => {
+                                                                        navigator.clipboard.writeText('webfilms@kotak');
+                                                                        setCopiedText('upi');
+                                                                        setTimeout(() => setCopiedText(''), 2000);
+                                                                  }}
+                                                                  style={{ background: 'transparent', border: 'none', color: copiedText === 'upi' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
+                                                                  title="Copy UPI ID"
+                                                            >
+                                                                  {copiedText === 'upi' ? <Check size={14} /> : <Copy size={14} />}
+                                                            </button>
+                                                      </div>
                                                 </div>
-                                                <div>
-                                                      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Account Name</span>
-                                                      <p style={{ margin: 0, fontWeight: 500 }}>The Anytime Mediatec Pvt Ltd</p>
-                                                </div>
-                                                <div>
-                                                      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Account Number</span>
-                                                      <p style={{ margin: 0, fontWeight: 600, color: '#3b82f6', letterSpacing: '1px' }}>50200012345678</p>
-                                                </div>
-                                                <div>
-                                                      <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>IFSC Code</span>
-                                                      <p style={{ margin: 0, fontWeight: 500 }}>HDFC0001234</p>
+
+                                                {/* Right: Bank Details */}
+                                                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
+                                                      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'white', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                            Direct Bank Transfer
+                                                      </h3>
+                                                      <div>
+                                                            <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Bank Name</span>
+                                                            <p style={{ margin: 0, fontWeight: 500, color: 'white' }}>KOTAK MAHINDRA BANK</p>
+                                                      </div>
+                                                      <div>
+                                                            <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Account Name</span>
+                                                            <p style={{ margin: 0, fontWeight: 500, color: 'white' }}>ITRAM MANAGEMENT LLP</p>
+                                                      </div>
+                                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
+                                                            <div>
+                                                                  <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>Account Number</span>
+                                                                  <p style={{ margin: 0, fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>50200012345678</p>
+                                                            </div>
+                                                            <button
+                                                                  onClick={() => {
+                                                                        navigator.clipboard.writeText('50200012345678');
+                                                                        setCopiedText('acc');
+                                                                        setTimeout(() => setCopiedText(''), 2000);
+                                                                  }}
+                                                                  style={{ background: 'transparent', border: 'none', color: copiedText === 'acc' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '0.5rem' }}
+                                                            >
+                                                                  {copiedText === 'acc' ? <Check size={16} /> : <Copy size={16} />}
+                                                            </button>
+                                                      </div>
+                                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
+                                                            <div>
+                                                                  <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>IFSC Code</span>
+                                                                  <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>HDFC0001234</p>
+                                                            </div>
+                                                            <button
+                                                                  onClick={() => {
+                                                                        navigator.clipboard.writeText('HDFC0001234');
+                                                                        setCopiedText('ifsc');
+                                                                        setTimeout(() => setCopiedText(''), 2000);
+                                                                  }}
+                                                                  style={{ background: 'transparent', border: 'none', color: copiedText === 'ifsc' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '0.5rem' }}
+                                                            >
+                                                                  {copiedText === 'ifsc' ? <Check size={16} /> : <Copy size={16} />}
+                                                            </button>
+                                                      </div>
                                                 </div>
                                           </div>
                                     </div>
