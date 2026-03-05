@@ -199,6 +199,7 @@ exports.forgotPassword = async (req, res) => {
             });
 
             // 5. Create reset url
+            // IMPORTANT: Ensure FRONTEND_URL is set to your live domain (e.g., https://vidzonaa.in) in your production dashboard (Railway/Render)
             const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
             const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
