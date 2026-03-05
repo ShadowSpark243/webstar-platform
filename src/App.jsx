@@ -8,6 +8,11 @@ import WalletPage from './pages/dashboard/WalletPage'
 import ProjectsPage from './pages/dashboard/ProjectsPage'
 import NetworkPage from './pages/dashboard/NetworkPage'
 import SupportPage from './pages/dashboard/SupportPage'
+import ProfilePage from './pages/dashboard/ProfilePage'
+
+// Auth Pages
+import ForgotPassword from './pages/auth/ForgotPassword'
+import ResetPassword from './pages/auth/ResetPassword'
 
 // New Admin Layout & Pages
 import AdminLayout from './layouts/AdminLayout'
@@ -38,6 +43,9 @@ function App() {
   return (
     <Routes>
       <Route path="/" element={<LandingPage />} />
+      <Route path="/forgot-password" element={<ForgotPassword />} />
+      <Route path="/reset-password/:token" element={<ResetPassword />} />
+
       <Route
         path="/dashboard"
         element={
@@ -52,6 +60,7 @@ function App() {
         <Route path="projects" element={<ProjectsPage />} />
         <Route path="network" element={<NetworkPage />} />
         <Route path="support" element={<SupportPage />} />
+        <Route path="profile" element={<ProfilePage />} />
       </Route>
 
       {/* ADMIN CONTROL CENTER ROUTES */}

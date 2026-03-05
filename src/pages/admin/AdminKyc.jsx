@@ -13,6 +13,7 @@ const AdminKyc = () => {
       const [confirmModal, setConfirmModal] = useState(null); // { docId, status, userName }
       const [rejectionReason, setRejectionReason] = useState('');
       const [processing, setProcessing] = useState(false);
+      const [viewingDocument, setViewingDocument] = useState(null); // Stores the full doc object when viewing
 
       const fetchData = async () => {
             try {
@@ -255,7 +256,16 @@ const AdminKyc = () => {
                                                                         </td>
                                                                         <td style={{ padding: '1.25rem 1.5rem', color: '#e2e8f0' }}>{new Date(doc.createdAt).toLocaleDateString()}</td>
                                                                         <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                                                                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
+                                                                                    {(doc.presignedUrl || doc.documentUrl) && (
+                                                                                          <button
+                                                                                                onClick={(e) => { e.stopPropagation(); setViewingDocument(doc); }}
+                                                                                                className="btn btn-outline"
+                                                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', color: '#3b82f6', borderColor: '#3b82f6', background: 'transparent' }}
+                                                                                          >
+                                                                                                View Document
+                                                                                          </button>
+                                                                                    )}
                                                                                     <button onClick={(e) => handleKycReview(doc.id, 'VERIFIED', doc.fullName || doc.user?.fullName || 'this user', e)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#10b981', border: 'none' }}>Approve</button>
                                                                                     <button onClick={(e) => handleKycReview(doc.id, 'REJECTED', doc.fullName || doc.user?.fullName || 'this user', e)} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', color: '#ef4444', borderColor: '#ef4444', background: 'transparent' }}>Reject</button>
                                                                               </div>
@@ -290,10 +300,13 @@ const AdminKyc = () => {
                                                                         ID: <span style={{ color: 'white' }}>{doc.documentNumber}</span>
                                                                   </div>
 
-                                                                  {doc.presignedUrl && (
-                                                                        <a href={doc.presignedUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} style={{ fontSize: '0.8rem', color: '#3b82f6', marginTop: '0.4rem', display: 'inline-block', fontWeight: 600 }}>
-                                                                              View Document ↗
-                                                                        </a>
+                                                                  {(doc.presignedUrl || doc.documentUrl) && (
+                                                                        <button
+                                                                              onClick={(e) => { e.stopPropagation(); setViewingDocument(doc); }}
+                                                                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '0.85rem', color: '#3b82f6', marginTop: '0.5rem', display: 'inline-block', fontWeight: 600 }}
+                                                                        >
+                                                                              View Document
+                                                                        </button>
                                                                   )}
 
                                                                   <div className="admin-card-row" style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)', gap: '0.5rem' }}>
@@ -380,6 +393,67 @@ const AdminKyc = () => {
                                                 </button>
                                           </div>
                                     </div>
+                              </div>
+                        </div>
+                  )}
+
+                  {/* Document Viewer Modal with Action Buttons */}
+                  {viewingDocument && (
+                        <div
+                              onClick={() => setViewingDocument(null)}
+                              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', zIndex: 10000 }}
+                        >
+                              {/* Viewer Header */}
+                              <div
+                                    onClick={(e) => e.stopPropagation()}
+                                    style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a' }}
+                              >
+                                    <div>
+                                          <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem', fontWeight: 600 }}>{viewingDocument.fullName || viewingDocument.user?.fullName}</h3>
+                                          <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.2rem' }}>{viewingDocument.documentType} | ID: {viewingDocument.documentNumber}</div>
+                                    </div>
+
+                                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                          <button
+                                                onClick={(e) => {
+                                                      setViewingDocument(null);
+                                                      handleKycReview(viewingDocument.id, 'REJECTED', viewingDocument.fullName || viewingDocument.user?.fullName || 'this user', e);
+                                                }}
+                                                className="btn btn-outline"
+                                                style={{ padding: '0.5rem 1.25rem', borderColor: '#ef4444', color: '#ef4444', background: 'transparent' }}
+                                          >
+                                                Reject Identity
+                                          </button>
+                                          <button
+                                                onClick={(e) => {
+                                                      setViewingDocument(null);
+                                                      handleKycReview(viewingDocument.id, 'VERIFIED', viewingDocument.fullName || viewingDocument.user?.fullName || 'this user', e);
+                                                }}
+                                                className="btn btn-primary"
+                                                style={{ padding: '0.5rem 1.25rem', background: '#10b981', border: 'none' }}
+                                          >
+                                                Approve Identity
+                                          </button>
+                                          <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.2)', margin: '0 0.5rem' }} />
+                                          <button
+                                                onClick={() => setViewingDocument(null)}
+                                                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
+                                          >
+                                                ×
+                                          </button>
+                                    </div>
+                              </div>
+
+                              {/* Viewer Body containing the Image */}
+                              <div
+                                    style={{ flex: 1, padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
+                                    onClick={(e) => e.stopPropagation()}
+                              >
+                                    <img
+                                          src={viewingDocument.presignedUrl || viewingDocument.documentUrl}
+                                          alt="KYC Document"
+                                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '0.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
+                                    />
                               </div>
                         </div>
                   )}

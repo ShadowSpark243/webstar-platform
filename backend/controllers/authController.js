@@ -113,11 +113,16 @@ exports.register = async (req, res) => {
 // Login Logic
 exports.login = async (req, res) => {
       try {
-            const { email, password } = req.body;
+            const { loginId, password } = req.body;
 
-            // 1. Find User
-            const user = await prisma.user.findUnique({
-                  where: { email }
+            // 1. Find User by email or username
+            const user = await prisma.user.findFirst({
+                  where: {
+                        OR: [
+                              { email: loginId },
+                              { username: loginId }
+                        ]
+                  }
             });
 
             if (!user) {
@@ -148,6 +153,149 @@ exports.login = async (req, res) => {
       } catch (error) {
             console.error('Login Error:', error);
             res.status(500).json({ success: false, message: 'Server error during login.' });
+      }
+};
+
+const crypto = require('crypto');
+const sendEmail = require('../utils/sendEmail');
+
+// Forgot Password Logic
+exports.forgotPassword = async (req, res) => {
+      try {
+            const { loginId } = req.body;
+
+            // 1. Find the user by email or username
+            const user = await prisma.user.findFirst({
+                  where: {
+                        OR: [
+                              { email: loginId },
+                              { username: loginId }
+                        ]
+                  }
+            });
+
+            if (!user) {
+                  return res.status(404).json({ success: false, message: 'User not found with that email or username.' });
+            }
+
+            // 2. Generate Reset Token
+            const resetToken = crypto.randomBytes(20).toString('hex');
+
+            // 3. Hash token and set to resetPasswordToken field
+            const resetPasswordToken = crypto
+                  .createHash('sha256')
+                  .update(resetToken)
+                  .digest('hex');
+
+            // 4. Set token expire (10 mins)
+            const resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000);
+
+            await prisma.user.update({
+                  where: { id: user.id },
+                  data: {
+                        resetPasswordToken,
+                        resetPasswordExpires
+                  }
+            });
+
+            // 5. Create reset url
+            const frontendUrl = process.env.FRONTEND_URL || 'http://localhost:5173';
+            const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
+
+            const message = `
+                  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0A0D14; color: #f8fafc; padding: 40px 20px; text-align: center; line-height: 1.6;">
+                        <div style="max-width: 600px; margin: 0 auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 40px 30px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
+                              <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin-bottom: 10px; letter-spacing: 2px;">WEB<span style="color: #f59e0b;">STAR</span></h1>
+                              <p style="color: #9ca3af; font-size: 16px; margin-bottom: 30px;">Secure Account Recovery</p>
+                              
+                              <div style="background-color: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 15px; text-align: left; margin-bottom: 30px; border-radius: 4px;">
+                                    <p style="margin: 0; color: #d1d5db; font-size: 15px;">We received a request to reset the password for your WEBSTAR account. If you made this request, click the secure link below to create a new password.</p>
+                              </div>
+
+                              <a href="${resetUrl}" style="display: inline-block; background-color: #f59e0b; color: #000000; font-size: 16px; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);">Reset My Password</a>
+
+                              <p style="color: #9ca3af; font-size: 13px; margin-bottom: 30px; word-break: break-all;">
+                                    Or copy and paste this link into your browser:<br>
+                                    <a href="${resetUrl}" style="color: #3b82f6; text-decoration: underline;">${resetUrl}</a>
+                              </p>
+
+                              <p style="color: #6b7280; font-size: 14px; margin-bottom: 10px;">If you did not request a password reset, you can safely ignore this email. Your account remains secure.</p>
+                              <p style="color: #4b5563; font-size: 12px; margin-top: 30px; border-top: 1px solid #1f2937; padding-top: 20px;">
+                                    This link will expire in 10 minutes for your security.<br>
+                                    &copy; ${new Date().getFullYear()} WEBSTAR. All rights reserved.
+                              </p>
+                        </div>
+                  </div>
+            `;
+
+            try {
+                  await sendEmail({
+                        email: user.email,
+                        subject: 'Password reset token',
+                        message
+                  });
+
+                  res.status(200).json({ success: true, message: 'Email sent' });
+            } catch (err) {
+                  console.error(err);
+                  await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                              resetPasswordToken: null,
+                              resetPasswordExpires: null
+                        }
+                  });
+
+                  return res.status(500).json({ success: false, message: 'Email could not be sent' });
+            }
+      } catch (error) {
+            console.error('Forgot Password Error:', error);
+            res.status(500).json({ success: false, message: 'Server error' });
+      }
+};
+
+// Reset Password
+exports.resetPassword = async (req, res) => {
+      try {
+            // 1. Get hashed token
+            const resetPasswordToken = crypto
+                  .createHash('sha256')
+                  .update(req.params.resetToken)
+                  .digest('hex');
+
+            // 2. Find user by token and check expiry
+            const user = await prisma.user.findFirst({
+                  where: {
+                        resetPasswordToken,
+                        resetPasswordExpires: { gt: new Date() }
+                  }
+            });
+
+            if (!user) {
+                  return res.status(400).json({ success: false, message: 'Invalid token or token expired' });
+            }
+
+            // 3. Set new password
+            const saltRounds = 10;
+            const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
+
+            await prisma.user.update({
+                  where: { id: user.id },
+                  data: {
+                        password: hashedPassword,
+                        resetPasswordToken: null,
+                        resetPasswordExpires: null
+                  }
+            });
+
+            res.status(200).json({
+                  success: true,
+                  message: 'Password has been reset successfully. Please login with your new password.',
+            });
+
+      } catch (error) {
+            console.error('Reset Password Error:', error);
+            res.status(500).json({ success: false, message: 'Server error resetting password.' });
       }
 };
 
@@ -202,6 +350,9 @@ exports.getMe = async (req, res) => {
                         rank: true,
                         referralCode: true,
                         createdAt: true,
+                        referredById: true,
+                        inviterCode: true,
+                        inviter: true,
                         kycDocuments: {
                               select: {
                                     status: true,

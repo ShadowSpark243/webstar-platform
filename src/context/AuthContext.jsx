@@ -44,9 +44,9 @@ export const AuthProvider = ({ children }) => {
             }
       }, []);
 
-      const login = async (email, password) => {
+      const login = async (loginId, password) => {
             try {
-                  const response = await api.post('/auth/login', { email, password });
+                  const response = await api.post('/auth/login', { loginId, password });
                   const { token, user: userData } = response.data;
 
                   localStorage.setItem('webstar_token', token);
@@ -59,6 +59,30 @@ export const AuthProvider = ({ children }) => {
                         success: false,
                         message: error.response?.data?.message || 'Login failed.',
                         fieldErrors: error.response?.data?.errors || []
+                  };
+            }
+      };
+
+      const requestPasswordReset = async (loginId) => {
+            try {
+                  const response = await api.post('/auth/forgot-password', { loginId });
+                  return { success: true, message: response.data.message };
+            } catch (error) {
+                  return {
+                        success: false,
+                        message: error.response?.data?.message || 'Failed to send reset email.'
+                  };
+            }
+      };
+
+      const resetPassword = async (resetToken, password) => {
+            try {
+                  const response = await api.post(`/auth/reset-password/${resetToken}`, { password });
+                  return { success: true, message: response.data.message };
+            } catch (error) {
+                  return {
+                        success: false,
+                        message: error.response?.data?.message || 'Failed to reset password.'
                   };
             }
       };
@@ -98,6 +122,8 @@ export const AuthProvider = ({ children }) => {
                   login,
                   register,
                   logout,
+                  requestPasswordReset,
+                  resetPassword,
                   isAuthModalOpen,
                   setIsAuthModalOpen
             }}>

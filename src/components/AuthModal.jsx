@@ -16,6 +16,7 @@ const AuthModal = () => {
       const [fullName, setFullName] = useState('');
       const [username, setUsername] = useState('');
       const [email, setEmail] = useState('');
+      const [loginId, setLoginId] = useState('');
       const [password, setPassword] = useState('');
       const [phone, setPhone] = useState('+91 ');
       const [referralCode, setReferralCode] = useState('');
@@ -26,6 +27,7 @@ const AuthModal = () => {
       const isFullNameValid = fullName.trim().length >= 3;
       const isUsernameValid = username.trim().length >= 3 && /^[a-zA-Z0-9_]+$/.test(username.trim());
       const isEmailValid = /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+      const isLoginIdValid = loginId.trim().length >= 3;
       const isPasswordValid = password.length >= 8;
       const isPhoneValid = /^\+91 [0-9]{10}$/.test(phone);
 
@@ -60,7 +62,7 @@ const AuthModal = () => {
 
             let result;
             if (isLoginView) {
-                  result = await login(email, password);
+                  result = await login(loginId, password);
             } else {
                   result = await register(fullName, email, username, phone, password, referralCode);
             }
@@ -169,19 +171,35 @@ const AuthModal = () => {
                                                 </>
                                           )}
 
-                                          <div className="form-group">
-                                                <label>Email Address</label>
-                                                <div className={`input-with-icon ${fieldErrors.email ? 'input-error' : (email.length > 0 && isEmailValid ? 'input-success' : '')}`}>
-                                                      <Mail size={18} className="input-icon" />
-                                                      <input
-                                                            type="email"
-                                                            placeholder="you@example.com"
-                                                            value={email}
-                                                            onChange={(e) => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: null })); }}
-                                                      />
+                                          {!isLoginView ? (
+                                                <div className="form-group">
+                                                      <label>Email Address</label>
+                                                      <div className={`input-with-icon ${fieldErrors.email ? 'input-error' : (email.length > 0 && isEmailValid ? 'input-success' : '')}`}>
+                                                            <Mail size={18} className="input-icon" />
+                                                            <input
+                                                                  type="email"
+                                                                  placeholder="you@example.com"
+                                                                  value={email}
+                                                                  onChange={(e) => { setEmail(e.target.value); if (fieldErrors.email) setFieldErrors(prev => ({ ...prev, email: null })); }}
+                                                            />
+                                                      </div>
+                                                      {fieldErrors.email && <div className="field-error-text">{fieldErrors.email}</div>}
                                                 </div>
-                                                {fieldErrors.email && <div className="field-error-text">{fieldErrors.email}</div>}
-                                          </div>
+                                          ) : (
+                                                <div className="form-group">
+                                                      <label>Email or Username</label>
+                                                      <div className={`input-with-icon ${fieldErrors.loginId ? 'input-error' : (loginId.length > 0 && isLoginIdValid ? 'input-success' : '')}`}>
+                                                            <User size={18} className="input-icon" />
+                                                            <input
+                                                                  type="text"
+                                                                  placeholder="johndoe123 or you@example.com"
+                                                                  value={loginId}
+                                                                  onChange={(e) => { setLoginId(e.target.value); if (fieldErrors.loginId) setFieldErrors(prev => ({ ...prev, loginId: null })); }}
+                                                            />
+                                                      </div>
+                                                      {fieldErrors.loginId && <div className="field-error-text">{fieldErrors.loginId}</div>}
+                                                </div>
+                                          )}
 
                                           <div className="form-group">
                                                 <label>Password</label>
@@ -195,6 +213,29 @@ const AuthModal = () => {
                                                       />
                                                 </div>
                                                 {fieldErrors.password && <div className="field-error-text">{fieldErrors.password}</div>}
+                                                {isLoginView && (
+                                                      <div style={{ display: 'flex', justifyContent: 'flex-end', marginTop: '0.5rem' }}>
+                                                            <button
+                                                                  type="button"
+                                                                  className="forgot-password-link"
+                                                                  onClick={() => {
+                                                                        setIsAuthModalOpen(false);
+                                                                        navigate('/forgot-password');
+                                                                  }}
+                                                                  style={{
+                                                                        background: 'none',
+                                                                        border: 'none',
+                                                                        color: 'var(--primary)',
+                                                                        fontSize: '0.85rem',
+                                                                        cursor: 'pointer',
+                                                                        padding: 0,
+                                                                        fontFamily: 'inherit'
+                                                                  }}
+                                                            >
+                                                                  Forgot Password?
+                                                            </button>
+                                                      </div>
+                                                )}
                                           </div>
 
                                           {!isLoginView && (

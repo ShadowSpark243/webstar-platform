@@ -15,9 +15,12 @@ router.post('/register', [
 ], validateRequest, authController.register);
 
 router.post('/login', [
-      body('email').isEmail().normalizeEmail().withMessage('A valid email is required'),
+      body('loginId').notEmpty().withMessage('Email or Username is required'),
       body('password').notEmpty().withMessage('Password is required')
 ], validateRequest, authController.login);
+
+router.post('/forgot-password', authController.forgotPassword);
+router.post('/reset-password/:resetToken', authController.resetPassword);
 
 // router.get('/setup-admin', authController.createSuperAdmin); // REMOVED — use seed script instead
 router.get('/me', protect, authController.getMe);

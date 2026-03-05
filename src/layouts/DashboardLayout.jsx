@@ -10,7 +10,8 @@ import {
       Menu,
       X,
       PlaySquare,
-      MessageCircle
+      MessageCircle,
+      User
 } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import './DashboardLayout.css';
@@ -32,6 +33,7 @@ const DashboardLayout = () => {
 
       const navItems = [
             { path: '/dashboard', label: 'Overview', icon: <LayoutDashboard size={20} />, exact: true },
+            { path: '/dashboard/profile', label: 'My Profile', icon: <User size={20} /> },
             { path: '/dashboard/wallet', label: user?.role === 'ADMIN' ? 'Wallet' : 'My Wallet', icon: <Wallet size={20} /> },
             { path: '/dashboard/projects', label: 'Live Projects', icon: <Film size={20} /> },
             { path: '/dashboard/network', label: 'My Network', icon: <Network size={20} /> },
