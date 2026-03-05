@@ -1,8 +1,15 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-      // Check if SMTP is configured
-      if (!process.env.SMTP_HOST || !process.env.SMTP_USER) {
+      // Production Robustness: Strip accidental quotes and ensure types
+      const host = (process.env.SMTP_HOST || '').replace(/['"]+/g, '');
+      const port = parseInt((process.env.SMTP_PORT || '587').replace(/['"]+/g, ''), 10);
+      const user = (process.env.SMTP_USER || '').replace(/['"]+/g, '');
+      const pass = (process.env.SMTP_PASS || '').replace(/['"]+/g, '');
+      const fromEmail = (process.env.FROM_EMAIL || '').replace(/['"]+/g, '');
+      const fromName = (process.env.FROM_NAME || 'Webstar').replace(/['"]+/g, '');
+
+      if (!host || !user) {
             console.warn(`[DEVELOPMENT MODE] Email not sent to ${options.email}. Logged below:`);
             console.log(`================ EMAIL CONTENT ================`);
             console.log(`To: ${options.email}`);
@@ -12,24 +19,27 @@ const sendEmail = async (options) => {
             return;
       }
 
+      console.log(`[EMAIL] Attempting to send to ${options.email} via ${host}:${port} (Secure: ${port === 465})`);
+
       const transporter = nodemailer.createTransport({
-            host: process.env.SMTP_HOST,
-            port: process.env.SMTP_PORT,
-            secure: process.env.SMTP_PORT == 465, // true for 465, false for other ports
+            host,
+            port,
+            secure: port === 465, // true for 465, false for 587/others
             auth: {
-                  user: process.env.SMTP_USER,
-                  pass: process.env.SMTP_PASS
+                  user,
+                  pass
             }
       });
 
       const message = {
-            from: `${process.env.FROM_NAME} <${process.env.FROM_EMAIL}>`,
+            from: `${fromName} <${fromEmail}>`,
             to: options.email,
             subject: options.subject,
             html: options.message
       };
 
       await transporter.sendMail(message);
+      console.log(`[EMAIL] Successfully sent to ${options.email}`);
 };
 
 module.exports = sendEmail;
