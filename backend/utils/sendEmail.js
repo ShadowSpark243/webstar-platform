@@ -1,13 +1,13 @@
 const nodemailer = require('nodemailer');
 
 const sendEmail = async (options) => {
-      // Production Robustness: Strip accidental quotes and ensure types
-      const host = (process.env.SMTP_HOST || '').replace(/['"]+/g, '');
-      const port = parseInt((process.env.SMTP_PORT || '587').replace(/['"]+/g, ''), 10);
-      const user = (process.env.SMTP_USER || '').replace(/['"]+/g, '');
-      const pass = (process.env.SMTP_PASS || '').replace(/['"]+/g, '');
-      const fromEmail = (process.env.FROM_EMAIL || '').replace(/['"]+/g, '');
-      const fromName = (process.env.FROM_NAME || 'Webstar').replace(/['"]+/g, '');
+      // Production Robustness: Strip accidental quotes, spaces, and ensure types
+      const host = (process.env.SMTP_HOST || '').replace(/['"]+/g, '').trim();
+      const port = parseInt((process.env.SMTP_PORT || '587').replace(/['"]+/g, '').trim(), 10);
+      const user = (process.env.SMTP_USER || '').replace(/['"]+/g, '').trim();
+      const pass = (process.env.SMTP_PASS || '').replace(/['"]+/g, '').trim();
+      const fromEmail = (process.env.FROM_EMAIL || '').replace(/['"]+/g, '').trim();
+      const fromName = (process.env.FROM_NAME || 'Webstar').replace(/['"]+/g, '').trim();
 
       if (!host || !user) {
             console.warn(`[DEVELOPMENT MODE] Email not sent to ${options.email}. Logged below:`);
