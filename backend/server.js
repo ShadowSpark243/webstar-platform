@@ -11,6 +11,9 @@ const logger = require('./utils/logger');
 
 const app = express();
 
+// Trust proxy for Railway/Vercel (required for express-rate-limit)
+app.set('trust proxy', 1);
+
 // ── Security Headers & Body Parser ─────────────────────────────────────────────
 app.use(helmet());
 app.use(express.json({ limit: '10mb' }));

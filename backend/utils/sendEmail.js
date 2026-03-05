@@ -28,7 +28,11 @@ const sendEmail = async (options) => {
             auth: {
                   user,
                   pass
-            }
+            },
+            // Timeouts to prevent hanging
+            connectionTimeout: 10000, // 10s
+            greetingTimeout: 10000,   // 10s
+            socketTimeout: 15000      // 15s
       });
 
       const message = {
@@ -38,8 +42,13 @@ const sendEmail = async (options) => {
             html: options.message
       };
 
-      await transporter.sendMail(message);
-      console.log(`[EMAIL] Successfully sent to ${options.email}`);
+      try {
+            await transporter.sendMail(message);
+            console.log(`[EMAIL] Successfully sent to ${options.email}`);
+      } catch (error) {
+            console.error(`[EMAIL ERROR] Failed to send to ${options.email}:`, error.message);
+            throw error; // Re-throw to be caught by the controller
+      }
 };
 
 module.exports = sendEmail;
