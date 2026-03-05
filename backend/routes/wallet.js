@@ -27,6 +27,8 @@ router.get('/my-investments', walletController.getMyInvestments);
 router.get('/dashboard', walletController.getDashboardData);
 router.post('/invest', walletController.investInProject);
 router.get('/network-stats', walletController.getNetworkStats);
+router.post('/withdraw', walletController.requestWithdrawal);
 router.post('/kyc/submit', upload.single('documentImage'), walletController.submitKyc);
+
 
 module.exports = router;

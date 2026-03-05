@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2, Filter, Copy, Check } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2, Filter, Copy, Check, TrendingUp, ShieldCheck, Film } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 import TransactionDetailsModal from '../../components/TransactionDetailsModal';
 import qrImage from '../../assets/Webfilms1.jpeg';
@@ -14,6 +14,17 @@ const WalletPage = () => {
       const [receiptFile, setReceiptFile] = useState(null);
       const [isSubmitting, setIsSubmitting] = useState(false);
       const [copiedText, setCopiedText] = useState('');
+      const [activeTab, setActiveTab] = useState('DEPOSIT'); // 'DEPOSIT' or 'WITHDRAW'
+
+      // Withdrawal Form State
+      const [withdrawAmount, setWithdrawAmount] = useState('');
+      const [bankName, setBankName] = useState('');
+      const [accountNumber, setAccountNumber] = useState('');
+      const [ifscCode, setIfscCode] = useState('');
+      const [upiId, setUpiId] = useState('');
+      const [balances, setBalances] = useState({ wallet: 0, income: 0 });
+      const [portfolio, setPortfolio] = useState({ totalInvestedAmount: 0, estimatedProfit: 0, activeInvestments: 0 });
+
 
       // Live Database State
       const [transactions, setTransactions] = useState([]);
@@ -36,11 +47,17 @@ const WalletPage = () => {
       const fetchData = async () => {
             setLoadingHistory(true);
             try {
-                  const historyUrl = user?.role === 'ADMIN' ? '/admin/transactions' : '/wallet/history';
+                  const historyUrl = user?.role === 'ADMIN' ? '/admin/transactions' : '/wallet/dashboard';
                   const res = await api.get(historyUrl);
 
                   if (res.data.success) {
-                        setTransactions(user?.role === 'ADMIN' ? res.data.transactions : res.data.history);
+                        setTransactions(user?.role === 'ADMIN' ? res.data.transactions : res.data.recentTransactions || res.data.history);
+                        if (res.data.balances) {
+                              setBalances(res.data.balances);
+                        }
+                        if (res.data.portfolio) {
+                              setPortfolio(res.data.portfolio);
+                        }
                   }
 
                   if (user?.role === 'ADMIN') {
@@ -118,6 +135,59 @@ const WalletPage = () => {
             }
       };
 
+      const handleWithdraw = async (e) => {
+            e.preventDefault();
+            if (user?.kycStatus !== 'VERIFIED') {
+                  alert("KYC verification is required for withdrawals. Please complete your KYC first.");
+                  return;
+            }
+
+            if (parseFloat(withdrawAmount) > (balances.income || 0)) {
+                  alert("Insufficient Income Wallet Balance.");
+                  return;
+            }
+
+            setIsSubmitting(true);
+            try {
+                  const amount = parseFloat(withdrawAmount);
+                  await api.post('/wallet/withdraw', {
+                        amount,
+                        bankName,
+                        accountNumber,
+                        ifscCode,
+                        upiId
+                  });
+
+                  setWithdrawAmount('');
+                  setBankName('');
+                  setAccountNumber('');
+                  setIfscCode('');
+                  setUpiId('');
+                  alert(`Withdrawal request for ₹${amount.toLocaleString('en-IN')} submitted successfully. It will be processed after admin review.`);
+                  fetchData();
+            } catch (error) {
+                  alert('Withdrawal request failed: ' + (error.response?.data?.message || error.message));
+            } finally {
+                  setIsSubmitting(false);
+            }
+      };
+
+      const handleExportCSV = async () => {
+            try {
+                  const response = await api.get('/export/transactions', { responseType: 'blob' });
+                  const url = window.URL.createObjectURL(new Blob([response.data]));
+                  const link = document.createElement('a');
+                  link.href = url;
+                  link.setAttribute('download', `transactions_${user.username}_${new Date().toISOString().split('T')[0]}.csv`);
+                  document.body.appendChild(link);
+                  link.click();
+                  link.remove();
+            } catch (error) {
+                  alert('Export failed: ' + (error.response?.data?.message || error.message));
+            }
+      };
+
+
       const filteredDeposits = depositQueue.filter(dep =>
             dep.user.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
             dep.user.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
@@ -148,17 +218,73 @@ const WalletPage = () => {
                         </div>
                   </header>
 
-                  {/* Current Balance Card */}
-                  <div className="stat-card glass-panel" style={{ marginBottom: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                        <div>
-                              <span className="stat-title">Current Balance</span>
-                              <h3 className="stat-value" style={{ fontSize: '2.5rem', marginTop: '0.5rem' }}>
-                                    ₹{user?.walletBalance?.toLocaleString('en-IN') || '0'}
-                              </h3>
+                  {/* Balance Cards */}
+                  <div className="dashboard-grid" style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
+                        <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                              <div>
+                                    <span className="stat-title">Wallet Balance</span>
+                                    <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem' }}>
+                                          ₹{((user?.role === 'ADMIN' ? user?.walletBalance : balances.wallet) || 0).toLocaleString('en-IN')}
+                                    </h3>
+                              </div>
+                              <div className="stat-icon-wrapper primary" style={{ padding: '0.75rem' }}>
+                                    <WalletIcon size={32} />
+                              </div>
                         </div>
-                        <div className="stat-icon-wrapper primary" style={{ padding: '1rem' }}>
-                              <WalletIcon size={48} />
+
+                        {user?.role !== 'ADMIN' && (
+                              <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
+                                    <div>
+                                          <span className="stat-title" style={{ color: '#10b981' }}>Income Wallet (Withdrawable)</span>
+                                          <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#10b981' }}>
+                                                ₹{(balances.income || 0).toLocaleString('en-IN')}
+                                          </h3>
+                                    </div>
+                                    <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                                          <TrendingUp size={32} />
+                                    </div>
+                              </div>
+                        )}
+
+                        <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
+                              <div>
+                                    <span className="stat-title" style={{ color: '#60a5fa' }}>Total Assets (Net Worth)</span>
+                                    <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#60a5fa' }}>
+                                          ₹{((user?.role === 'ADMIN' ? (user?.walletBalance || 0) : (balances.wallet || 0)) + (balances.income || 0) + (portfolio.totalInvestedAmount || 0)).toLocaleString('en-IN')}
+                                    </h3>
+                              </div>
+                              <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa' }}>
+                                    <ShieldCheck size={32} />
+                              </div>
                         </div>
+
+                        {user?.role !== 'ADMIN' && (
+                              <>
+                                    <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                          <div>
+                                                <span className="stat-title" style={{ color: '#34d399' }}>Total Invested</span>
+                                                <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#34d399' }}>
+                                                      ₹{(portfolio.totalInvestedAmount || 0).toLocaleString('en-IN')}
+                                                </h3>
+                                          </div>
+                                          <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(52, 211, 153, 0.1)', color: '#34d399' }}>
+                                                <Film size={32} />
+                                          </div>
+                                    </div>
+
+                                    <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
+                                          <div>
+                                                <span className="stat-title" style={{ color: '#fbbf24' }}>Estimated Profit</span>
+                                                <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#fbbf24' }}>
+                                                      ₹{(portfolio.estimatedProfit || 0).toLocaleString('en-IN')}
+                                                </h3>
+                                          </div>
+                                          <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24' }}>
+                                                <TrendingUp size={32} />
+                                          </div>
+                                    </div>
+                              </>
+                        )}
                   </div>
 
                   <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
@@ -166,163 +292,282 @@ const WalletPage = () => {
                         {/* Standard Users see the forms */}
                         {user?.role !== 'ADMIN' && (
                               <>
-                                    {/* Payment Options Section */}
-                                    <div className="dashboard-card glass-panel" style={{ gridColumn: '1 / -1' }}>
-                                          <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <Landmark className="text-primary" /> Payment Methods
-                                          </h2>
-                                          <p className="text-muted" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                                                Transfer the amount via QR Code or Bank Transfer, then submit a deposit request with your UTR/Reference number.
-                                          </p>
-
-                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-                                                {/* Left: QR Code (UPI) */}
-                                                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                                      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            Scanner / UPI
-                                                      </h3>
-                                                      <div style={{ background: 'white', padding: '0.75rem', borderRadius: '1rem', marginBottom: '1rem', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
-                                                            <img src={qrImage} alt="Payment QR Code" style={{ width: '180px', height: '180px', objectFit: 'contain', display: 'block' }} />
-                                                      </div>
-                                                      <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '0.6rem 1rem', borderRadius: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                            <span style={{ fontSize: '0.85rem', color: '#60a5fa', fontWeight: 600 }}>UPI: webfilms@kotak</span>
-                                                            <button
-                                                                  onClick={() => {
-                                                                        navigator.clipboard.writeText('webfilms@kotak');
-                                                                        setCopiedText('upi');
-                                                                        setTimeout(() => setCopiedText(''), 2000);
-                                                                  }}
-                                                                  style={{ background: 'transparent', border: 'none', color: copiedText === 'upi' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
-                                                                  title="Copy UPI ID"
-                                                            >
-                                                                  {copiedText === 'upi' ? <Check size={14} /> : <Copy size={14} />}
-                                                            </button>
-                                                      </div>
-                                                </div>
-
-                                                {/* Right: Bank Details */}
-                                                <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
-                                                      <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'white', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            Direct Bank Transfer
-                                                      </h3>
-                                                      <div>
-                                                            <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Bank Name</span>
-                                                            <p style={{ margin: 0, fontWeight: 500, color: 'white' }}>KOTAK MAHINDRA BANK</p>
-                                                      </div>
-                                                      <div>
-                                                            <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Account Name</span>
-                                                            <p style={{ margin: 0, fontWeight: 500, color: 'white' }}>ITRAM MANAGEMENT LLP</p>
-                                                      </div>
-                                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
-                                                            <div>
-                                                                  <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>Account Number</span>
-                                                                  <p style={{ margin: 0, fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>1249346867</p>
-                                                            </div>
-                                                            <button
-                                                                  onClick={() => {
-                                                                        navigator.clipboard.writeText('1249346867');
-                                                                        setCopiedText('acc');
-                                                                        setTimeout(() => setCopiedText(''), 2000);
-                                                                  }}
-                                                                  style={{ background: 'transparent', border: 'none', color: copiedText === 'acc' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '0.5rem' }}
-                                                            >
-                                                                  {copiedText === 'acc' ? <Check size={16} /> : <Copy size={16} />}
-                                                            </button>
-                                                      </div>
-                                                      <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
-                                                            <div>
-                                                                  <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>IFSC Code</span>
-                                                                  <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>KKBK0001487</p>
-                                                            </div>
-                                                            <button
-                                                                  onClick={() => {
-                                                                        navigator.clipboard.writeText('KKBK0001487');
-                                                                        setCopiedText('ifsc');
-                                                                        setTimeout(() => setCopiedText(''), 2000);
-                                                                  }}
-                                                                  style={{ background: 'transparent', border: 'none', color: copiedText === 'ifsc' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '0.5rem' }}
-                                                            >
-                                                                  {copiedText === 'ifsc' ? <Check size={16} /> : <Copy size={16} />}
-                                                            </button>
-                                                      </div>
-                                                </div>
-                                          </div>
+                                    {/* Tabs for Deposit/Withdraw */}
+                                    <div className="glass-panel" style={{ gridColumn: '1 / -1', padding: '0.5rem', display: 'flex', gap: '0.5rem', borderRadius: '1rem', background: 'rgba(255,255,255,0.03)' }}>
+                                          <button
+                                                onClick={() => setActiveTab('DEPOSIT')}
+                                                style={{
+                                                      flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer',
+                                                      background: activeTab === 'DEPOSIT' ? '#3b82f6' : 'transparent', color: activeTab === 'DEPOSIT' ? 'white' : 'rgba(255,255,255,0.5)',
+                                                      transition: 'all 0.2s ease'
+                                                }}
+                                          >
+                                                <ArrowDownToLine size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Add Funds
+                                          </button>
+                                          <button
+                                                onClick={() => setActiveTab('WITHDRAW')}
+                                                style={{
+                                                      flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer',
+                                                      background: activeTab === 'WITHDRAW' ? '#3b82f6' : 'transparent', color: activeTab === 'WITHDRAW' ? 'white' : 'rgba(255,255,255,0.5)',
+                                                      transition: 'all 0.2s ease'
+                                                }}
+                                          >
+                                                <ArrowUpRight size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Withdraw
+                                          </button>
                                     </div>
 
-                                    {/* Deposit Form */}
-                                    <div className="dashboard-card glass-panel">
-                                          <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                <ArrowDownToLine className="text-green-400" /> Submit Deposit Request
-                                          </h2>
+                                    {activeTab === 'DEPOSIT' ? (
+                                          <>
+                                                {/* Payment Options Section */}
 
-                                          <form onSubmit={handleDeposit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                                <div className="form-group">
-                                                      <label>Amount Transferred (₹)</label>
-                                                      <input
-                                                            type="number"
-                                                            required
-                                                            min="1000"
-                                                            placeholder="E.g. 100000"
-                                                            className="dashboard-input"
-                                                            value={depositAmount}
-                                                            onChange={(e) => setDepositAmount(e.target.value)}
-                                                            style={{
-                                                                  width: '100%',
-                                                                  padding: '0.875rem 1rem',
-                                                                  background: 'rgba(255, 255, 255, 0.05)',
-                                                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                                  color: 'white',
-                                                                  borderRadius: '0.75rem'
-                                                            }}
-                                                      />
-                                                </div>
-
-                                                <div className="form-group">
-                                                      <label>UTR / Transaction Reference Number</label>
-                                                      <input
-                                                            type="text"
-                                                            required
-                                                            placeholder="E.g. UPI1234567890"
-                                                            className="dashboard-input"
-                                                            value={utrNumber}
-                                                            onChange={(e) => setUtrNumber(e.target.value)}
-                                                            style={{
-                                                                  width: '100%',
-                                                                  padding: '0.875rem 1rem',
-                                                                  background: 'rgba(255, 255, 255, 0.05)',
-                                                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                                  color: 'white',
-                                                                  borderRadius: '0.75rem'
-                                                            }}
-                                                      />
-                                                </div>
-
-                                                <div className="form-group">
-                                                      <label>Payment Receipt / Screenshot</label>
-                                                      <input
-                                                            type="file"
-                                                            required
-                                                            accept="image/*,.pdf"
-                                                            onChange={(e) => setReceiptFile(e.target.files[0])}
-                                                            style={{
-                                                                  width: '100%',
-                                                                  padding: '0.875rem 1rem',
-                                                                  background: 'rgba(255, 255, 255, 0.05)',
-                                                                  border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                                  color: 'white',
-                                                                  borderRadius: '0.75rem'
-                                                            }}
-                                                      />
-                                                      <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
-                                                            Upload a screenshot of your payment confirmation for faster verification.
+                                                <div className="dashboard-card glass-panel" style={{ gridColumn: '1 / -1' }}>
+                                                      <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                            <Landmark className="text-primary" /> Payment Methods
+                                                      </h2>
+                                                      <p className="text-muted" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
+                                                            Transfer the amount via QR Code or Bank Transfer, then submit a deposit request with your UTR/Reference number.
                                                       </p>
+
+                                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
+                                                            {/* Left: QR Code (UPI) */}
+                                                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
+                                                                  <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                        Scanner / UPI
+                                                                  </h3>
+                                                                  <div style={{ background: 'white', padding: '0.75rem', borderRadius: '1rem', marginBottom: '1rem', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
+                                                                        <img src={qrImage} alt="Payment QR Code" style={{ width: '180px', height: '180px', objectFit: 'contain', display: 'block' }} />
+                                                                  </div>
+                                                                  <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '0.6rem 1rem', borderRadius: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                                        <span style={{ fontSize: '0.85rem', color: '#60a5fa', fontWeight: 600 }}>UPI: webfilms@kotak</span>
+                                                                        <button
+                                                                              onClick={() => {
+                                                                                    navigator.clipboard.writeText('webfilms@kotak');
+                                                                                    setCopiedText('upi');
+                                                                                    setTimeout(() => setCopiedText(''), 2000);
+                                                                              }}
+                                                                              style={{ background: 'transparent', border: 'none', color: copiedText === 'upi' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
+                                                                              title="Copy UPI ID"
+                                                                        >
+                                                                              {copiedText === 'upi' ? <Check size={14} /> : <Copy size={14} />}
+                                                                        </button>
+                                                                  </div>
+                                                            </div>
+
+                                                            {/* Right: Bank Details */}
+                                                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
+                                                                  <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'white', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                        Direct Bank Transfer
+                                                                  </h3>
+                                                                  <div>
+                                                                        <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Bank Name</span>
+                                                                        <p style={{ margin: 0, fontWeight: 500, color: 'white' }}>KOTAK MAHINDRA BANK</p>
+                                                                  </div>
+                                                                  <div>
+                                                                        <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Account Name</span>
+                                                                        <p style={{ margin: 0, fontWeight: 500, color: 'white' }}>ITRAM MANAGEMENT LLP</p>
+                                                                  </div>
+                                                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
+                                                                        <div>
+                                                                              <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>Account Number</span>
+                                                                              <p style={{ margin: 0, fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>1249346867</p>
+                                                                        </div>
+                                                                        <button
+                                                                              onClick={() => {
+                                                                                    navigator.clipboard.writeText('1249346867');
+                                                                                    setCopiedText('acc');
+                                                                                    setTimeout(() => setCopiedText(''), 2000);
+                                                                              }}
+                                                                              style={{ background: 'transparent', border: 'none', color: copiedText === 'acc' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '0.5rem' }}
+                                                                        >
+                                                                              {copiedText === 'acc' ? <Check size={16} /> : <Copy size={16} />}
+                                                                        </button>
+                                                                  </div>
+                                                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
+                                                                        <div>
+                                                                              <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>IFSC Code</span>
+                                                                              <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>KKBK0001487</p>
+                                                                        </div>
+                                                                        <button
+                                                                              onClick={() => {
+                                                                                    navigator.clipboard.writeText('KKBK0001487');
+                                                                                    setCopiedText('ifsc');
+                                                                                    setTimeout(() => setCopiedText(''), 2000);
+                                                                              }}
+                                                                              style={{ background: 'transparent', border: 'none', color: copiedText === 'ifsc' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '0.5rem' }}
+                                                                        >
+                                                                              {copiedText === 'ifsc' ? <Check size={16} /> : <Copy size={16} />}
+                                                                        </button>
+                                                                  </div>
+                                                            </div>
+                                                      </div>
                                                 </div>
 
-                                                <button type="submit" className="btn btn-primary" disabled={isSubmitting || !depositAmount || !utrNumber || !receiptFile}>
-                                                      {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : 'Submit Request'}
-                                                </button>
-                                          </form>
-                                    </div>
+                                                {/* Deposit Form */}
+                                                <div className="dashboard-card glass-panel">
+                                                      <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                            <ArrowDownToLine className="text-green-400" /> Submit Deposit Request
+                                                      </h2>
+
+                                                      <form onSubmit={handleDeposit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
+                                                            <div className="form-group">
+                                                                  <label>Amount Transferred (₹)</label>
+                                                                  <input
+                                                                        type="number"
+                                                                        required
+                                                                        min="1000"
+                                                                        placeholder="E.g. 100000"
+                                                                        className="dashboard-input"
+                                                                        value={depositAmount}
+                                                                        onChange={(e) => setDepositAmount(e.target.value)}
+                                                                        style={{
+                                                                              width: '100%',
+                                                                              padding: '0.875rem 1rem',
+                                                                              background: 'rgba(255, 255, 255, 0.05)',
+                                                                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                              color: 'white',
+                                                                              borderRadius: '0.75rem'
+                                                                        }}
+                                                                  />
+                                                            </div>
+
+                                                            <div className="form-group">
+                                                                  <label>UTR / Transaction Reference Number</label>
+                                                                  <input
+                                                                        type="text"
+                                                                        required
+                                                                        placeholder="E.g. UPI1234567890"
+                                                                        className="dashboard-input"
+                                                                        value={utrNumber}
+                                                                        onChange={(e) => setUtrNumber(e.target.value)}
+                                                                        style={{
+                                                                              width: '100%',
+                                                                              padding: '0.875rem 1rem',
+                                                                              background: 'rgba(255, 255, 255, 0.05)',
+                                                                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                              color: 'white',
+                                                                              borderRadius: '0.75rem'
+                                                                        }}
+                                                                  />
+                                                            </div>
+
+                                                            <div className="form-group">
+                                                                  <label>Payment Receipt / Screenshot</label>
+                                                                  <input
+                                                                        type="file"
+                                                                        required
+                                                                        accept="image/*,.pdf"
+                                                                        onChange={(e) => setReceiptFile(e.target.files[0])}
+                                                                        style={{
+                                                                              width: '100%',
+                                                                              padding: '0.875rem 1rem',
+                                                                              background: 'rgba(255, 255, 255, 0.05)',
+                                                                              border: '1px solid rgba(255, 255, 255, 0.1)',
+                                                                              color: 'white',
+                                                                              borderRadius: '0.75rem'
+                                                                        }}
+                                                                  />
+                                                                  <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
+                                                                        Upload a screenshot of your payment confirmation for faster verification.
+                                                                  </p>
+                                                            </div>
+
+                                                            <button type="submit" className="btn btn-primary" disabled={isSubmitting || !depositAmount || !utrNumber || !receiptFile}>
+                                                                  {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : 'Submit Request'}
+                                                            </button>
+                                                      </form>
+                                                </div>
+                                          </>
+                                    ) : (
+                                          <div className="dashboard-card glass-panel" style={{ gridColumn: '1 / -1' }}>
+                                                <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                      <ArrowUpRight className="text-red-400" /> Request Withdrawal
+                                                </h2>
+                                                {user?.kycStatus !== 'VERIFIED' ? (
+                                                      <div style={{ padding: '2rem', textAlign: 'center', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '1rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                                                            <User size={48} className="text-red-400" style={{ margin: '0 auto 1.5rem auto' }} />
+                                                            <h3 style={{ color: 'white', marginBottom: '0.5rem' }}>KYC Required</h3>
+                                                            <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '400px', margin: '0 auto 1.5rem auto' }}>
+                                                                  For security reasons, you must complete your identity verification before you can withdraw funds.
+                                                            </p>
+                                                            <button
+                                                                  onClick={() => window.location.href = '/dashboard/kyc'}
+                                                                  className="btn btn-primary"
+                                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
+                                                            >
+                                                                  Go to KYC Verification
+                                                            </button>
+                                                      </div>
+                                                ) : (
+                                                      <form onSubmit={handleWithdraw} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
+                                                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                                                  <label>Withdrawal Amount (₹)</label>
+                                                                  <input
+                                                                        type="number"
+                                                                        required
+                                                                        min="1000"
+                                                                        placeholder="Minimum ₹1,000"
+                                                                        value={withdrawAmount}
+                                                                        onChange={(e) => setWithdrawAmount(e.target.value)}
+                                                                        className="dashboard-input"
+                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
+                                                                  />
+                                                                  <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
+                                                                        Withdrawable Income Balance: ₹{balances.income?.toLocaleString('en-IN')}
+                                                                  </p>
+                                                            </div>
+                                                            <div className="form-group">
+                                                                  <label>Bank Name</label>
+                                                                  <input
+                                                                        type="text"
+                                                                        placeholder="E.g. HDFC Bank"
+                                                                        value={bankName}
+                                                                        onChange={(e) => setBankName(e.target.value)}
+                                                                        className="dashboard-input"
+                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
+                                                                  />
+                                                            </div>
+                                                            <div className="form-group">
+                                                                  <label>Account Number</label>
+                                                                  <input
+                                                                        type="text"
+                                                                        placeholder="Account Number"
+                                                                        value={accountNumber}
+                                                                        onChange={(e) => setAccountNumber(e.target.value)}
+                                                                        className="dashboard-input"
+                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
+                                                                  />
+                                                            </div>
+                                                            <div className="form-group">
+                                                                  <label>IFSC Code</label>
+                                                                  <input
+                                                                        type="text"
+                                                                        placeholder="IFSC Code"
+                                                                        value={ifscCode}
+                                                                        onChange={(e) => setIfscCode(e.target.value)}
+                                                                        className="dashboard-input"
+                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
+                                                                  />
+                                                            </div>
+                                                            <div className="form-group">
+                                                                  <label>UPI ID (Optional)</label>
+                                                                  <input
+                                                                        type="text"
+                                                                        placeholder="E.g. user@okaxis"
+                                                                        value={upiId}
+                                                                        onChange={(e) => setUpiId(e.target.value)}
+                                                                        className="dashboard-input"
+                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
+                                                                  />
+                                                            </div>
+                                                            <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
+                                                                  <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={isSubmitting || !withdrawAmount}>
+                                                                        {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : 'Request Withdrawal'}
+                                                                  </button>
+                                                            </div>
+                                                      </form>
+                                                )}
+                                          </div>
+                                    )}
                               </>
                         )}
                   </div>
@@ -457,7 +702,20 @@ const WalletPage = () => {
                   {/* Transaction History */}
                   <div className="dashboard-card glass-panel" style={{ marginTop: '2rem', padding: 0 }}>
                         <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }} className="wallet-header-flex">
-                              <h2 className="card-title" style={{ margin: 0, fontSize: '1.1rem' }}>Transaction Ledger</h2>
+                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
+                                    <h2 className="card-title" style={{ margin: 0, fontSize: '1.1rem' }}>Transaction Ledger</h2>
+                                    <button
+                                          onClick={handleExportCSV}
+                                          style={{
+                                                display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.1)',
+                                                border: '1px solid rgba(59, 130, 246, 0.2)', color: '#60a5fa', padding: '0.4rem 0.8rem',
+                                                borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer'
+                                          }}
+                                    >
+                                          <ArrowDownToLine size={14} /> Export CSV
+                                    </button>
+                              </div>
+
                               <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', flex: '1 1 300px', justifyContent: 'flex-end' }} className="wallet-actions-flex">
                                     <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', flex: '1 1 auto', maxWidth: '100%' }}>
                                           <Filter size={16} style={{ color: 'rgba(255,255,255,0.5)', marginLeft: '0.5rem' }} />

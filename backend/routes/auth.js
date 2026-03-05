@@ -24,6 +24,10 @@ router.post('/reset-password/:resetToken', authController.resetPassword);
 
 // router.get('/setup-admin', authController.createSuperAdmin); // REMOVED — use seed script instead
 router.get('/me', protect, authController.getMe);
+router.put('/change-password', protect, authController.changePassword);
+router.get('/sessions', protect, authController.getSessions);
+router.delete('/sessions/:sessionId', protect, authController.revokeSession);
+
 
 module.exports = router;
 

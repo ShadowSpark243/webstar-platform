@@ -237,18 +237,53 @@ const ProjectsPage = () => {
 
                                                             {expandedProjects[grp.project.id] && (
                                                                   <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', animation: 'fadeIn 0.2s ease' }}>
-                                                                        {grp.investments.map((inv) => (
-                                                                              <div key={inv.id} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(255,255,255,0.02)', padding: '0.75rem', borderRadius: '0.5rem' }}>
-                                                                                    <div>
-                                                                                          <div style={{ color: 'white', fontSize: '0.9rem', fontWeight: 500 }}>₹{inv.amount.toLocaleString('en-IN')}</div>
-                                                                                          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', marginTop: '0.1rem' }}><Clock size={10} style={{ display: 'inline', marginRight: '4px' }} />{new Date(inv.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                                                        {grp.investments.map((inv) => {
+                                                                              const start = new Date(inv.createdAt).getTime();
+                                                                              const end = new Date(inv.maturityDate).getTime();
+                                                                              const now = Date.now();
+                                                                              const total = end - start;
+                                                                              const elapsed = now - start;
+                                                                              const progress = Math.min(Math.max((elapsed / total) * 100, 0), 100);
+                                                                              const isMatured = now >= end;
+
+                                                                              return (
+                                                                                    <div key={inv.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.75rem', border: isMatured ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid transparent' }}>
+                                                                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
+                                                                                                <div>
+                                                                                                      <div style={{ color: 'white', fontSize: '1rem', fontWeight: 600 }}>₹{inv.amount.toLocaleString('en-IN')}</div>
+                                                                                                      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                                                            <Clock size={12} /> Started: {new Date(inv.createdAt).toLocaleDateString()}
+                                                                                                      </div>
+                                                                                                </div>
+                                                                                                <div style={{ textAlign: 'right' }}>
+                                                                                                      <div style={{ color: isMatured ? '#10b981' : '#3b82f6', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
+                                                                                                            {isMatured ? 'MATURED' : 'EARNING'}
+                                                                                                      </div>
+                                                                                                      <div style={{ color: '#10b981', fontSize: '0.9rem', fontWeight: 700 }}>+₹{(inv.expectedReturn - inv.amount).toLocaleString('en-IN')}</div>
+                                                                                                </div>
+                                                                                          </div>
+
+                                                                                          <div style={{ marginBottom: '0.5rem' }}>
+                                                                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.3rem' }}>
+                                                                                                      <span>Maturity Progress</span>
+                                                                                                      <span>{progress.toFixed(1)}%</span>
+                                                                                                </div>
+                                                                                                <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
+                                                                                                      <div style={{ width: `${progress}%`, height: '100%', background: isMatured ? '#10b981' : 'linear-gradient(90deg, #3b82f6, #8b5cf6)', transition: 'width 1s ease' }} />
+                                                                                                </div>
+                                                                                          </div>
+
+                                                                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
+                                                                                                <span style={{ color: 'rgba(255,255,255,0.4)' }}>Ends: {new Date(inv.maturityDate).toLocaleDateString()}</span>
+                                                                                                {isMatured && (
+                                                                                                      <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 600 }}>
+                                                                                                            <CheckCircle2 size={12} /> Principal + ROI credited
+                                                                                                      </span>
+                                                                                                )}
+                                                                                          </div>
                                                                                     </div>
-                                                                                    <div style={{ textAlign: 'right' }}>
-                                                                                          <div style={{ color: '#10b981', fontSize: '0.85rem', fontWeight: 600 }}>+₹{(inv.expectedReturn - inv.amount).toLocaleString('en-IN')}</div>
-                                                                                          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem' }}>Expected Profit</div>
-                                                                                    </div>
-                                                                              </div>
-                                                                        ))}
+                                                                              );
+                                                                        })}
                                                                   </div>
                                                             )}
                                                       </div>

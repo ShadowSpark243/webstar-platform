@@ -104,6 +104,46 @@ exports.getDashboardData = async (req, res) => {
       try {
             const { getRankProgress } = require('../utils/rankEngine');
 
+            // 1. Payout any matured investments automatically on dashboard load
+            const now = new Date();
+            const maturedInvestments = await prisma.investment.findMany({
+                  where: {
+                        userId: req.user.id,
+                        status: 'ACTIVE',
+                        maturityDate: { lte: now }
+                  },
+                  include: {
+                        project: { select: { title: true } }
+                  }
+            });
+
+            if (maturedInvestments.length > 0) {
+                  for (const inv of maturedInvestments) {
+                        await prisma.$transaction([
+                              // Change investment status
+                              prisma.investment.update({
+                                    where: { id: inv.id },
+                                    data: { status: 'PAID_OUT', paidOutAt: now, returnedAmount: inv.expectedReturn }
+                              }),
+                              // Credit Income Balance
+                              prisma.user.update({
+                                    where: { id: req.user.id },
+                                    data: { incomeBalance: { increment: inv.expectedReturn } }
+                              }),
+                              // Log Transaction
+                              prisma.transaction.create({
+                                    data: {
+                                          userId: req.user.id,
+                                          type: 'RETURN',
+                                          amount: inv.expectedReturn,
+                                          status: 'APPROVED',
+                                          description: `ROI Maturity Payout: ${inv.project?.title || 'Project'} investment returned with profit.`
+                                    }
+                              })
+                        ]);
+                  }
+            }
+
             const [investments, recentTx, user] = await Promise.all([
                   prisma.investment.findMany({
                         where: { userId: req.user.id },
@@ -125,7 +165,7 @@ exports.getDashboardData = async (req, res) => {
                   }),
                   prisma.user.findUnique({
                         where: { id: req.user.id },
-                        select: { teamVolume: true }
+                        select: { teamVolume: true, walletBalance: true, incomeBalance: true }
                   })
             ]);
 
@@ -152,17 +192,26 @@ exports.getDashboardData = async (req, res) => {
                   }
             }
 
+            // 3. Calculate Portfolio Metrics
+            const activeInvestmentsData = await prisma.investment.findMany({
+                  where: { userId: req.user.id, status: 'ACTIVE' }
+            });
+
+            const portfolio = {
+                  totalInvestedAmount: activeInvestmentsData.reduce((sum, inv) => sum + inv.amount, 0),
+                  estimatedProfit: activeInvestmentsData.reduce((sum, inv) => sum + (inv.expectedReturn - inv.amount), 0),
+                  activeInvestments: activeInvestmentsData.length
+            };
+
             res.status(200).json({
                   success: true,
                   investments,
                   recentTransactions: recentTx,
-                  portfolio: {
-                        totalExpectedReturn,
-                        totalInvestedAmount,
-                        activeInvestments,
-                        uniqueProjects,
-                        estimatedProfit: totalExpectedReturn - totalInvestedAmount
+                  balances: {
+                        wallet: (user.walletBalance || 0),
+                        income: (user.incomeBalance || 0)
                   },
+                  portfolio,
                   rankProgress
             });
       } catch (error) {
@@ -200,19 +249,22 @@ exports.investInProject = async (req, res) => {
                   return res.status(400).json({ success: false, message: `Minimum investment for this project is ₹${project.minInvestment.toLocaleString('en-IN')}.` });
             }
 
-            // 3. Calculate expected return from real project data
+            // 3. Calculate expected return and maturity date from real project data
             const expectedReturn = investAmount * (1 + project.roiPercentage / 100);
+            const maturityDate = new Date();
+            maturityDate.setMonth(maturityDate.getMonth() + project.durationMonths);
             const projectWillBeFunded = project.raisedAmount + investAmount >= project.targetAmount;
 
-            // 4. ATOMIC DB TRANSACTION — Array transaction executes in a SINGLE round trip, much faster!
+            // 4. ATOMIC DB TRANSACTION
             const [newInvestment, newTx, updatedUser] = await prisma.$transaction([
-                  // Create Investment record
+                  // Create Investment record with maturity date
                   prisma.investment.create({
                         data: {
                               userId: req.user.id,
                               projectId: project.id,
                               amount: investAmount,
                               expectedReturn,
+                              maturityDate,
                               status: 'ACTIVE'
                         }
                   }),
@@ -244,7 +296,7 @@ exports.investInProject = async (req, res) => {
                   })
             ]);
 
-            // 5. MLM 5-Level Commission Distribution (runs AFTER transaction — failure here won't undo the investment)
+            // 5. MLM 5-Level Commission Distribution
             const networkStats = require('../utils/networkStats');
             await networkStats.updateUpliners(req.user.id, {
                   investmentAmount: investAmount,
@@ -259,6 +311,56 @@ exports.investInProject = async (req, res) => {
       } catch (error) {
             console.error('[INVEST ERROR]', error.message);
             res.status(500).json({ success: false, message: 'Investment failed. Please try again.' });
+      }
+};
+
+// ── Withdrawal Request ──
+exports.requestWithdrawal = async (req, res) => {
+      try {
+            const { amount, bankName, accountNumber, ifscCode, upiId } = req.body;
+            const withdrawAmount = parseFloat(amount);
+
+            if (!withdrawAmount || isNaN(withdrawAmount) || withdrawAmount < 1000) {
+                  return res.status(400).json({ success: false, message: 'Minimum withdrawal is ₹1,000.' });
+            }
+
+            const bankAccountInfo = `Bank: ${bankName} | Acc: ${accountNumber} | IFSC: ${ifscCode}${upiId ? ` | UPI: ${upiId}` : ''}`;
+
+            if (!bankName || !accountNumber || !ifscCode) {
+                  return res.status(400).json({ success: false, message: 'Complete bank account details are required.' });
+            }
+
+            const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+            if (user.kycStatus !== 'VERIFIED') {
+                  return res.status(403).json({ success: false, message: 'KYC Verification Required for Withdrawal.' });
+            }
+            if (user.incomeBalance < withdrawAmount) {
+                  return res.status(400).json({ success: false, message: 'Insufficient Income Wallet Balance.' });
+            }
+
+            // Check for pending withdrawals
+            const pendingWithdrawal = await prisma.transaction.findFirst({
+                  where: { userId: req.user.id, type: 'WITHDRAWAL', status: 'PENDING' }
+            });
+            if (pendingWithdrawal) {
+                  return res.status(400).json({ success: false, message: 'You already have a pending withdrawal request.' });
+            }
+
+            const transaction = await prisma.transaction.create({
+                  data: {
+                        userId: req.user.id,
+                        type: 'WITHDRAWAL',
+                        amount: withdrawAmount,
+                        status: 'PENDING',
+                        bankAccountInfo: bankAccountInfo.trim(),
+                        description: 'Withdrawal Request'
+                  }
+            });
+
+            res.status(201).json({ success: true, message: 'Withdrawal request submitted for Admin review.', transaction });
+      } catch (error) {
+            console.error('Withdrawal Request Error:', error);
+            res.status(500).json({ success: false, message: 'Failed to process withdrawal request.' });
       }
 };
 

@@ -8,6 +8,8 @@ const helmet = require('helmet');
 const hpp = require('hpp');
 const prisma = require('./utils/db');
 const logger = require('./utils/logger');
+const maintenanceMiddleware = require('./middleware/maintenanceMiddleware');
+
 
 const app = express();
 
@@ -60,6 +62,10 @@ app.use('/api/', globalLimiter);
 app.use('/api/auth/login', authLimiter);
 app.use('/api/auth/register', authLimiter);
 
+// ── Maintenance Mode Check ────────────────────────────────────────────────────
+app.use('/api/', maintenanceMiddleware);
+
+
 // ── Health Check (pings DB) ───────────────────────────────────────────────────
 app.get('/api/health', async (req, res) => {
       try {
@@ -77,6 +83,8 @@ app.use('/api/admin', require('./routes/admin'));
 app.use('/api/wallet', require('./routes/wallet'));
 app.use('/api/projects', require('./routes/project'));
 app.use('/api/chat', require('./routes/chat'));
+app.use('/api/export', require('./routes/export'));
+
 
 // ── 404 Handler ───────────────────────────────────────────────────────────────
 app.use((req, res) => {

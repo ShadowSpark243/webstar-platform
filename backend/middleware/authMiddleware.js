@@ -21,6 +21,12 @@ exports.protect = async (req, res, next) => {
                         return res.status(401).json({ message: 'Not authorized, user not found' });
                   }
 
+                  // Update session lastActive if exists
+                  await prisma.session.updateMany({
+                        where: { token, userId: req.user.id },
+                        data: { lastActive: new Date() }
+                  }).catch(() => { }); // Ignore error if session doesn't exist for some reason
+
                   next();
             } catch (error) {
                   return res.status(401).json({ message: 'Not authorized, token failed' });

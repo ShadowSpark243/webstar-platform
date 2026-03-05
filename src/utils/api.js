@@ -18,7 +18,7 @@ api.interceptors.request.use(
       }
 );
 
-// Add a response interceptor to handle expired tokens globally
+// Add a response interceptor to handle expired tokens and maintenance mode globally
 api.interceptors.response.use(
       (response) => response,
       (error) => {
@@ -29,6 +29,14 @@ api.interceptors.response.use(
                         window.location.href = '/';
                   }
             }
+
+            if (error.response?.status === 503 && error.response?.data?.maintenance) {
+                  // System is in maintenance mode — redirect to maintenance page
+                  if (window.location.pathname !== '/maintenance') {
+                        window.location.href = '/maintenance';
+                  }
+            }
+
             return Promise.reject(error);
       }
 );

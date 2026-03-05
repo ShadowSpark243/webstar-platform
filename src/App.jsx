@@ -24,6 +24,9 @@ import AdminNetwork from './pages/admin/AdminNetwork'
 import AdminSettings from './pages/admin/AdminSettings'
 import AdminProjects from './pages/admin/AdminProjects'
 import AdminSupport from './pages/admin/AdminSupport'
+import MaintenancePage from './pages/MaintenancePage'
+import TermsPage from './pages/TermsPage'
+import PrivacyPage from './pages/PrivacyPage'
 
 import { useAuth } from './context/AuthContext'
 
@@ -82,6 +85,9 @@ function App() {
         <Route path="support" element={<AdminSupport />} />
       </Route>
 
+      <Route path="/maintenance" element={<MaintenancePage />} />
+      <Route path="/terms" element={<TermsPage />} />
+      <Route path="/privacy" element={<PrivacyPage />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes >
   )

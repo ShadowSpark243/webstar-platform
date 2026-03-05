@@ -61,8 +61,8 @@ exports.register = async (req, res) => {
                   // Admin accounts are always assigned ID 0 via raw SQL
                   await prisma.$executeRawUnsafe(`SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'`);
                   await prisma.$executeRawUnsafe(
-                        `INSERT INTO User (id, fullName, email, username, phone, password, referralCode, referredById, inviterCode, inviter, role, status, kycStatus, walletBalance, totalInvested, teamVolume, \`rank\`, updatedAt)
-                         VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ADMIN', 'ACTIVE', 'VERIFIED', 0, 0, 0, 'Starter', NOW())`,
+                        `INSERT INTO User (id, fullName, email, username, phone, password, referralCode, referredById, inviterCode, inviter, role, status, kycStatus, walletBalance, incomeBalance, totalInvested, teamVolume, \`rank\`, updatedAt)
+                         VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ADMIN', 'ACTIVE', 'VERIFIED', 0, 0, 0, 0, 'Starter', NOW())`,
                         fullName, email, username, phone, hashedPassword, newReferralCode,
                         referredById, inviterCode, inviter
                   );
@@ -141,6 +141,16 @@ exports.login = async (req, res) => {
             const token = jwt.sign({ id: user.id, role: user.role }, process.env.JWT_SECRET, {
                   expiresIn: '7d'
             });
+
+            // 4. Create Session record
+            await prisma.session.create({
+                  data: {
+                        userId: user.id,
+                        token,
+                        ip: req.ip || req.headers['x-forwarded-for'],
+                        device: req.headers['user-agent']
+                  }
+            }).catch(e => console.error('Session creation failed:', e.message));
 
             const { password: _, ...userWithoutPassword } = user;
 
@@ -346,6 +356,7 @@ exports.getMe = async (req, res) => {
                         status: true,
                         kycStatus: true,
                         walletBalance: true,
+                        incomeBalance: true,
                         totalInvested: true,
                         teamVolume: true,
                         rank: true,
@@ -372,3 +383,68 @@ exports.getMe = async (req, res) => {
             res.status(500).json({ success: false, message: 'Server Error Fetching User' });
       }
 };
+
+// ── Change Password (from Profile) ──
+exports.changePassword = async (req, res) => {
+      try {
+            const { currentPassword, newPassword } = req.body;
+
+            if (!currentPassword || !newPassword) {
+                  return res.status(400).json({ success: false, message: 'Current and new password are required.' });
+            }
+            if (newPassword.length < 8) {
+                  return res.status(400).json({ success: false, message: 'New password must be at least 8 characters.' });
+            }
+
+            const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+            const isMatch = await bcrypt.compare(currentPassword, user.password);
+
+            if (!isMatch) {
+                  return res.status(401).json({ success: false, message: 'Current password is incorrect.' });
+            }
+
+            const salt = await bcrypt.genSalt(12);
+            const hashedPassword = await bcrypt.hash(newPassword, salt);
+
+            await prisma.user.update({
+                  where: { id: req.user.id },
+                  data: { password: hashedPassword }
+            });
+
+            res.status(200).json({ success: true, message: 'Password changed successfully.' });
+      } catch (error) {
+            console.error('Change Password Error:', error);
+            res.status(500).json({ success: false, message: 'Failed to change password.' });
+      }
+};
+
+// ── Get Active Sessions ──
+exports.getSessions = async (req, res) => {
+      try {
+            const sessions = await prisma.session.findMany({
+                  where: { userId: req.user.id },
+                  orderBy: { lastActive: 'desc' }
+            });
+            res.status(200).json({ success: true, sessions });
+      } catch (error) {
+            res.status(500).json({ success: false, message: 'Failed to fetch sessions.' });
+      }
+};
+
+// ── Revoke a Session ──
+exports.revokeSession = async (req, res) => {
+      try {
+            const { sessionId } = req.params;
+            const session = await prisma.session.findUnique({ where: { id: parseInt(sessionId) } });
+
+            if (!session || session.userId !== req.user.id) {
+                  return res.status(404).json({ success: false, message: 'Session not found.' });
+            }
+
+            await prisma.session.delete({ where: { id: parseInt(sessionId) } });
+            res.status(200).json({ success: true, message: 'Session revoked.' });
+      } catch (error) {
+            res.status(500).json({ success: false, message: 'Failed to revoke session.' });
+      }
+};
+

@@ -1,4 +1,4 @@
-import React from 'react';
+import { Link } from 'react-router-dom';
 import { PlaySquare, Mail, Phone, MapPin } from 'lucide-react';
 import './Footer.css';
 
@@ -11,12 +11,12 @@ const Footer = () => {
                         <div className="footer-grid">
 
                               <div className="footer-brand">
-                                    <a href="#" className="footer-logo">
+                                    <Link to="/" className="footer-logo">
                                           <PlaySquare className="text-primary" size={32} />
                                           <span>
                                                 WEB<span className="text-primary">STAR</span>
                                           </span>
-                                    </a>
+                                    </Link>
                                     <p className="footer-desc">
                                           Funding the next generation of blockbuster web series and movies through a revolutionary project-based profit sharing and network incentive model.
                                     </p>
@@ -50,8 +50,8 @@ const Footer = () => {
                                     <h4>Legal & Compliance</h4>
                                     <ul>
                                           <li><a href="#risk">Risk Disclosure</a></li>
-                                          <li><a href="#">Terms of Service</a></li>
-                                          <li><a href="#">Privacy Policy</a></li>
+                                          <li><Link to="/terms">Terms of Service</Link></li>
+                                          <li><Link to="/privacy">Privacy Policy</Link></li>
                                           <li><a href="#">KYC Requirements</a></li>
                                     </ul>
                               </div>

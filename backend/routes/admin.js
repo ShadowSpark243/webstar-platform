@@ -23,7 +23,10 @@ router.put('/kyc/review', adminController.reviewKyc);
 // Global Ledger / Deposits
 router.get('/deposits', adminController.getPendingDeposits);
 router.put('/deposits/review', adminController.reviewDeposit);
+router.get('/withdrawals', adminController.getPendingWithdrawals);
+router.put('/withdrawals/review', adminController.reviewWithdrawal);
 router.get('/transactions', adminController.getAllTransactions);
+
 
 // Global Network Tree
 router.get('/network', adminController.getGlobalNetworkTree);
@@ -33,5 +36,12 @@ router.get('/projects', adminController.getAllProjects);
 router.post('/projects', adminController.createProject);
 router.put('/projects/:id', adminController.updateProject);
 router.delete('/projects/:id', adminController.deleteProject);
+
+// Audit & System
+router.get('/logs', adminController.getAdminLogs);
+router.get('/analytics', adminController.getAnalytics);
+router.get('/maintenance', adminController.getMaintenanceMode);
+router.post('/maintenance/toggle', adminController.toggleMaintenanceMode);
+
 
 module.exports = router;

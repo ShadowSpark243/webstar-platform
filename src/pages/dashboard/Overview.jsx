@@ -32,6 +32,7 @@ const txIcons = {
       WITHDRAWAL: { icon: <ArrowUpRight size={14} />, color: '#f59e0b' },
       INVESTMENT: { icon: <Film size={14} />, color: '#3b82f6' },
       COMMISSION: { icon: <Users size={14} />, color: '#8b5cf6' },
+      RETURN: { icon: <TrendingUp size={14} />, color: '#10b981' },
       REFUND: { icon: <ArrowDownLeft size={14} />, color: '#06b6d4' }
 };
 
@@ -86,29 +87,29 @@ const Overview = () => {
                         <div className="ov-stat ov-s1">
                               <Wallet size={16} className="ov-stat-ic" />
                               <div>
-                                    <span className="ov-sv">{fmtINR(user?.walletBalance)}</span>
-                                    <span className="ov-sl">Balance</span>
+                                    <span className="ov-sv">{fmtINR(data?.balances?.wallet ?? user?.walletBalance)}</span>
+                                    <span className="ov-sl">Main Wallet</span>
                               </div>
                         </div>
-                        <div className="ov-stat ov-s2">
-                              <TrendingUp size={16} className="ov-stat-ic" />
+                        <div className="ov-stat ov-s2" style={{ borderColor: 'rgba(16, 185, 129, 0.2)' }}>
+                              <TrendingUp size={16} className="ov-stat-ic" style={{ color: '#10b981' }} />
                               <div>
-                                    <span className="ov-sv">{fmtINR(user?.totalInvested)}</span>
-                                    <span className="ov-sl">Invested</span>
+                                    <span className="ov-sv" style={{ color: '#10b981' }}>{fmtINR(data?.balances?.income ?? user?.incomeBalance)}</span>
+                                    <span className="ov-sl">Income Wallet</span>
                               </div>
                         </div>
                         <div className="ov-stat ov-s3">
-                              <CircleDollarSign size={16} className="ov-stat-ic" />
+                              <Film size={16} className="ov-stat-ic" />
                               <div>
-                                    <span className="ov-sv">{fmtINR(pf.totalExpectedReturn)}</span>
-                                    <span className="ov-sl">Returns</span>
+                                    <span className="ov-sv">{fmtINR(pf.totalInvestedAmount)}</span>
+                                    <span className="ov-sl">Invested</span>
                               </div>
                         </div>
                         <div className="ov-stat ov-s4">
-                              <Users size={16} className="ov-stat-ic" />
+                              <CircleDollarSign size={16} className="ov-stat-ic" />
                               <div>
-                                    <span className="ov-sv">{fmtINR(user?.teamVolume)}</span>
-                                    <span className="ov-sl">Network</span>
+                                    <span className="ov-sv">{fmtINR(pf.estimatedProfit)}</span>
+                                    <span className="ov-sl">Profit (Est.)</span>
                               </div>
                         </div>
                   </div>
@@ -224,7 +225,7 @@ const Overview = () => {
                                                 </div>
                                           ) : tx.map(t => {
                                                 const tc = txIcons[t.type] || txIcons.DEPOSIT;
-                                                const pos = ['DEPOSIT', 'COMMISSION', 'REFUND'].includes(t.type);
+                                                const pos = ['DEPOSIT', 'COMMISSION', 'REFUND', 'RETURN'].includes(t.type);
                                                 return (
                                                       <div key={t.id} className="ov-tx">
                                                             <div className="ov-tx-ic" style={{ background: `${tc.color}15`, color: tc.color }}>{tc.icon}</div>

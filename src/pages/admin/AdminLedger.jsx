@@ -6,11 +6,13 @@ import TransactionDetailsModal from '../../components/TransactionDetailsModal';
 
 const AdminLedger = () => {
       const [pendingDeposits, setPendingDeposits] = useState([]);
+      const [pendingWithdrawals, setPendingWithdrawals] = useState([]);
       const [transactions, setTransactions] = useState([]);
       const [loading, setLoading] = useState(true);
       const [loadingHistory, setLoadingHistory] = useState(true);
 
       const [searchQuery, setSearchQuery] = useState('');
+      const [withdrawalSearchQuery, setWithdrawalSearchQuery] = useState('');
       const [txSearchQuery, setTxSearchQuery] = useState('');
       const [txTypeFilter, setTxTypeFilter] = useState('ALL');
       const [txStatusFilter, setTxStatusFilter] = useState('ALL');
@@ -23,6 +25,15 @@ const AdminLedger = () => {
                   setPendingDeposits(res.data.deposits);
             } catch (error) {
                   console.error("Failed to fetch pending deposits", error);
+            }
+      };
+
+      const fetchWithdrawals = async () => {
+            try {
+                  const res = await api.get('/admin/withdrawals');
+                  setPendingWithdrawals(res.data.withdrawals);
+            } catch (error) {
+                  console.error("Failed to fetch pending withdrawals", error);
             }
       };
 
@@ -40,7 +51,7 @@ const AdminLedger = () => {
 
       const fetchData = async () => {
             setLoading(true);
-            await Promise.all([fetchDeposits(), fetchTransactions()]);
+            await Promise.all([fetchDeposits(), fetchWithdrawals(), fetchTransactions()]);
             setLoading(false);
       };
 
@@ -48,14 +59,14 @@ const AdminLedger = () => {
             fetchData();
       }, []);
 
-      const [confirmModal, setConfirmModal] = useState({ isOpen: false, depositId: null, status: null, isLoading: false, rejectionReason: '' });
+      const [confirmModal, setConfirmModal] = useState({ isOpen: false, transactionId: null, type: 'DEPOSIT', status: null, isLoading: false, rejectionReason: '' });
 
-      const handleReviewClick = (depositId, status) => {
-            setConfirmModal({ isOpen: true, depositId, status, isLoading: false, rejectionReason: '' });
+      const handleReviewClick = (transactionId, type, status) => {
+            setConfirmModal({ isOpen: true, transactionId, type, status, isLoading: false, rejectionReason: '' });
       };
 
       const executeReview = async () => {
-            const { depositId, status, rejectionReason } = confirmModal;
+            const { transactionId, type, status, rejectionReason } = confirmModal;
 
             if (status === 'REJECTED' && (!rejectionReason || !rejectionReason.trim())) {
                   alert("Please provide a reason for rejection.");
@@ -64,14 +75,15 @@ const AdminLedger = () => {
 
             setConfirmModal(prev => ({ ...prev, isLoading: true }));
             try {
-                  const res = await api.put('/admin/deposits/review', { transactionId: parseInt(depositId), status, rejectionReason });
+                  const endpoint = type === 'DEPOSIT' ? '/admin/deposits/review' : '/admin/withdrawals/review';
+                  const res = await api.put(endpoint, { transactionId: parseInt(transactionId), status, rejectionReason });
                   if (res.data.success) {
-                        alert(`Success: Deposit has been ${status === 'APPROVED' ? 'Approved' : 'Rejected'} and the database is updated.`);
-                        setConfirmModal({ isOpen: false, depositId: null, status: null, isLoading: false, rejectionReason: '' });
-                        fetchData(); // Refresh both deposits and ledger
+                        alert(`Success: ${type} has been ${status === 'APPROVED' ? 'Approved' : 'Rejected'}.`);
+                        setConfirmModal({ isOpen: false, transactionId: null, type: 'DEPOSIT', status: null, isLoading: false, rejectionReason: '' });
+                        fetchData();
                   }
             } catch (error) {
-                  alert("Failed to process deposit: " + (error.response?.data?.message || 'Unknown error'));
+                  alert("Failed to process request: " + (error.response?.data?.message || 'Unknown error'));
                   setConfirmModal(prev => ({ ...prev, isLoading: false }));
             }
       };
@@ -80,6 +92,13 @@ const AdminLedger = () => {
             (d.user?.fullName || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
             (d.user?.email || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
             (d.bankReference || '').toLowerCase().includes((searchQuery || '').toLowerCase())
+      );
+
+      const filteredWithdrawals = pendingWithdrawals.filter(w =>
+            (w.user?.fullName || '').toLowerCase().includes((withdrawalSearchQuery || '').toLowerCase()) ||
+            (w.user?.email || '').toLowerCase().includes((withdrawalSearchQuery || '').toLowerCase()) ||
+            (w.bankName || '').toLowerCase().includes((withdrawalSearchQuery || '').toLowerCase()) ||
+            (w.accountNumber || '').toLowerCase().includes((withdrawalSearchQuery || '').toLowerCase())
       );
 
       const filteredTransactions = transactions.filter(t => {
@@ -229,7 +248,7 @@ const AdminLedger = () => {
                                                                   <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
                                                                         <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', width: '100%' }}>
                                                                               <button
-                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'APPROVED') }}
+                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'DEPOSIT', 'APPROVED') }}
                                                                                     className="btn btn-primary"
                                                                                     style={{
                                                                                           padding: '0.55rem 0',
@@ -245,7 +264,7 @@ const AdminLedger = () => {
                                                                                     Credit Funds
                                                                               </button>
                                                                               <button
-                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'REJECTED') }}
+                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'DEPOSIT', 'REJECTED') }}
                                                                                     className="btn btn-outline"
                                                                                     style={{
                                                                                           padding: '0.55rem 0',
@@ -258,6 +277,91 @@ const AdminLedger = () => {
                                                                                           fontWeight: 700,
                                                                                           borderRadius: '0.5rem'
                                                                                     }}
+                                                                              >
+                                                                                    Reject
+                                                                              </button>
+                                                                        </div>
+                                                                  </td>
+                                                            </tr>
+                                                      ))}
+                                                </tbody>
+                                          </table>
+                                    </div>
+                              )}
+                        </div>
+
+                        {/* Pending Withdrawals Queue */}
+                        <div className="dashboard-card glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
+                              <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(239, 68, 68, 0.05)' }}>
+                                    <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                          <ArrowUpRight className="text-red-400" size={20} /> Withdrawal Requests Queue
+                                    </h2>
+                                    <div style={{ position: 'relative', minWidth: '280px', flex: '1 1 auto' }}>
+                                          <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
+                                          <input
+                                                type="text"
+                                                placeholder="Search user, bank, or account..."
+                                                value={withdrawalSearchQuery}
+                                                onChange={(e) => setWithdrawalSearchQuery(e.target.value)}
+                                                style={{
+                                                      width: '100%',
+                                                      padding: '0.65rem 1rem 0.65rem 2.5rem',
+                                                      background: 'rgba(0,0,0,0.3)',
+                                                      border: '1px solid rgba(255,255,255,0.1)',
+                                                      color: 'white',
+                                                      borderRadius: '2rem',
+                                                      outline: 'none',
+                                                      fontSize: '0.85rem'
+                                                }}
+                                          />
+                                    </div>
+                              </div>
+                              {loading ? (
+                                    <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Loading withdrawals...</div>
+                              ) : (
+                                    <div style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', display: 'block', WebkitOverflowScrolling: 'touch' }}>
+                                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                                                <thead>
+                                                      <tr style={{ background: 'rgba(0,0,0,0.2)', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
+                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>User Identity</th>
+                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Withdrawal Method</th>
+                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Requested Amount</th>
+                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600, textAlign: 'right' }}>Actions</th>
+                                                      </tr>
+                                                </thead>
+                                                <tbody>
+                                                      {filteredWithdrawals.length === 0 ? (
+                                                            <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)' }}>No pending withdrawal requests.</td></tr>
+                                                      ) : filteredWithdrawals.map((w) => (
+                                                            <tr
+                                                                  key={w.id}
+                                                                  style={{ borderTop: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'all 0.2s' }}
+                                                                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(239, 68, 68, 0.05)' })}
+                                                                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
+                                                            >
+                                                                  <td style={{ padding: '1.25rem 1.5rem' }} onClick={() => setSelectedTransaction(w)}>
+                                                                        <div style={{ fontWeight: 600, color: 'white' }}>{w.user?.fullName}</div>
+                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{w.user?.email}</div>
+                                                                  </td>
+                                                                  <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.9rem' }} onClick={() => setSelectedTransaction(w)}>
+                                                                        <div style={{ color: 'white' }}>{w.bankName}</div>
+                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>{w.accountNumber} • {w.ifscCode}</div>
+                                                                        {w.upiId && <div style={{ fontSize: '0.8rem', color: '#60a5fa' }}>UPI: {w.upiId}</div>}
+                                                                  </td>
+                                                                  <td style={{ padding: '1.25rem 1.5rem', fontWeight: 700, color: '#ef4444', fontSize: '1.1rem' }} onClick={() => setSelectedTransaction(w)}>₹{w.amount?.toLocaleString('en-IN')}</td>
+                                                                  <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
+                                                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                                              <button
+                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(w.id, 'WITHDRAWAL', 'APPROVED') }}
+                                                                                    className="btn btn-primary"
+                                                                                    style={{ background: '#3b82f6', border: 'none', padding: '0.55rem 1rem', fontSize: '0.8rem', fontWeight: 700 }}
+                                                                              >
+                                                                                    Disburse
+                                                                              </button>
+                                                                              <button
+                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(w.id, 'WITHDRAWAL', 'REJECTED') }}
+                                                                                    className="btn btn-outline"
+                                                                                    style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#ef4444', padding: '0.55rem 1rem', fontSize: '0.8rem', fontWeight: 700 }}
                                                                               >
                                                                                     Reject
                                                                               </button>
@@ -394,7 +498,7 @@ const AdminLedger = () => {
 
                                     <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
                                           <button
-                                                onClick={() => setConfirmModal({ isOpen: false, depositId: null, status: null, isLoading: false, rejectionReason: '' })}
+                                                onClick={() => setConfirmModal({ isOpen: false, transactionId: null, type: 'DEPOSIT', status: null, isLoading: false, rejectionReason: '' })}
                                                 className="btn btn-outline"
                                                 style={{ padding: '0.75rem 1.5rem', flex: 1 }}
                                                 disabled={confirmModal.isLoading}

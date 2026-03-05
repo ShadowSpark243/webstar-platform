@@ -17,6 +17,7 @@ model User {
   referralCode           String             @unique
   referredById           Int?
   walletBalance          Float              @default(0)
+  incomeBalance          Float              @default(0)
   totalInvested          Float              @default(0)
   teamVolume             Float              @default(0)
   rank                   String             @default("Starter")
@@ -120,6 +121,9 @@ model Investment {
   amount         Float
   expectedReturn Float
   status         InvStatus @default(ACTIVE)
+  maturityDate   DateTime?
+  returnedAmount Float     @default(0)
+  paidOutAt      DateTime?
   createdAt      DateTime  @default(now())
   project        Project   @relation(fields: [projectId], references: [id])
   user           User      @relation(fields: [userId], references: [id])
@@ -155,6 +159,37 @@ model SupportMessage {
   @@index([senderId])
 }
 
+model AdminLog {
+  id         Int      @id @default(autoincrement())
+  adminId    Int
+  action     String
+  targetType String
+  targetId   Int?
+  details    String?  @db.Text
+  createdAt  DateTime @default(now())
+
+  @@index([adminId])
+  @@index([createdAt])
+}
+
+model Session {
+  id         Int      @id @default(autoincrement())
+  userId     Int
+  token      String   @unique
+  device     String?
+  ip         String?
+  lastActive DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([userId])
+  @@index([token])
+}
+
+model AppSetting {
+  key   String @id @unique
+  value String
+}
+
 enum TicketStatus {
   OPEN
   IN_PROGRESS
@@ -185,6 +220,8 @@ enum TxType {
   INVESTMENT
   COMMISSION
   REFUND
+  RETURN
+  BONUS
 }
 
 enum TxStatus {

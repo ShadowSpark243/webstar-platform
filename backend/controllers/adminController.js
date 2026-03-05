@@ -1,5 +1,6 @@
 const prisma = require('../utils/db');
 const { generatePresignedUrl } = require('../utils/s3');
+const logAdminAction = require('../middleware/adminLogMiddleware');
 
 // ----------------------------------------------------
 // 1. GLOBAL METRICS (10k User Limit & Funding)
@@ -9,14 +10,30 @@ exports.getGlobalStats = async (req, res) => {
             const totalUsers = await prisma.user.count({ where: { role: 'USER' } });
 
             // Sum of all APPROVED DEPOSITS minus APPROVED WITHDRAWALS
-            const totalDeposits = await prisma.transaction.aggregate({
+            const depositStats = await prisma.transaction.aggregate({
                   _sum: { amount: true },
                   where: { type: 'DEPOSIT', status: 'APPROVED' }
             });
 
+            const withdrawalStats = await prisma.transaction.aggregate({
+                  _sum: { amount: true },
+                  where: { type: 'WITHDRAWAL', status: 'APPROVED' }
+            });
+
+            const totalDeposits = (depositStats._sum.amount || 0) - (withdrawalStats._sum.amount || 0);
+
             const totalInvestments = await prisma.investment.aggregate({
                   _sum: { amount: true },
                   where: { status: 'ACTIVE' }
+            });
+
+            // 1b. Global User Balances (Platform Liability)
+            const globalBalances = await prisma.user.aggregate({
+                  _sum: {
+                        walletBalance: true,
+                        incomeBalance: true
+                  },
+                  where: { role: 'USER' }
             });
 
             // 6-Month Funding Data
@@ -90,8 +107,11 @@ exports.getGlobalStats = async (req, res) => {
                         remaining: 10000 - totalUsers
                   },
                   funding: {
-                        totalDeposited: totalDeposits._sum.amount || 0,
-                        totalInvested: totalInvestments._sum.amount || 0
+                        totalDeposited: totalDeposits || 0,
+                        totalInvested: totalInvestments._sum.amount || 0,
+                        totalUserWallet: globalBalances._sum.walletBalance || 0,
+                        totalUserIncome: globalBalances._sum.incomeBalance || 0,
+                        totalPlatformLiability: (globalBalances._sum.walletBalance || 0) + (globalBalances._sum.incomeBalance || 0)
                   },
                   analytics: {
                         fundingData,
@@ -203,11 +223,13 @@ exports.updateUserWallet = async (req, res) => {
                   data: {
                         userId: parseInt(id),
                         type: 'DEPOSIT',
-                        amount: parseFloat(newBalance), // Not totally accurate math-wise, but logs the change
+                        amount: parseFloat(newBalance),
                         status: 'APPROVED',
                         description: `Admin Override: ${reason || 'Manual Adjustment'}`
                   }
             });
+
+            await logAdminAction(req.user.id, 'UPDATE_WALLET', 'USER', parseInt(id), `Set balance to ₹${newBalance}. Reason: ${reason || 'N/A'}`);
 
             res.status(200).json({ success: true, user: updatedUser });
       } catch (error) {
@@ -229,6 +251,8 @@ exports.updateUserStatus = async (req, res) => {
                   data: { status }
             });
 
+            await logAdminAction(req.user.id, `USER_${status}`, 'USER', parseInt(id));
+
             res.status(200).json({ success: true, message: `User marked as ${status}`, user: updatedUser });
       } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -240,25 +264,19 @@ exports.updateUserStatus = async (req, res) => {
 // ----------------------------------------------------
 exports.getAllKyc = async (req, res) => {
       try {
-            // Use a raw-safe approach: query docs first, then include user data
-            // This prevents Prisma's "Inconsistent query result" crash on orphaned records
             const documents = await prisma.kycDocument.findMany({
                   orderBy: { createdAt: 'desc' }
             });
 
-            // Manually attach user data and presigned URLs
             const enrichedDocs = [];
             for (const doc of documents) {
-                  // Fetch user safely (may be null if orphaned)
                   const user = await prisma.user.findUnique({
                         where: { id: doc.userId },
                         select: { fullName: true, email: true, username: true, phone: true }
                   });
 
-                  // Skip orphaned docs with no matching user
                   if (!user) continue;
 
-                  // Generate presigned URL for the document
                   if (doc.documentUrl) {
                         try {
                               const keyMatch = doc.documentUrl.split(`${process.env.S3_BUCKET_NAME}/`);
@@ -283,7 +301,7 @@ exports.getAllKyc = async (req, res) => {
 
 exports.reviewKyc = async (req, res) => {
       try {
-            const { docId, status, rejectionReason } = req.body; // status must be 'VERIFIED' or 'REJECTED'
+            const { docId, status, rejectionReason } = req.body;
 
             const document = await prisma.kycDocument.update({
                   where: { id: parseInt(docId) },
@@ -295,11 +313,12 @@ exports.reviewKyc = async (req, res) => {
                   }
             });
 
-            // Also update the global User state
             await prisma.user.update({
                   where: { id: document.userId },
                   data: { kycStatus: status }
             });
+
+            await logAdminAction(req.user.id, `KYC_${status}`, 'KYC', parseInt(docId), rejectionReason || null);
 
             res.status(200).json({ success: true, message: `KYC ${status}` });
       } catch (error) {
@@ -318,7 +337,6 @@ exports.getPendingDeposits = async (req, res) => {
                   orderBy: { createdAt: 'asc' }
             });
 
-            // Add presigned URLs for receipts
             for (const dep of deposits) {
                   if (dep.receiptUrl) {
                         try {
@@ -340,7 +358,7 @@ exports.getPendingDeposits = async (req, res) => {
 
 exports.reviewDeposit = async (req, res) => {
       try {
-            const { transactionId, status, rejectionReason } = req.body; // 'APPROVED' or 'REJECTED'
+            const { transactionId, status, rejectionReason } = req.body;
 
             const tx = await prisma.transaction.update({
                   where: { id: parseInt(transactionId) },
@@ -350,7 +368,6 @@ exports.reviewDeposit = async (req, res) => {
                   }
             });
 
-            // If approved, actually fund the wallet and activate user
             if (status === 'APPROVED') {
                   const user = await prisma.user.findUnique({ where: { id: tx.userId } });
 
@@ -371,7 +388,67 @@ exports.reviewDeposit = async (req, res) => {
                   }
             }
 
+            await logAdminAction(req.user.id, `DEPOSIT_${status}`, 'TRANSACTION', parseInt(transactionId), `₹${tx.amount}`);
+
             res.status(200).json({ success: true, message: `Deposit ${status}` });
+      } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+      }
+};
+
+// ----------------------------------------------------
+// 4b. WITHDRAWAL APPROVALS
+// ----------------------------------------------------
+exports.getPendingWithdrawals = async (req, res) => {
+      try {
+            const withdrawals = await prisma.transaction.findMany({
+                  where: { type: 'WITHDRAWAL', status: 'PENDING' },
+                  include: { user: { select: { fullName: true, email: true, username: true, walletBalance: true } } },
+                  orderBy: { createdAt: 'asc' }
+            });
+            res.status(200).json({ success: true, withdrawals });
+      } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+      }
+};
+
+exports.reviewWithdrawal = async (req, res) => {
+      try {
+            const { transactionId, status, rejectionReason } = req.body;
+
+            const tx = await prisma.transaction.findUnique({ where: { id: parseInt(transactionId) } });
+            if (!tx || tx.type !== 'WITHDRAWAL' || tx.status !== 'PENDING') {
+                  return res.status(400).json({ success: false, message: 'Invalid withdrawal request.' });
+            }
+
+            await prisma.transaction.update({
+                  where: { id: parseInt(transactionId) },
+                  data: {
+                        status,
+                        rejectionReason: status === 'REJECTED' ? rejectionReason : null
+                  }
+            });
+
+            // If approved, deduct the amount from the user's wallet
+            if (status === 'APPROVED') {
+                  const user = await prisma.user.findUnique({ where: { id: tx.userId } });
+                  if (user.incomeBalance < tx.amount) {
+                        await prisma.transaction.update({
+                              where: { id: parseInt(transactionId) },
+                              data: { status: 'REJECTED', rejectionReason: 'Insufficient income balance at time of processing.' }
+                        });
+                        return res.status(400).json({ success: false, message: 'User has insufficient income balance. Withdrawal auto-rejected.' });
+                  }
+
+                  await prisma.user.update({
+                        where: { id: tx.userId },
+                        data: { incomeBalance: { decrement: tx.amount } }
+                  });
+            }
+
+            await logAdminAction(req.user.id, `WITHDRAWAL_${status}`, 'TRANSACTION', parseInt(transactionId), `₹${tx.amount}`);
+
+            res.status(200).json({ success: true, message: `Withdrawal ${status}` });
       } catch (error) {
             res.status(500).json({ success: false, message: error.message });
       }
@@ -423,10 +500,9 @@ exports.getAllTransactions = async (req, res) => {
             const transactions = await prisma.transaction.findMany({
                   include: { user: { select: { fullName: true, email: true, username: true } } },
                   orderBy: { createdAt: 'desc' },
-                  take: 500 // Limit to prevent massive payload
+                  take: 500
             });
 
-            // Add presigned URLs for receipts in ledger
             for (const tx of transactions) {
                   if (tx.receiptUrl) {
                         try {
@@ -475,7 +551,6 @@ exports.createProject = async (req, res) => {
       try {
             const { title, description, genre, imageUrl, targetAmount, minInvestment, roiPercentage, durationMonths, status } = req.body;
 
-            // Validation
             if (!title || !description || !genre || !targetAmount || !minInvestment || !roiPercentage || !durationMonths) {
                   return res.status(400).json({ success: false, message: 'All required fields must be provided.' });
             }
@@ -493,6 +568,8 @@ exports.createProject = async (req, res) => {
                         status: status || 'COMING_SOON'
                   }
             });
+
+            await logAdminAction(req.user.id, 'CREATE_PROJECT', 'PROJECT', project.id, title);
 
             res.status(201).json({ success: true, project, message: 'Project created successfully.' });
       } catch (error) {
@@ -523,6 +600,8 @@ exports.updateProject = async (req, res) => {
                   data: updateData
             });
 
+            await logAdminAction(req.user.id, 'UPDATE_PROJECT', 'PROJECT', parseInt(id));
+
             res.status(200).json({ success: true, project, message: 'Project updated successfully.' });
       } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -533,7 +612,6 @@ exports.deleteProject = async (req, res) => {
       try {
             const { id } = req.params;
 
-            // Check if project has any investments
             const investmentCount = await prisma.investment.count({
                   where: { projectId: parseInt(id) }
             });
@@ -546,8 +624,120 @@ exports.deleteProject = async (req, res) => {
             }
 
             await prisma.project.delete({ where: { id: parseInt(id) } });
+            await logAdminAction(req.user.id, 'DELETE_PROJECT', 'PROJECT', parseInt(id));
+
             res.status(200).json({ success: true, message: 'Project deleted successfully.' });
       } catch (error) {
             res.status(500).json({ success: false, message: error.message });
       }
 };
+
+// ----------------------------------------------------
+// 7. AUDIT TRAIL
+// ----------------------------------------------------
+exports.getAdminLogs = async (req, res) => {
+      try {
+            const logs = await prisma.adminLog.findMany({
+                  orderBy: { createdAt: 'desc' },
+                  take: 100
+            });
+            res.status(200).json({ success: true, logs });
+      } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+      }
+};
+
+// ----------------------------------------------------
+// 8. ANALYTICS (12-Month Trends)
+// ----------------------------------------------------
+exports.getAnalytics = async (req, res) => {
+      try {
+            const twelveMonthsAgo = new Date();
+            twelveMonthsAgo.setMonth(twelveMonthsAgo.getMonth() - 11);
+            twelveMonthsAgo.setDate(1);
+
+            const [deposits, investments, users, withdrawals] = await Promise.all([
+                  prisma.transaction.findMany({
+                        where: { type: 'DEPOSIT', status: 'APPROVED', createdAt: { gte: twelveMonthsAgo } },
+                        select: { amount: true, createdAt: true }
+                  }),
+                  prisma.investment.findMany({
+                        where: { createdAt: { gte: twelveMonthsAgo } },
+                        select: { amount: true, createdAt: true }
+                  }),
+                  prisma.user.findMany({
+                        where: { role: 'USER', createdAt: { gte: twelveMonthsAgo } },
+                        select: { createdAt: true }
+                  }),
+                  prisma.transaction.findMany({
+                        where: { type: 'WITHDRAWAL', status: 'APPROVED', createdAt: { gte: twelveMonthsAgo } },
+                        select: { amount: true, createdAt: true }
+                  })
+            ]);
+
+            const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+            const dataMap = {};
+
+            for (let i = 11; i >= 0; i--) {
+                  const d = new Date();
+                  d.setMonth(d.getMonth() - i);
+                  const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+                  dataMap[key] = { name: months[d.getMonth()], deposits: 0, investments: 0, users: 0, withdrawals: 0 };
+            }
+
+            deposits.forEach(t => {
+                  const d = new Date(t.createdAt);
+                  const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+                  if (dataMap[key]) dataMap[key].deposits += t.amount;
+            });
+            investments.forEach(t => {
+                  const d = new Date(t.createdAt);
+                  const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+                  if (dataMap[key]) dataMap[key].investments += t.amount;
+            });
+            users.forEach(u => {
+                  const d = new Date(u.createdAt);
+                  const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+                  if (dataMap[key]) dataMap[key].users++;
+            });
+            withdrawals.forEach(t => {
+                  const d = new Date(t.createdAt);
+                  const key = `${months[d.getMonth()]} ${d.getFullYear()}`;
+                  if (dataMap[key]) dataMap[key].withdrawals += t.amount;
+            });
+
+            res.status(200).json({ success: true, analytics: Object.values(dataMap) });
+      } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+      }
+};
+
+// ----------------------------------------------------
+// 9. MAINTENANCE MODE
+// ----------------------------------------------------
+exports.getMaintenanceMode = async (req, res) => {
+      try {
+            const setting = await prisma.appSetting.findUnique({ where: { key: 'maintenance_mode' } });
+            res.status(200).json({ success: true, maintenance: setting?.value === 'true' });
+      } catch (error) {
+            res.status(200).json({ success: true, maintenance: false });
+      }
+};
+
+exports.toggleMaintenanceMode = async (req, res) => {
+      try {
+            const { enabled } = req.body;
+            await prisma.appSetting.upsert({
+                  where: { key: 'maintenance_mode' },
+                  update: { value: enabled ? 'true' : 'false' },
+                  create: { key: 'maintenance_mode', value: enabled ? 'true' : 'false' }
+            });
+
+            await logAdminAction(req.user.id, enabled ? 'ENABLE_MAINTENANCE' : 'DISABLE_MAINTENANCE', 'SYSTEM', null);
+
+            res.status(200).json({ success: true, message: `Maintenance mode ${enabled ? 'enabled' : 'disabled'}.` });
+      } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+      }
+};
+

@@ -93,7 +93,7 @@ exports.updateUpliners = async (userId, updates = { isNewUser: false, isNewlyAct
                   if (updates.investmentAmount > 0) {
                         userUpdate.teamVolume = { increment: updates.investmentAmount };
                         userUpdate.totalTeamCommission = { increment: updates.investmentAmount * COMMISSION_RATES[level] };
-                        userUpdate.walletBalance = { increment: updates.investmentAmount * COMMISSION_RATES[level] };
+                        userUpdate.incomeBalance = { increment: updates.investmentAmount * COMMISSION_RATES[level] };
                   }
 
                   if (Object.keys(userUpdate).length > 0) {
