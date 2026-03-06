@@ -88,7 +88,7 @@
       border-radius: var(--radius-xl);
       margin-bottom: 2.5rem;
       border: 1px solid var(--glass-border);
-      width: fit-content;
+      width: 100%; /* Makes tabs span fully on desktop and mobile */
 }
 
 .tab-btn {
@@ -506,6 +506,18 @@
 
       .balance-info .balance-value {
             font-size: 1.75rem;
+      }
+
+      .wallet-header-flex {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            gap: 1rem !important;
+      }
+
+      .wallet-actions-flex {
+            flex-direction: column !important;
+            align-items: stretch !important;
+            width: 100% !important;
       }
 }
 

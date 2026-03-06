@@ -52,6 +52,14 @@ const ProjectsPage = () => {
       useEffect(() => {
             fetchProjects();
             fetchMyInvestments();
+            
+            const handleFocus = () => {
+                  fetchProjects();
+                  fetchMyInvestments();
+            };
+            
+            window.addEventListener('focus', handleFocus);
+            return () => window.removeEventListener('focus', handleFocus);
       }, []);
 
       const openDetails = (project) => {
