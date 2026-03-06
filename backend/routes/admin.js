@@ -43,5 +43,8 @@ router.get('/analytics', adminController.getAnalytics);
 router.get('/maintenance', adminController.getMaintenanceMode);
 router.post('/maintenance/toggle', adminController.toggleMaintenanceMode);
 
+// ROI Management
+router.post('/trigger-roi', adminController.triggerDailyPayouts);
+
 
 module.exports = router;

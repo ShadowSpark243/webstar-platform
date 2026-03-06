@@ -29,6 +29,7 @@ router.post('/invest', walletController.investInProject);
 router.get('/network-stats', walletController.getNetworkStats);
 router.post('/withdraw', walletController.requestWithdrawal);
 router.post('/kyc/submit', upload.single('documentImage'), walletController.submitKyc);
+router.get('/daily-payouts', walletController.getDailyPayoutHistory);
 
 
 module.exports = router;

@@ -103,48 +103,9 @@ exports.getMyInvestments = async (req, res) => {
 exports.getDashboardData = async (req, res) => {
       try {
             const { getRankProgress } = require('../utils/rankEngine');
+            const roiService = require('../services/roiService');
 
-            // 1. Payout any matured investments automatically on dashboard load
-            const now = new Date();
-            const maturedInvestments = await prisma.investment.findMany({
-                  where: {
-                        userId: req.user.id,
-                        status: 'ACTIVE',
-                        maturityDate: { lte: now }
-                  },
-                  include: {
-                        project: { select: { title: true } }
-                  }
-            });
-
-            if (maturedInvestments.length > 0) {
-                  for (const inv of maturedInvestments) {
-                        await prisma.$transaction([
-                              // Change investment status
-                              prisma.investment.update({
-                                    where: { id: inv.id },
-                                    data: { status: 'PAID_OUT', paidOutAt: now, returnedAmount: inv.expectedReturn }
-                              }),
-                              // Credit Income Balance
-                              prisma.user.update({
-                                    where: { id: req.user.id },
-                                    data: { incomeBalance: { increment: inv.expectedReturn } }
-                              }),
-                              // Log Transaction
-                              prisma.transaction.create({
-                                    data: {
-                                          userId: req.user.id,
-                                          type: 'RETURN',
-                                          amount: inv.expectedReturn,
-                                          status: 'APPROVED',
-                                          description: `ROI Maturity Payout: ${inv.project?.title || 'Project'} investment returned with profit.`
-                                    }
-                              })
-                        ]);
-                  }
-            }
-
-            const [investments, recentTx, user] = await Promise.all([
+            const [investments, recentTx, user, todayEarningsData] = await Promise.all([
                   prisma.investment.findMany({
                         where: { userId: req.user.id },
                         orderBy: { createdAt: 'desc' },
@@ -161,19 +122,14 @@ exports.getDashboardData = async (req, res) => {
                   prisma.transaction.findMany({
                         where: { userId: req.user.id },
                         orderBy: { createdAt: 'desc' },
-                        take: 5
+                        take: 10
                   }),
                   prisma.user.findUnique({
                         where: { id: req.user.id },
-                        select: { teamVolume: true, walletBalance: true, incomeBalance: true }
-                  })
+                        select: { teamVolume: true, walletBalance: true, incomeBalance: true, roiBalance: true }
+                  }),
+                  roiService.getTodayEarnings(req.user.id)
             ]);
-
-            // Portfolio analytics
-            const totalExpectedReturn = investments.reduce((sum, inv) => sum + inv.expectedReturn, 0);
-            const totalInvestedAmount = investments.reduce((sum, inv) => sum + inv.amount, 0);
-            const activeInvestments = investments.filter(inv => inv.status === 'ACTIVE').length;
-            const uniqueProjects = new Set(investments.map(inv => inv.projectId)).size;
 
             // Rank progress
             const rankProgress = getRankProgress(user?.teamVolume || 0);
@@ -192,15 +148,14 @@ exports.getDashboardData = async (req, res) => {
                   }
             }
 
-            // 3. Calculate Portfolio Metrics
-            const activeInvestmentsData = await prisma.investment.findMany({
-                  where: { userId: req.user.id, status: 'ACTIVE' }
-            });
+            // Calculate Portfolio Metrics
+            const activeInvestmentsData = investments.filter(inv => inv.status === 'ACTIVE');
 
             const portfolio = {
                   totalInvestedAmount: activeInvestmentsData.reduce((sum, inv) => sum + inv.amount, 0),
                   estimatedProfit: activeInvestmentsData.reduce((sum, inv) => sum + (inv.expectedReturn - inv.amount), 0),
-                  activeInvestments: activeInvestmentsData.length
+                  activeInvestments: activeInvestmentsData.length,
+                  totalPaidOut: investments.reduce((sum, inv) => sum + (inv.totalPaidOut || 0), 0)
             };
 
             res.status(200).json({
@@ -209,10 +164,13 @@ exports.getDashboardData = async (req, res) => {
                   recentTransactions: recentTx,
                   balances: {
                         wallet: (user.walletBalance || 0),
-                        income: (user.incomeBalance || 0)
+                        income: (user.incomeBalance || 0),
+                        roi: (user.roiBalance || 0)
                   },
                   portfolio,
-                  rankProgress
+                  rankProgress,
+                  todayEarnings: todayEarningsData.todayEarnings,
+                  todayPayouts: todayEarningsData.todayPayouts
             });
       } catch (error) {
             res.status(500).json({ success: false, message: error.message });
@@ -317,7 +275,7 @@ exports.investInProject = async (req, res) => {
 // ── Withdrawal Request ──
 exports.requestWithdrawal = async (req, res) => {
       try {
-            const { amount, bankName, accountNumber, ifscCode, upiId } = req.body;
+            const { amount, bankName, accountNumber, ifscCode, upiId, source } = req.body;
             const withdrawAmount = parseFloat(amount);
 
             if (!withdrawAmount || isNaN(withdrawAmount) || withdrawAmount < 1000) {
@@ -334,8 +292,10 @@ exports.requestWithdrawal = async (req, res) => {
             if (user.kycStatus !== 'VERIFIED') {
                   return res.status(403).json({ success: false, message: 'KYC Verification Required for Withdrawal.' });
             }
-            if (user.incomeBalance < withdrawAmount) {
-                  return res.status(400).json({ success: false, message: 'Insufficient Income Wallet Balance.' });
+            const withdrawFromField = source === 'roi' ? 'roiBalance' : 'incomeBalance';
+            const availableBalance = source === 'roi' ? user.roiBalance : user.incomeBalance;
+            if (availableBalance < withdrawAmount) {
+                  return res.status(400).json({ success: false, message: `Insufficient ${source === 'roi' ? 'ROI' : 'Income'} Wallet Balance.` });
             }
 
             // Check for pending withdrawals
@@ -346,6 +306,8 @@ exports.requestWithdrawal = async (req, res) => {
                   return res.status(400).json({ success: false, message: 'You already have a pending withdrawal request.' });
             }
 
+            const walletLabel = source === 'roi' ? 'ROI Wallet' : 'Income Wallet';
+
             const transaction = await prisma.transaction.create({
                   data: {
                         userId: req.user.id,
@@ -353,7 +315,7 @@ exports.requestWithdrawal = async (req, res) => {
                         amount: withdrawAmount,
                         status: 'PENDING',
                         bankAccountInfo: bankAccountInfo.trim(),
-                        description: 'Withdrawal Request'
+                        description: `Withdrawal from ${walletLabel}`
                   }
             });
 
@@ -473,6 +435,23 @@ exports.getNetworkStats = async (req, res) => {
             });
 
             res.status(200).json({ success: true, networkStats: stats, tree });
+      } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+      }
+};
+
+// ── Daily ROI Payout History ──
+exports.getDailyPayoutHistory = async (req, res) => {
+      try {
+            const roiService = require('../services/roiService');
+            const payouts = await roiService.getRecentPayouts(req.user.id, 60);
+            const { todayEarnings } = await roiService.getTodayEarnings(req.user.id);
+
+            res.status(200).json({
+                  success: true,
+                  payouts,
+                  todayEarnings
+            });
       } catch (error) {
             res.status(500).json({ success: false, message: error.message });
       }

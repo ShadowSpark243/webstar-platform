@@ -31,7 +31,8 @@ exports.getGlobalStats = async (req, res) => {
             const globalBalances = await prisma.user.aggregate({
                   _sum: {
                         walletBalance: true,
-                        incomeBalance: true
+                        incomeBalance: true,
+                        roiBalance: true
                   },
                   where: { role: 'USER' }
             });
@@ -111,7 +112,8 @@ exports.getGlobalStats = async (req, res) => {
                         totalInvested: totalInvestments._sum.amount || 0,
                         totalUserWallet: globalBalances._sum.walletBalance || 0,
                         totalUserIncome: globalBalances._sum.incomeBalance || 0,
-                        totalPlatformLiability: (globalBalances._sum.walletBalance || 0) + (globalBalances._sum.incomeBalance || 0)
+                        totalUserROI: globalBalances._sum.roiBalance || 0,
+                        totalPlatformLiability: (globalBalances._sum.walletBalance || 0) + (globalBalances._sum.incomeBalance || 0) + (globalBalances._sum.roiBalance || 0)
                   },
                   analytics: {
                         fundingData,
@@ -432,17 +434,23 @@ exports.reviewWithdrawal = async (req, res) => {
             // If approved, deduct the amount from the user's wallet
             if (status === 'APPROVED') {
                   const user = await prisma.user.findUnique({ where: { id: tx.userId } });
-                  if (user.incomeBalance < tx.amount) {
+
+                  // Determine which wallet to deduct from based on transaction description
+                  const isROIWithdrawal = tx.description && tx.description.includes('ROI Wallet');
+                  const balanceField = isROIWithdrawal ? 'roiBalance' : 'incomeBalance';
+                  const availableBalance = isROIWithdrawal ? (user.roiBalance || 0) : (user.incomeBalance || 0);
+
+                  if (availableBalance < tx.amount) {
                         await prisma.transaction.update({
                               where: { id: parseInt(transactionId) },
-                              data: { status: 'REJECTED', rejectionReason: 'Insufficient income balance at time of processing.' }
+                              data: { status: 'REJECTED', rejectionReason: `Insufficient ${isROIWithdrawal ? 'ROI' : 'income'} balance at time of processing.` }
                         });
-                        return res.status(400).json({ success: false, message: 'User has insufficient income balance. Withdrawal auto-rejected.' });
+                        return res.status(400).json({ success: false, message: `User has insufficient ${isROIWithdrawal ? 'ROI' : 'income'} balance. Withdrawal auto-rejected.` });
                   }
 
                   await prisma.user.update({
                         where: { id: tx.userId },
-                        data: { incomeBalance: { decrement: tx.amount } }
+                        data: { [balanceField]: { decrement: tx.amount } }
                   });
             }
 
@@ -741,3 +749,28 @@ exports.toggleMaintenanceMode = async (req, res) => {
       }
 };
 
+// ── Manually Trigger Daily ROI Payouts ──
+exports.triggerDailyPayouts = async (req, res) => {
+      try {
+            const roiService = require('../services/roiService');
+            const { logAdminAction } = require('../utils/adminLogger');
+
+            const stats = await roiService.processDailyPayouts();
+
+            await logAdminAction({
+                  adminId: req.user.id,
+                  action: 'MANUAL_ROI_TRIGGER',
+                  targetType: 'SYSTEM',
+                  targetId: 0,
+                  details: `Processed ${stats.processed} payouts, ₹${stats.totalDisbursed.toFixed(2)} disbursed. Skipped: ${stats.skipped}, Errors: ${stats.errors}`
+            });
+
+            res.status(200).json({
+                  success: true,
+                  message: `Daily ROI processed successfully.`,
+                  stats
+            });
+      } catch (error) {
+            res.status(500).json({ success: false, message: error.message });
+      }
+};

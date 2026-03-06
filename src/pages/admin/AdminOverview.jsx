@@ -314,6 +314,53 @@ const AdminOverview = () => {
                                                                         </div>
                                                                   )}
                                                             </div>
+
+                                                            <div style={{ background: 'rgba(0,0,0,0.2)', padding: '1.25rem', borderRadius: '0.75rem', border: '1px solid rgba(245, 158, 11, 0.15)', marginTop: '1rem' }}>
+                                                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                                                        <div>
+                                                                              <div style={{ fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                                    <TrendingUp size={16} style={{ color: '#f59e0b' }} /> Daily ROI Engine
+                                                                              </div>
+                                                                              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>
+                                                                                    Manually trigger today's ROI payouts for all users
+                                                                              </div>
+                                                                        </div>
+                                                                        <button
+                                                                              onClick={async () => {
+                                                                                    if (!window.confirm('Run daily ROI payouts now? This will credit all active investments for today.')) return;
+                                                                                    setActionLoading(true);
+                                                                                    try {
+                                                                                          const res = await api.post('/admin/trigger-roi');
+                                                                                          if (res.data.success) {
+                                                                                                alert(`ROI Processed!\n\nProcessed: ${res.data.stats.processed}\nSkipped: ${res.data.stats.skipped}\nErrors: ${res.data.stats.errors}\nDisbursed: ₹${res.data.stats.totalDisbursed.toFixed(2)}`);
+                                                                                                fetchData();
+                                                                                          }
+                                                                                    } catch (error) {
+                                                                                          alert('Failed: ' + (error.response?.data?.message || error.message));
+                                                                                    } finally {
+                                                                                          setActionLoading(false);
+                                                                                    }
+                                                                              }}
+                                                                              disabled={actionLoading}
+                                                                              style={{
+                                                                                    background: 'linear-gradient(135deg, #f59e0b, #d97706)',
+                                                                                    color: 'white',
+                                                                                    border: 'none',
+                                                                                    padding: '0.6rem 1.2rem',
+                                                                                    borderRadius: '0.6rem',
+                                                                                    cursor: actionLoading ? 'not-allowed' : 'pointer',
+                                                                                    fontWeight: 600,
+                                                                                    fontSize: '0.85rem',
+                                                                                    display: 'flex',
+                                                                                    alignItems: 'center',
+                                                                                    gap: '0.5rem',
+                                                                                    opacity: actionLoading ? 0.5 : 1
+                                                                              }}
+                                                                        >
+                                                                              {actionLoading ? <RefreshCw size={14} className="animate-spin" /> : <TrendingUp size={14} />} Run ROI
+                                                                        </button>
+                                                                  </div>
+                                                            </div>
                                                       </div>
 
                                                       <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>

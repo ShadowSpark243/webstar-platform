@@ -1,7 +1,7 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2, Filter, Copy, Check, TrendingUp, ShieldCheck, Film } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2, Filter, Copy, Check, TrendingUp, ShieldCheck, Film, Sparkles, Zap } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 import TransactionDetailsModal from '../../components/TransactionDetailsModal';
 import qrImage from '../../assets/Webfilms1.jpeg';
@@ -24,6 +24,9 @@ const WalletPage = () => {
       const [upiId, setUpiId] = useState('');
       const [balances, setBalances] = useState({ wallet: 0, income: 0 });
       const [portfolio, setPortfolio] = useState({ totalInvestedAmount: 0, estimatedProfit: 0, activeInvestments: 0 });
+      const [todayEarnings, setTodayEarnings] = useState(0);
+      const [triggeringROI, setTriggeringROI] = useState(false);
+      const [withdrawSource, setWithdrawSource] = useState('income');
 
 
       // Live Database State
@@ -57,6 +60,9 @@ const WalletPage = () => {
                         }
                         if (res.data.portfolio) {
                               setPortfolio(res.data.portfolio);
+                        }
+                        if (res.data.todayEarnings !== undefined) {
+                              setTodayEarnings(res.data.todayEarnings);
                         }
                   }
 
@@ -142,8 +148,9 @@ const WalletPage = () => {
                   return;
             }
 
-            if (parseFloat(withdrawAmount) > (balances.income || 0)) {
-                  alert("Insufficient Income Wallet Balance.");
+            const selectedBalance = withdrawSource === 'roi' ? (balances.roi || 0) : (balances.income || 0);
+            if (parseFloat(withdrawAmount) > selectedBalance) {
+                  alert(`Insufficient ${withdrawSource === 'roi' ? 'ROI' : 'Income'} Wallet Balance.`);
                   return;
             }
 
@@ -155,7 +162,8 @@ const WalletPage = () => {
                         bankName,
                         accountNumber,
                         ifscCode,
-                        upiId
+                        upiId,
+                        source: withdrawSource
                   });
 
                   setWithdrawAmount('');
@@ -246,11 +254,25 @@ const WalletPage = () => {
                               </div>
                         )}
 
+                        {user?.role !== 'ADMIN' && (
+                              <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(251, 191, 36, 0.08) 100%)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
+                                    <div>
+                                          <span className="stat-title" style={{ color: '#f59e0b' }}>ROI Wallet</span>
+                                          <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#fbbf24' }}>
+                                                ₹{(balances.roi || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
+                                          </h3>
+                                    </div>
+                                    <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
+                                          <Sparkles size={32} />
+                                    </div>
+                              </div>
+                        )}
+
                         <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
                               <div>
                                     <span className="stat-title" style={{ color: '#60a5fa' }}>Total Assets (Net Worth)</span>
                                     <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#60a5fa' }}>
-                                          ₹{((user?.role === 'ADMIN' ? (user?.walletBalance || 0) : (balances.wallet || 0)) + (balances.income || 0) + (portfolio.totalInvestedAmount || 0)).toLocaleString('en-IN')}
+                                          ₹{((user?.role === 'ADMIN' ? (user?.walletBalance || 0) : (balances.wallet || 0)) + (balances.income || 0) + (balances.roi || 0) + (portfolio.totalInvestedAmount || 0)).toLocaleString('en-IN')}
                                     </h3>
                               </div>
                               <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa' }}>
@@ -500,6 +522,31 @@ const WalletPage = () => {
                                                 ) : (
                                                       <form onSubmit={handleWithdraw} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
                                                             <div className="form-group" style={{ gridColumn: '1 / -1' }}>
+                                                                  <label>Withdraw From</label>
+                                                                  <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
+                                                                        <button type="button" onClick={() => setWithdrawSource('income')} style={{
+                                                                              flex: 1, padding: '1rem', borderRadius: '0.75rem', cursor: 'pointer',
+                                                                              background: withdrawSource === 'income' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)',
+                                                                              border: withdrawSource === 'income' ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
+                                                                              color: 'white', textAlign: 'left', transition: 'all 0.2s'
+                                                                        }}>
+                                                                              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#10b981' }}>Income Wallet</div>
+                                                                              <div style={{ fontSize: '1.25rem', fontWeight: 700, marginTop: '0.25rem' }}>₹{(balances.income || 0).toLocaleString('en-IN')}</div>
+                                                                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>Commissions & Bonuses</div>
+                                                                        </button>
+                                                                        <button type="button" onClick={() => setWithdrawSource('roi')} style={{
+                                                                              flex: 1, padding: '1rem', borderRadius: '0.75rem', cursor: 'pointer',
+                                                                              background: withdrawSource === 'roi' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255,255,255,0.03)',
+                                                                              border: withdrawSource === 'roi' ? '2px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
+                                                                              color: 'white', textAlign: 'left', transition: 'all 0.2s'
+                                                                        }}>
+                                                                              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#f59e0b' }}>ROI Wallet</div>
+                                                                              <div style={{ fontSize: '1.25rem', fontWeight: 700, marginTop: '0.25rem' }}>₹{(balances.roi || 0).toLocaleString('en-IN')}</div>
+                                                                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>Daily ROI Earnings</div>
+                                                                        </button>
+                                                                  </div>
+                                                            </div>
+                                                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
                                                                   <label>Withdrawal Amount (₹)</label>
                                                                   <input
                                                                         type="number"
@@ -512,7 +559,7 @@ const WalletPage = () => {
                                                                         style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
                                                                   />
                                                                   <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
-                                                                        Withdrawable Income Balance: ₹{balances.income?.toLocaleString('en-IN')}
+                                                                        Available: ₹{(withdrawSource === 'roi' ? (balances.roi || 0) : (balances.income || 0)).toLocaleString('en-IN')} from {withdrawSource === 'roi' ? 'ROI Wallet' : 'Income Wallet'}
                                                                   </p>
                                                             </div>
                                                             <div className="form-group">
@@ -810,12 +857,12 @@ const WalletPage = () => {
                                                       </div>
                                                 </div>
                                                 <div style={{
-                                                      color: tx.status === 'REJECTED' ? '#6b7280' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? '#10b981' : '#f87171'),
+                                                      color: tx.status === 'REJECTED' ? '#6b7280' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'RETURN', 'REFUND', 'BONUS'].includes(tx.type) ? '#10b981' : '#f87171'),
                                                       fontWeight: 700, fontSize: 'clamp(0.85rem, 3vw, 1rem)',
                                                       textDecoration: tx.status === 'REJECTED' ? 'line-through' : 'none',
                                                       whiteSpace: 'nowrap', flexShrink: 0, textAlign: 'right'
                                                 }}>
-                                                      {tx.status === 'REJECTED' ? '' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? '+' : '-')}₹{Math.abs(tx.amount).toLocaleString('en-IN')}
+                                                      {tx.status === 'REJECTED' ? '' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'RETURN', 'REFUND', 'BONUS'].includes(tx.type) ? '+' : '-')}₹{Math.abs(tx.amount).toLocaleString('en-IN')}
                                                 </div>
                                           </div>
                                     ))}

@@ -33,7 +33,8 @@ const txIcons = {
       INVESTMENT: { icon: <Film size={14} />, color: '#3b82f6' },
       COMMISSION: { icon: <Users size={14} />, color: '#8b5cf6' },
       RETURN: { icon: <TrendingUp size={14} />, color: '#10b981' },
-      REFUND: { icon: <ArrowDownLeft size={14} />, color: '#06b6d4' }
+      REFUND: { icon: <ArrowDownLeft size={14} />, color: '#06b6d4' },
+      DAILY_ROI: { icon: <Sparkles size={14} />, color: '#f59e0b' }
 };
 
 const rankIconMap = { 'Starter': <Star size={20} />, 'Manager': <Award size={20} />, 'Senior Manager': <Trophy size={20} />, 'Director': <Crown size={20} /> };
@@ -87,15 +88,22 @@ const Overview = () => {
                         <div className="ov-stat ov-s1">
                               <Wallet size={16} className="ov-stat-ic" />
                               <div>
-                                    <span className="ov-sv">{fmtINR(data?.balances?.wallet ?? user?.walletBalance)}</span>
+                                    <span className="ov-sv">{fmtINR(data?.balances?.wallet || 0)}</span>
                                     <span className="ov-sl">Main Wallet</span>
                               </div>
                         </div>
                         <div className="ov-stat ov-s2" style={{ borderColor: 'rgba(16, 185, 129, 0.2)' }}>
                               <TrendingUp size={16} className="ov-stat-ic" style={{ color: '#10b981' }} />
                               <div>
-                                    <span className="ov-sv" style={{ color: '#10b981' }}>{fmtINR(data?.balances?.income ?? user?.incomeBalance)}</span>
+                                    <span className="ov-sv" style={{ color: '#10b981' }}>{fmtINR(data?.balances?.income || 0)}</span>
                                     <span className="ov-sl">Income Wallet</span>
+                              </div>
+                        </div>
+                        <div className="ov-stat" style={{ borderColor: 'rgba(245, 158, 11, 0.2)' }}>
+                              <Sparkles size={16} className="ov-stat-ic" style={{ color: '#f59e0b' }} />
+                              <div>
+                                    <span className="ov-sv" style={{ color: '#f59e0b' }}>{fmtINR(data?.balances?.roi || 0)}</span>
+                                    <span className="ov-sl">ROI Wallet</span>
                               </div>
                         </div>
                         <div className="ov-stat ov-s3">

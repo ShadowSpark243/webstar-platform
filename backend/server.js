@@ -114,6 +114,25 @@ process.on('uncaughtException', (err) => {
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
       logger.info(`🚀 WEBSTAR Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+
+      // ── Daily ROI Cron Scheduler ────────────────────────────────────────────
+      // Runs at midnight IST (18:30 UTC previous day) every day
+      const cron = require('node-cron');
+      const roiService = require('./services/roiService');
+
+      cron.schedule('30 18 * * *', async () => {
+            logger.info('[CRON] Daily ROI payout job started.');
+            try {
+                  const stats = await roiService.processDailyPayouts();
+                  logger.info(`[CRON] Daily ROI complete: Processed=${stats.processed}, Skipped=${stats.skipped}, Errors=${stats.errors}, Disbursed=₹${stats.totalDisbursed.toFixed(2)}`);
+            } catch (error) {
+                  logger.error(`[CRON] Daily ROI failed: ${error.message}`);
+            }
+      }, {
+            timezone: 'Asia/Kolkata'
+      });
+
+      logger.info('⏰ Daily ROI cron job scheduled (midnight IST).');
 });
 
 const gracefulShutdown = async (signal) => {
