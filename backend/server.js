@@ -113,7 +113,7 @@ process.on('uncaughtException', (err) => {
 // ── Server Start & Graceful Shutdown ──────────────────────────────────────────
 const PORT = process.env.PORT || 5000;
 const server = app.listen(PORT, () => {
-      logger.info(`🚀 WEBSTAR Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
+      logger.info(`🚀 ITRAM WEBPRO Server running on port ${PORT} [${process.env.NODE_ENV || 'development'}]`);
 
       // ── Daily ROI Cron Scheduler ────────────────────────────────────────────
       // Runs at midnight IST (18:30 UTC previous day) every day

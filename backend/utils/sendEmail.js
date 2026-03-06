@@ -7,7 +7,7 @@ const sendEmail = async (options) => {
       const smtpUser = (process.env.SMTP_USER || '').replace(/['"]+/g, '').trim();
       const smtpPass = (process.env.SMTP_PASS || '').replace(/['"]+/g, '').trim();
       const fromEmail = (process.env.FROM_EMAIL || '').replace(/['"]+/g, '').trim();
-      const fromName = (process.env.FROM_NAME || 'Webstar').replace(/['"]+/g, '').trim();
+      const fromName = (process.env.FROM_NAME || 'ITRAM WEBPRO').replace(/['"]+/g, '').trim();
 
       if (!smtpPass && !smtpHost) {
             console.warn(`[DEVELOPMENT MODE] Email not sent to ${options.email}. Logged below:`);

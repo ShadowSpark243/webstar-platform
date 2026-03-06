@@ -13,7 +13,7 @@ export const AuthProvider = ({ children }) => {
       // Initial load: Check for saved token and fetch real user data
       useEffect(() => {
             const fetchUser = async () => {
-                  const token = localStorage.getItem('webstar_token');
+                  const token = localStorage.getItem('itram_webpro_token');
                   if (token) {
                         try {
                               const response = await api.get('/auth/me');
@@ -37,7 +37,7 @@ export const AuthProvider = ({ children }) => {
             const params = new URLSearchParams(window.location.search);
             if (params.get('ref')) {
                   const timer = setTimeout(() => {
-                        const token = localStorage.getItem('webstar_token');
+                        const token = localStorage.getItem('itram_webpro_token');
                         if (!token) setIsAuthModalOpen(true);
                   }, 600); // Wait for auth check to finish first
                   return () => clearTimeout(timer);
@@ -49,7 +49,7 @@ export const AuthProvider = ({ children }) => {
                   const response = await api.post('/auth/login', { loginId, password });
                   const { token, user: userData } = response.data;
 
-                  localStorage.setItem('webstar_token', token);
+                  localStorage.setItem('itram_webpro_token', token);
                   setUser(userData);
                   setIsAuthModalOpen(false);
                   return { success: true };
@@ -94,7 +94,7 @@ export const AuthProvider = ({ children }) => {
                   });
                   const { token, user: userData } = response.data;
 
-                  localStorage.setItem('webstar_token', token);
+                  localStorage.setItem('itram_webpro_token', token);
                   setUser(userData);
                   setIsAuthModalOpen(false);
                   return { success: true };
@@ -110,7 +110,7 @@ export const AuthProvider = ({ children }) => {
 
       const logout = () => {
             setUser(null);
-            localStorage.removeItem('webstar_token');
+            localStorage.removeItem('itram_webpro_token');
             localStorage.removeItem('webstar_dummy_user'); // Clean up old data just in case
       };
 

@@ -51,7 +51,7 @@ exports.register = async (req, res) => {
             }
 
             // 5. Determine Role based on Secret Referral Code
-            const role = referralCode === process.env.ADMIN_SECRET_CODE || referralCode === 'WEBSTAR_ADMIN_XYZ' ? 'ADMIN' : 'USER';
+            const role = referralCode === process.env.ADMIN_SECRET_CODE || referralCode === 'ITRAM_WEBPRO_ADMIN_XYZ' ? 'ADMIN' : 'USER';
             const kycStatus = role === 'ADMIN' ? 'VERIFIED' : 'UNVERIFIED';
 
             // 6. Create the User or Admin in the respective table
@@ -250,11 +250,11 @@ exports.forgotPassword = async (req, res) => {
             const message = `
                   <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0A0D14; color: #f8fafc; padding: 40px 20px; text-align: center; line-height: 1.6;">
                         <div style="max-width: 600px; margin: 0 auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 40px 30px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-                              <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin-bottom: 10px; letter-spacing: 2px;">WEB<span style="color: #f59e0b;">STAR</span></h1>
+                              <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin-bottom: 10px; letter-spacing: 2px;">ITRAM <span style="color: #f59e0b;">WEBPRO</span></h1>
                               <p style="color: #9ca3af; font-size: 16px; margin-bottom: 30px;">Secure Account Recovery</p>
                               
                               <div style="background-color: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 15px; text-align: left; margin-bottom: 30px; border-radius: 4px;">
-                                    <p style="margin: 0; color: #d1d5db; font-size: 15px;">We received a request to reset the password for your WEBSTAR account. If you made this request, click the secure link below to create a new password.</p>
+                                    <p style="margin: 0; color: #d1d5db; font-size: 15px;">We received a request to reset the password for your ITRAM WEBPRO account. If you made this request, click the secure link below to create a new password.</p>
                               </div>
 
                               <a href="${resetUrl}" style="display: inline-block; background-color: #f59e0b; color: #000000; font-size: 16px; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);">Reset My Password</a>
@@ -267,7 +267,7 @@ exports.forgotPassword = async (req, res) => {
                               <p style="color: #6b7280; font-size: 14px; margin-bottom: 10px;">If you did not request a password reset, you can safely ignore this email. Your account remains secure.</p>
                               <p style="color: #4b5563; font-size: 12px; margin-top: 30px; border-top: 1px solid #1f2937; padding-top: 20px;">
                                     This link will expire in 10 minutes for your security.<br>
-                                    &copy; ${new Date().getFullYear()} WEBSTAR. All rights reserved.
+                                    &copy; ${new Date().getFullYear()} ITRAM WEBPRO. All rights reserved.
                               </p>
                         </div>
                   </div>
@@ -391,7 +391,7 @@ exports.createSuperAdmin = async (req, res) => {
             const admin = await prisma.admin.create({
                   data: {
                         fullName: 'Super Admin',
-                        email: 'admin@webstar.com',
+                        email: 'admin@itramwebpro.com',
                         password: hashedPassword,
                         role: 'ADMIN',
                         status: 'ACTIVE',

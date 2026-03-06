@@ -7,7 +7,7 @@ const api = axios.create({
 // Add a request interceptor to automatically attach the JWT token to every request
 api.interceptors.request.use(
       (config) => {
-            const token = localStorage.getItem('webstar_token');
+            const token = localStorage.getItem('itram_webpro_token');
             if (token) {
                   config.headers.Authorization = `Bearer ${token}`;
             }
@@ -24,7 +24,7 @@ api.interceptors.response.use(
       (error) => {
             if (error.response?.status === 401) {
                   // Token expired or invalid — clear and redirect to login
-                  localStorage.removeItem('webstar_token');
+                  localStorage.removeItem('itram_webpro_token');
                   if (window.location.pathname.startsWith('/dashboard') || window.location.pathname.startsWith('/admin')) {
                         window.location.href = '/';
                   }
