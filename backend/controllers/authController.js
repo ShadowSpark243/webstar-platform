@@ -248,27 +248,53 @@ exports.forgotPassword = async (req, res) => {
             const resetUrl = `${frontendUrl}/reset-password/${resetToken}`;
 
             const message = `
-                  <div style="font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #0A0D14; color: #f8fafc; padding: 40px 20px; text-align: center; line-height: 1.6;">
-                        <div style="max-width: 600px; margin: 0 auto; background-color: #111827; border: 1px solid #1f2937; border-radius: 16px; padding: 40px 30px; box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);">
-                              <h1 style="color: #ffffff; font-size: 28px; font-weight: 800; margin-bottom: 10px; letter-spacing: 2px;">ITRAM <span style="color: #f59e0b;">WEBPRO</span></h1>
-                              <p style="color: #9ca3af; font-size: 16px; margin-bottom: 30px;">Secure Account Recovery</p>
+                  <div style="font-family: 'Outfit', 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; background-color: #050608; padding: 60px 20px; color: #f8fafc; line-height: 1.5;">
+                        <div style="max-width: 540px; margin: 0 auto; background-color: #0a0b0e; border: 1px solid rgba(255,255,255,0.08); border-radius: 24px; overflow: hidden; box-shadow: 0 40px 100px -20px rgba(0,0,0,0.8);">
                               
-                              <div style="background-color: rgba(245, 158, 11, 0.1); border-left: 4px solid #f59e0b; padding: 15px; text-align: left; margin-bottom: 30px; border-radius: 4px;">
-                                    <p style="margin: 0; color: #d1d5db; font-size: 15px;">We received a request to reset the password for your ITRAM WEBPRO account. If you made this request, click the secure link below to create a new password.</p>
+                              <!-- Header Accent -->
+                              <div style="height: 6px; background: linear-gradient(90deg, #f59e0b, #fbbf24);"></div>
+                              
+                              <div style="padding: 45px 35px;">
+                                    <!-- Brand Logo/Name -->
+                                    <div style="margin-bottom: 35px; text-align: center;">
+                                          <h1 style="margin: 0; font-size: 26px; font-weight: 800; letter-spacing: 1.5px; color: #ffffff; text-transform: uppercase;">
+                                                ITRAM <span style="color: #f59e0b;">WEBPRO</span>
+                                          </h1>
+                                          <div style="width: 40px; height: 2px; background: #f59e0b; margin: 15px auto 0;"></div>
+                                    </div>
+
+                                    <h2 style="font-size: 20px; font-weight: 600; color: #ffffff; margin-bottom: 20px; text-align: center;">Secure Account Recovery</h2>
+                                    
+                                    <p style="font-size: 15px; color: #94a3b8; margin-bottom: 30px; text-align: center;">
+                                          We received a request to reset your password. To proceed with setting up a new one, click the secure verification button below.
+                                    </p>
+
+                                    <!-- Action Button -->
+                                    <div style="text-align: center; margin-bottom: 35px;">
+                                          <a href="${resetUrl}" style="display: inline-block; background-color: #f59e0b; color: #000000; font-size: 15px; font-weight: 700; text-decoration: none; padding: 18px 45px; border-radius: 12px; box-shadow: 0 10px 25px rgba(245, 158, 11, 0.35); transition: transform 0.2s;">
+                                                Reset My Password
+                                          </a>
+                                    </div>
+
+                                    <!-- Fallback Link -->
+                                    <div style="background-color: rgba(255,255,255,0.03); border: 1px dashed rgba(255,255,255,0.1); border-radius: 12px; padding: 20px; margin-bottom: 30px;">
+                                          <p style="margin: 0 0 10px 0; font-size: 12px; color: #64748b; font-weight: 600; text-transform: uppercase;">Direct Link</p>
+                                          <a href="${resetUrl}" style="font-size: 13px; color: #3b82f6; text-decoration: none; word-break: break-all; opacity: 0.8;">
+                                                ${resetUrl}
+                                          </a>
+                                    </div>
+
+                                    <p style="font-size: 13px; color: #475569; text-align: center; margin-bottom: 0;">
+                                          If you didn't request this, you can safely ignore this email. This link will expire in <b>10 minutes</b>.
+                                    </p>
                               </div>
 
-                              <a href="${resetUrl}" style="display: inline-block; background-color: #f59e0b; color: #000000; font-size: 16px; font-weight: bold; text-decoration: none; padding: 16px 32px; border-radius: 8px; margin-bottom: 20px; box-shadow: 0 4px 14px rgba(245, 158, 11, 0.4);">Reset My Password</a>
-
-                              <p style="color: #9ca3af; font-size: 13px; margin-bottom: 30px; word-break: break-all;">
-                                    Or copy and paste this link into your browser:<br>
-                                    <a href="${resetUrl}" style="color: #3b82f6; text-decoration: underline;">${resetUrl}</a>
-                              </p>
-
-                              <p style="color: #6b7280; font-size: 14px; margin-bottom: 10px;">If you did not request a password reset, you can safely ignore this email. Your account remains secure.</p>
-                              <p style="color: #4b5563; font-size: 12px; margin-top: 30px; border-top: 1px solid #1f2937; padding-top: 20px;">
-                                    This link will expire in 10 minutes for your security.<br>
-                                    &copy; ${new Date().getFullYear()} ITRAM WEBPRO. All rights reserved.
-                              </p>
+                              <!-- Footer Text -->
+                              <div style="background-color: #050608; padding: 25px; text-align: center; border-top: 1px solid rgba(255,255,255,0.05);">
+                                    <p style="margin: 0; font-size: 12px; color: #4b5563; font-weight: 500;">
+                                          &copy; ${new Date().getFullYear()} ITRAM WEBPRO. All rights reserved.
+                                    </p>
+                              </div>
                         </div>
                   </div>
             `;
