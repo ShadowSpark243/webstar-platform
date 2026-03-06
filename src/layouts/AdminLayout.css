@@ -276,3 +276,121 @@
             flex-wrap: wrap;
       }
 }
+
+/* --- Premium Global Admin Table System --- */
+.table-container {
+      width: 100%;
+      overflow-x: auto;
+      background: rgba(15, 23, 42, 0.4);
+      border-radius: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      -webkit-overflow-scrolling: touch;
+}
+
+.admin-table {
+      width: 100%;
+      border-collapse: collapse;
+      text-align: left;
+      min-width: 800px;
+}
+
+.admin-table th {
+      padding: 1.25rem 1.5rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.8rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      background: rgba(0, 0, 0, 0.2);
+}
+
+.admin-table td {
+      padding: 1.25rem 1.5rem;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      vertical-align: middle;
+}
+
+.clickable-row {
+      cursor: pointer;
+      transition: all 0.2s;
+}
+
+.clickable-row:hover {
+      background: rgba(255, 255, 255, 0.03);
+      transform: translateY(-1px);
+}
+
+.search-wrapper {
+      position: relative;
+      flex: 1;
+      max-width: 400px;
+}
+
+.search-icon {
+      position: absolute;
+      left: 1rem;
+      top: 50%;
+      transform: translateY(-50%);
+      color: rgba(255, 255, 255, 0.4);
+      pointer-events: none;
+}
+
+.admin-search-input {
+      width: 100%;
+      background: rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      border-radius: 0.75rem;
+      padding: 0.75rem 1rem 0.75rem 3rem;
+      color: white;
+      font-size: 0.9rem;
+      outline: none;
+      transition: all 0.2s;
+}
+
+.admin-search-input:focus {
+      border-color: #8b5cf6;
+      background: rgba(0, 0, 0, 0.4);
+      box-shadow: 0 0 0 3px rgba(139, 92, 246, 0.1);
+}
+
+/* Badge Styles */
+.badge {
+      padding: 0.25rem 0.75rem;
+      border-radius: 2rem;
+      font-size: 0.75rem;
+      font-weight: 700;
+      text-transform: uppercase;
+}
+
+.badge-success {
+      background: rgba(16, 185, 129, 0.15);
+      color: #10b981;
+}
+
+.badge-warning {
+      background: rgba(245, 158, 11, 0.15);
+      color: #f59e0b;
+}
+
+.badge-danger {
+      background: rgba(239, 68, 68, 0.15);
+      color: #ef4444;
+}
+
+.badge-primary {
+      background: rgba(59, 130, 246, 0.15);
+      color: #3b82f6;
+}
+
+/* Desktop Hide Utility */
+@media (max-width: 768px) {
+      .mobile-hide {
+            display: none !important;
+      }
+}
+
+@media (min-width: 769px) {
+      .mobile-show {
+            display: none !important;
+      }
+}

@@ -24,193 +24,208 @@ const TransactionDetailsModal = ({ transaction, onClose, onInspectUser }) => {
       };
 
       return (
-            <div
-                  onClick={onClose}
-                  style={{
-                        position: 'fixed', inset: 0,
-                        background: 'rgba(0, 0, 0, 0.75)', backdropFilter: 'blur(8px)',
-                        display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
-                        zIndex: 10000, padding: '0',
-                        animation: 'fadeIn 0.2s ease'
-                  }}
-            >
+            <div className="modal-overlay" onClick={onClose}>
                   <style>{`
-                        @keyframes fadeIn { from { opacity: 0 } to { opacity: 1 } }
-                        @keyframes slideUp { from { transform: translateY(100%) } to { transform: translateY(0) } }
-                        @media (min-width: 640px) {
-                              .tx-modal-container { 
-                                    align-items: center !important; 
-                              }
-                              .tx-modal-card {
-                                    border-radius: 1rem !important;
-                                    max-height: 90vh !important;
-                                    margin: 1rem !important;
-                              }
+                        .modal-overlay {
+                              position: fixed;
+                              inset: 0;
+                              background: rgba(0, 0, 0, 0.8);
+                              backdrop-filter: blur(12px);
+                              display: flex;
+                              justify-content: center;
+                              align-items: center;
+                              z-index: 10000;
+                              padding: 1.5rem;
+                              animation: fadeIn 0.3s ease-out;
+                        }
+
+                        .tx-modal-card {
+                              width: 100%;
+                              max-width: 480px;
+                              background: rgba(15, 23, 42, 0.9);
+                              border: 1px solid rgba(255, 255, 255, 0.1);
+                              border-radius: 2rem;
+                              overflow: hidden;
+                              box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+                              animation: modalScale 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+                        }
+
+                        @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
+                        @keyframes modalScale { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+
+                        .tx-hero-section {
+                              padding: 2.5rem 1.5rem;
+                              text-align: center;
+                              background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
+                              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                              position: relative;
+                        }
+
+                        .tx-type-chip {
+                              display: inline-block;
+                              padding: 0.5rem 1rem;
+                              border-radius: 2rem;
+                              font-size: 0.75rem;
+                              font-weight: 800;
+                              text-transform: uppercase;
+                              letter-spacing: 0.1em;
+                              margin-bottom: 1rem;
+                              background: rgba(255, 255, 255, 0.05);
+                              color: rgba(255, 255, 255, 0.5);
+                        }
+
+                        .tx-amount-large {
+                              font-size: 3rem;
+                              font-weight: 900;
+                              margin-bottom: 1rem;
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              gap: 0.75rem;
+                              letter-spacing: -0.02em;
+                        }
+
+                        .tx-status-pill {
+                              display: inline-flex;
+                              align-items: center;
+                              gap: 0.5rem;
+                              padding: 0.6rem 1.25rem;
+                              border-radius: 3rem;
+                              font-size: 0.85rem;
+                              font-weight: 700;
+                        }
+
+                        .tx-details-grid {
+                              padding: 1.5rem;
+                              display: flex;
+                              flex-direction: column;
+                              gap: 1.25rem;
+                        }
+
+                        .detail-item {
+                              display: flex;
+                              flex-direction: column;
+                              gap: 0.4rem;
+                        }
+
+                        .detail-label {
+                              font-size: 0.7rem;
+                              color: rgba(255, 255, 255, 0.35);
+                              text-transform: uppercase;
+                              font-weight: 700;
+                              letter-spacing: 0.05em;
+                              display: flex;
+                              align-items: center;
+                              gap: 0.4rem;
+                        }
+
+                        .detail-value {
+                              font-size: 1rem;
+                              color: white;
+                              font-weight: 600;
+                              line-height: 1.5;
+                        }
+
+                        .ref-box {
+                              padding: 0.75rem 1rem;
+                              background: rgba(0, 0, 0, 0.3);
+                              border-radius: 1rem;
+                              border: 1px solid rgba(255, 255, 255, 0.05);
+                              font-family: 'JetBrains Mono', monospace;
+                              color: #60a5fa;
+                              word-break: break-all;
+                        }
+
+                        .user-card-mini {
+                              margin: 1.5rem;
+                              padding: 1.25rem;
+                              background: linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%);
+                              border-radius: 1.5rem;
+                              border: 1px solid rgba(139, 92, 246, 0.2);
+                              display: flex;
+                              align-items: center;
+                              justify-content: space-between;
+                              gap: 1rem;
+                        }
+
+                        @media (max-width: 480px) {
+                              .modal-overlay { padding: 1rem; }
+                              .tx-amount-large { font-size: 2.25rem; }
                         }
                   `}</style>
 
-                  <div
-                        className="tx-modal-container"
-                        onClick={onClose}
-                        style={{
-                              position: 'fixed', inset: 0,
-                              display: 'flex', justifyContent: 'center', alignItems: 'flex-end',
-                              padding: '0'
-                        }}
-                  >
-                        <div
-                              className="tx-modal-card"
-                              onClick={(e) => e.stopPropagation()}
-                              style={{
-                                    width: '100%', maxWidth: '460px',
-                                    background: 'linear-gradient(180deg, #111111 0%, #0a0a0a 100%)',
-                                    border: '1px solid rgba(255,255,255,0.08)',
-                                    borderRadius: '1.25rem 1.25rem 0 0',
-                                    overflow: 'hidden',
-                                    animation: 'slideUp 0.3s ease',
-                                    maxHeight: '92vh',
-                                    overflowY: 'auto'
-                              }}
-                        >
-                              {/* Colored accent bar */}
-                              <div style={{
-                                    height: '3px', width: '100%',
-                                    background: isRejected ? '#ef4444' : (isPositive ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #f87171, #ef4444)')
-                              }} />
+                  <div className="tx-modal-card" onClick={(e) => e.stopPropagation()}>
+                        <div className="tx-hero-section">
+                              <button onClick={onClose} style={{ position: 'absolute', top: '1.25rem', right: '1.25rem', background: 'rgba(255,255,255,0.05)', border: 'none', color: 'white', padding: '0.5rem', borderRadius: '50%', cursor: 'pointer' }}>
+                                    <X size={20} />
+                              </button>
 
-                              {/* Drag Handle (mobile indicator) */}
-                              <div style={{ display: 'flex', justifyContent: 'center', paddingTop: '0.75rem' }}>
-                                    <div style={{ width: '36px', height: '4px', borderRadius: '2px', background: 'rgba(255,255,255,0.15)' }} />
+                              <div className="tx-type-chip">
+                                    {typeLabels[transaction.type] || transaction.type}
                               </div>
 
-                              {/* Header */}
-                              <div style={{
-                                    padding: '0.75rem 1.25rem 1rem', display: 'flex',
-                                    justifyContent: 'space-between', alignItems: 'flex-start'
-                              }}>
-                                    <div>
-                                          <h2 style={{ margin: 0, fontSize: '1.1rem', fontWeight: 700, color: 'white', letterSpacing: '-0.01em' }}>Transaction Details</h2>
-                                          <span style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.35)', fontFamily: 'monospace' }}>TX-{String(transaction.id).padStart(6, '0')}</span>
-                                    </div>
-                                    <button
-                                          onClick={onClose}
-                                          style={{
-                                                background: 'rgba(255,255,255,0.05)', border: 'none',
-                                                color: 'rgba(255,255,255,0.5)', cursor: 'pointer',
-                                                padding: '0.4rem', borderRadius: '0.5rem',
-                                                display: 'flex', alignItems: 'center', justifyContent: 'center',
-                                                transition: 'background 0.2s'
-                                          }}
-                                    >
-                                          <X size={18} />
-                                    </button>
+                              <div className="tx-amount-large" style={{ color: isRejected ? '#64748b' : (isPositive ? '#10b981' : '#ef4444'), textDecoration: isRejected ? 'line-through' : 'none' }}>
+                                    {isPositive ? <ArrowDownToLine size={32} /> : <ArrowUpRight size={32} />}
+                                    <span>{isRejected ? '' : (isPositive ? '+' : '-')}₹{Math.abs(transaction.amount).toLocaleString('en-IN')}</span>
                               </div>
 
-                              {/* Amount Hero */}
-                              <div style={{
-                                    margin: '0 1.25rem', padding: '1.25rem 1rem',
-                                    background: 'rgba(255,255,255,0.02)',
-                                    border: '1px solid rgba(255,255,255,0.06)',
-                                    borderRadius: '0.75rem', textAlign: 'center'
-                              }}>
-                                    <div style={{
-                                          fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)',
-                                          textTransform: 'uppercase', letterSpacing: '2px',
-                                          marginBottom: '0.5rem', fontWeight: 600
-                                    }}>
-                                          {typeLabels[transaction.type] || transaction.type}
-                                    </div>
-
-                                    <div style={{
-                                          fontSize: 'clamp(1.75rem, 6vw, 2.25rem)', fontWeight: 800,
-                                          color: isRejected ? '#6b7280' : (isPositive ? '#10b981' : '#f87171'),
-                                          display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem',
-                                          textDecoration: isRejected ? 'line-through' : 'none',
-                                          lineHeight: 1.2
-                                    }}>
-                                          {isPositive ? <ArrowDownToLine size={22} style={{ flexShrink: 0 }} /> : <ArrowUpRight size={22} style={{ flexShrink: 0 }} />}
-                                          <span>{isRejected ? '' : (isPositive ? '+' : '-')}₹{Math.abs(transaction.amount).toLocaleString('en-IN')}</span>
-                                    </div>
-
-                                    <div style={{
-                                          display: 'inline-flex', alignItems: 'center', gap: '0.3rem',
-                                          marginTop: '0.75rem', background: status.bg,
-                                          color: status.color, padding: '0.25rem 0.65rem',
-                                          borderRadius: '1rem', fontSize: '0.72rem', fontWeight: 600
-                                    }}>
-                                          {status.icon} {status.label}
-                                    </div>
+                              <div className="tx-status-pill" style={{ background: status.bg, color: status.color }}>
+                                    {status.icon} {status.label}
                               </div>
+                        </div>
 
-                              {/* Detail Rows */}
-                              <div style={{ padding: '1.25rem', display: 'flex', flexDirection: 'column', gap: '0' }}>
-                                    {transaction.status === 'REJECTED' && transaction.rejectionReason && (
-                                          <DetailRow icon={<XCircle size={14} color="#ef4444" />} label={<span style={{ color: '#ef4444' }}>Rejection Note</span>} value={<span style={{ color: '#fca5a5' }}>{transaction.rejectionReason}</span>} />
-                                    )}
-                                    <DetailRow icon={<FileText size={14} />} label="Description" value={transaction.description || '—'} />
-                                    <DetailRow icon={<Clock size={14} />} label="Timestamp" value={new Date(transaction.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })} />
-                                    {transaction.bankReference && (
-                                          <DetailRow icon={<Hash size={14} />} label="Bank UTR" value={transaction.bankReference} highlight />
-                                    )}
-                                    {transaction.receiptUrl && (
-                                          <DetailRow
-                                                icon={<FileText size={14} color="#10b981" />}
-                                                label="Payment Receipt"
-                                                value={
-                                                      <a
-                                                            href={transaction.receiptUrl}
-                                                            target="_blank"
-                                                            rel="noopener noreferrer"
-                                                            style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.4rem', textDecoration: 'none' }}
-                                                      >
-                                                            View Screenshot <ExternalLink size={12} />
-                                                      </a>
-                                                }
-                                          />
-                                    )}
-                                    {transaction.bankAccountInfo && (
-                                          <DetailRow icon={<Landmark size={14} />} label="Bank Info" value={transaction.bankAccountInfo} />
-                                    )}
-                              </div>
-
-                              {/* Admin: Inspect User */}
-                              {onInspectUser && transaction.user && (
-                                    <div style={{ padding: '0 1.25rem 1.25rem' }}>
-                                          <div style={{
-                                                display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                                background: 'rgba(139, 92, 246, 0.06)',
-                                                border: '1px solid rgba(139, 92, 246, 0.15)',
-                                                padding: '0.875rem 1rem', borderRadius: '0.75rem',
-                                                flexWrap: 'wrap', gap: '0.75rem'
-                                          }}>
-                                                <div style={{ minWidth: 0 }}>
-                                                      <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: '#c4b5fd', fontSize: '0.7rem', marginBottom: '0.2rem', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>
-                                                            <User size={12} /> Associated User
-                                                      </div>
-                                                      <div style={{ color: 'white', fontWeight: 600, fontSize: '0.9rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                            {transaction.user.fullName}
-                                                      </div>
-                                                      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>
-                                                            {transaction.user.username ? `@${transaction.user.username}` : ''}{transaction.user.username && transaction.user.email ? ' · ' : ''}{transaction.user.email || ''}
-                                                      </div>
-                                                </div>
-                                                <button
-                                                      onClick={() => { onClose(); onInspectUser(transaction.userId); }}
-                                                      style={{
-                                                            padding: '0.5rem 0.875rem', fontSize: '0.78rem',
-                                                            border: '1px solid rgba(139, 92, 246, 0.4)', color: '#a78bfa',
-                                                            background: 'rgba(139, 92, 246, 0.08)', borderRadius: '0.5rem',
-                                                            cursor: 'pointer', fontWeight: 600,
-                                                            display: 'flex', alignItems: 'center', gap: '0.35rem',
-                                                            whiteSpace: 'nowrap', flexShrink: 0,
-                                                            transition: 'all 0.2s'
-                                                      }}
-                                                >
-                                                      <ExternalLink size={13} /> Inspect Profile
-                                                </button>
-                                          </div>
+                        <div className="tx-details-grid">
+                              {transaction.status === 'REJECTED' && transaction.rejectionReason && (
+                                    <div className="detail-item">
+                                          <div className="detail-label"><XCircle size={14} color="#ef4444" /> Rejection Note</div>
+                                          <div className="detail-value" style={{ color: '#fca5a5' }}>{transaction.rejectionReason}</div>
                                     </div>
                               )}
+
+                              <div className="detail-item">
+                                    <div className="detail-label"><FileText size={14} /> Description</div>
+                                    <div className="detail-value">{transaction.description || 'No description provided'}</div>
+                              </div>
+
+                              <div className="detail-item">
+                                    <div className="detail-label"><Clock size={14} /> Timestamp</div>
+                                    <div className="detail-value">{new Date(transaction.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}</div>
+                              </div>
+
+                              {transaction.bankReference && (
+                                    <div className="detail-item">
+                                          <div className="detail-label"><Hash size={14} /> Bank Reference (UTR)</div>
+                                          <div className="ref-box">{transaction.bankReference}</div>
+                                    </div>
+                              )}
+
+                              {transaction.receiptUrl && (
+                                    <div className="detail-item">
+                                          <div className="detail-label"><FileText size={14} /> Payment Receipt</div>
+                                          <a href={transaction.receiptUrl} target="_blank" rel="noopener noreferrer" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6', fontWeight: 700, textDecoration: 'none', background: 'rgba(59, 130, 246, 0.1)', padding: '0.75rem 1rem', borderRadius: '1rem', width: 'fit-content' }}>
+                                                View Receipt <ExternalLink size={14} />
+                                          </a>
+                                    </div>
+                              )}
+                        </div>
+
+                        {onInspectUser && transaction.user && (
+                              <div className="user-card-mini">
+                                    <div>
+                                          <div className="detail-label" style={{ color: '#818cf8' }}><User size={12} /> Contributor</div>
+                                          <div style={{ color: 'white', fontWeight: 800, fontSize: '1.1rem', margin: '0.2rem 0' }}>{transaction.user.fullName}</div>
+                                          <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem' }}>{transaction.user.email}</div>
+                                    </div>
+                                    <button onClick={() => { onClose(); onInspectUser(transaction.userId); }} style={{ padding: '0.6rem 1rem', background: '#4f46e5', border: 'none', color: 'white', borderRadius: '0.75rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer', boxShadow: '0 4px 12px rgba(79, 70, 229, 0.3)' }}>
+                                          Inspect
+                                    </button>
+                              </div>
+                        )}
+
+                        <div style={{ padding: '0 1.5rem 2rem' }}>
+                              <button onClick={onClose} style={{ width: '100%', padding: '1rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '1rem', color: 'white', fontWeight: 700, cursor: 'pointer', fontSize: '1rem' }}>
+                                    Dismiss
+                              </button>
                         </div>
                   </div>
             </div>

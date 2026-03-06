@@ -1,0 +1,195 @@
+.admin-overview {
+      animation: fadeIn 0.4s ease-out;
+}
+
+.admin-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: flex-start;
+      margin-bottom: 2rem;
+      gap: 1rem;
+}
+
+.admin-header-actions {
+      display: flex;
+      gap: 1rem;
+      flex-wrap: wrap;
+}
+
+.admin-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.5rem;
+}
+
+.stat-card {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1.5rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      position: relative;
+      overflow: hidden;
+      transition: transform 0.2s, border-color 0.2s;
+}
+
+.stat-card:hover {
+      transform: translateY(-2px);
+      border-color: rgba(255, 255, 255, 0.1);
+}
+
+.stat-watermark {
+      position: absolute;
+      top: -10%;
+      right: -5%;
+      opacity: 0.05;
+}
+
+.stat-label {
+      color: rgba(255, 255, 255, 0.5);
+      font-size: 0.85rem;
+      text-transform: uppercase;
+      letter-spacing: 0.05em;
+      margin-bottom: 0.5rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+}
+
+.stat-value {
+      font-size: 2rem;
+      font-weight: 800;
+      color: white;
+}
+
+.stat-progress-container {
+      margin-top: 1rem;
+      background: rgba(255, 255, 255, 0.05);
+      border-radius: 1rem;
+      height: 6px;
+      overflow: hidden;
+}
+
+.stat-progress-bar {
+      height: 100%;
+      border-radius: 1rem;
+}
+
+.admin-charts-grid {
+      margin-top: 2.5rem;
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 1.5rem;
+}
+
+.chart-panel {
+      background: rgba(15, 23, 42, 0.4);
+      backdrop-filter: blur(12px);
+      padding: 1.5rem;
+      border-radius: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.governance-layout {
+      display: grid;
+      grid-template-columns: 1.6fr 1fr;
+      gap: 1.5rem;
+}
+
+.audit-card {
+      max-height: 700px;
+      display: flex;
+      flex-direction: column;
+}
+
+.audit-list {
+      overflow-y: auto;
+      flex: 1;
+      padding-right: 0.5rem;
+}
+
+.audit-item {
+      background: rgba(255, 255, 255, 0.02);
+      padding: 1rem;
+      border-radius: 0.875rem;
+      border: 1px solid rgba(255, 255, 255, 0.04);
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 0.75rem;
+      transition: background 0.2s;
+}
+
+.audit-item:hover {
+      background: rgba(255, 255, 255, 0.04);
+}
+
+.audit-icon {
+      width: 42px;
+      height: 42px;
+      border-radius: 0.75rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+}
+
+.control-card {
+      margin-bottom: 1.5rem;
+}
+
+.control-item {
+      background: rgba(0, 0, 0, 0.2);
+      padding: 1.25rem;
+      border-radius: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.03);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+}
+
+/* Toggle Switch Styles */
+.toggle-switch {
+      width: 52px;
+      height: 28px;
+      border-radius: 14px;
+      position: relative;
+      cursor: pointer;
+      transition: all 0.3s;
+      border: none;
+}
+
+.toggle-knob {
+      width: 22px;
+      height: 22px;
+      background: white;
+      border-radius: 50%;
+      position: absolute;
+      top: 3px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      box-shadow: 0 2px 4px rgba(0, 0, 0, 0.3);
+}
+
+@media (max-width: 1024px) {
+      .governance-layout {
+            grid-template-columns: 1fr;
+      }
+}
+
+@media (max-width: 768px) {
+      .admin-header {
+            flex-direction: column;
+            align-items: flex-start;
+      }
+
+      .admin-header-actions {
+            width: 100%;
+            justify-content: flex-start;
+      }
+
+      .stat-value {
+            font-size: 1.75rem;
+      }
+
+      .admin-charts-grid {
+            grid-template-columns: 1fr;
+      }
+}

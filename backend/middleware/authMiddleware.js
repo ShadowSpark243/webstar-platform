@@ -11,11 +11,18 @@ exports.protect = async (req, res, next) => {
                   // Verify token
                   const decoded = jwt.verify(token, process.env.JWT_SECRET);
 
-                  // Get user from the token
-                  req.user = await prisma.user.findUnique({
-                        where: { id: decoded.id },
-                        select: { id: true, role: true, email: true, status: true, kycStatus: true }
-                  });
+                  // Get user from the token based on role
+                  if (decoded.role === 'ADMIN') {
+                        req.user = await prisma.admin.findUnique({
+                              where: { id: decoded.id },
+                              select: { id: true, role: true, email: true, status: true }
+                        });
+                  } else {
+                        req.user = await prisma.user.findUnique({
+                              where: { id: decoded.id },
+                              select: { id: true, role: true, email: true, status: true, kycStatus: true }
+                        });
+                  }
 
                   if (!req.user) {
                         return res.status(401).json({ message: 'Not authorized, user not found' });
@@ -23,7 +30,7 @@ exports.protect = async (req, res, next) => {
 
                   // Update session lastActive if exists
                   await prisma.session.updateMany({
-                        where: { token, userId: req.user.id },
+                        where: { token, [decoded.role === 'ADMIN' ? 'adminId' : 'userId']: req.user.id },
                         data: { lastActive: new Date() }
                   }).catch(() => { }); // Ignore error if session doesn't exist for some reason
 

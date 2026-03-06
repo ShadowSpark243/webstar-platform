@@ -557,9 +557,9 @@ exports.getAllProjects = async (req, res) => {
 
 exports.createProject = async (req, res) => {
       try {
-            const { title, description, genre, imageUrl, targetAmount, minInvestment, roiPercentage, durationMonths, status } = req.body;
+            const { title, description, genre, imageUrl, targetAmount, minInvestment, revenueSharePercent, durationMonths, status, spvName, spvRegistration, revenueAgreementUrl } = req.body;
 
-            if (!title || !description || !genre || !targetAmount || !minInvestment || !roiPercentage || !durationMonths) {
+            if (!title || !description || !genre || !targetAmount || !minInvestment || !revenueSharePercent || !durationMonths) {
                   return res.status(400).json({ success: false, message: 'All required fields must be provided.' });
             }
 
@@ -571,9 +571,12 @@ exports.createProject = async (req, res) => {
                         imageUrl: imageUrl || 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2025&auto=format&fit=crop',
                         targetAmount: parseFloat(targetAmount),
                         minInvestment: parseFloat(minInvestment),
-                        roiPercentage: parseFloat(roiPercentage),
+                        revenueSharePercent: parseFloat(revenueSharePercent),
                         durationMonths: parseInt(durationMonths),
-                        status: status || 'COMING_SOON'
+                        status: status || 'COMING_SOON',
+                        spvName: spvName || null,
+                        spvRegistration: spvRegistration || null,
+                        revenueAgreementUrl: revenueAgreementUrl || null
                   }
             });
 
@@ -589,11 +592,11 @@ exports.updateProject = async (req, res) => {
       try {
             const { id } = req.params;
             const updateData = {};
-            const allowed = ['title', 'description', 'genre', 'imageUrl', 'targetAmount', 'minInvestment', 'roiPercentage', 'durationMonths', 'status', 'raisedAmount'];
+            const allowed = ['title', 'description', 'genre', 'imageUrl', 'targetAmount', 'minInvestment', 'revenueSharePercent', 'durationMonths', 'status', 'raisedAmount', 'spvName', 'spvRegistration', 'revenueAgreementUrl'];
 
             for (const key of allowed) {
                   if (req.body[key] !== undefined) {
-                        if (['targetAmount', 'minInvestment', 'roiPercentage', 'raisedAmount'].includes(key)) {
+                        if (['targetAmount', 'minInvestment', 'revenueSharePercent', 'raisedAmount'].includes(key)) {
                               updateData[key] = parseFloat(req.body[key]);
                         } else if (key === 'durationMonths') {
                               updateData[key] = parseInt(req.body[key]);
@@ -759,7 +762,7 @@ exports.triggerDailyPayouts = async (req, res) => {
 
             await logAdminAction({
                   adminId: req.user.id,
-                  action: 'MANUAL_ROI_TRIGGER',
+                  action: 'MANUAL_REV_SHARE_TRIGGER',
                   targetType: 'SYSTEM',
                   targetId: 0,
                   details: `Processed ${stats.processed} payouts, ₹${stats.totalDisbursed.toFixed(2)} disbursed. Skipped: ${stats.skipped}, Errors: ${stats.errors}`
@@ -767,7 +770,7 @@ exports.triggerDailyPayouts = async (req, res) => {
 
             res.status(200).json({
                   success: true,
-                  message: `Daily ROI processed successfully.`,
+                  message: `Daily Revenue Share processed successfully.`,
                   stats
             });
       } catch (error) {

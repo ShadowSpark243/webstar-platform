@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { Users, Search } from 'lucide-react';
+import { Users, Search, ChevronRight, UserCheck, ShieldCheck, Mail, Calendar, Wallet } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 
 const AdminUsers = () => {
@@ -13,7 +13,7 @@ const AdminUsers = () => {
             setLoading(true);
             try {
                   const res = await api.get('/admin/users');
-                  setUserList(res.data.users);
+                  setUserList(res.data.users || []);
             } catch (error) {
                   console.error("Failed to fetch user directory:", error);
             } finally {
@@ -26,133 +26,183 @@ const AdminUsers = () => {
       }, []);
 
       const filteredUsers = userList.filter(u =>
-            u.fullName.toLowerCase().includes(searchQuery.toLowerCase()) ||
-            u.email.toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (u.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (u.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
             String(u.id).includes(searchQuery)
       );
 
-      return (
-            <div>
-                  <h1 className="admin-page-title">User Directory</h1>
-                  <p className="admin-page-subtitle">Deep management and status tracking for all registered users.</p>
+      const getStatusBadge = (status) => {
+            switch (status) {
+                  case 'ACTIVE': return 'badge-success';
+                  case 'INACTIVE': return 'badge-warning';
+                  case 'BANNED': return 'badge-danger';
+                  default: return 'badge-primary';
+            }
+      };
 
-                  <div className="dashboard-card glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
-                              <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem', fontSize: '1.1rem' }}>
-                                    <Users size={20} className="text-secondary" /> Registered Accounts ({userList.length})
+      const getKycBadge = (status) => {
+            switch (status) {
+                  case 'VERIFIED': return 'badge-success';
+                  case 'PENDING': return 'badge-warning';
+                  case 'REJECTED': return 'badge-danger';
+                  default: return 'badge-primary';
+            }
+      };
+
+      return (
+            <div className="fade-in">
+                  <header style={{ marginBottom: '2rem' }}>
+                        <h1 className="admin-page-title">User Directory</h1>
+                        <p className="admin-page-subtitle">Deep management and status tracking for all registered users.</p>
+                  </header>
+
+                  <div className="glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '1rem' }}>
+                        <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem' }}>
+                              <h2 style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.75rem', fontSize: '1.1rem', color: 'white' }}>
+                                    <Users size={20} style={{ color: '#8b5cf6' }} /> Accounts <span style={{ color: 'rgba(255,255,255,0.3)', fontWeight: 400 }}>({userList.length})</span>
                               </h2>
-                              <div style={{ background: 'rgba(0,0,0,0.3)', padding: '0.6rem 1rem', borderRadius: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', flex: '1 1 250px', maxWidth: '100%' }}>
-                                    <Search size={16} className="text-muted" />
+                              <div className="search-wrapper">
+                                    <Search size={18} className="search-icon" />
                                     <input
                                           type="text"
-                                          placeholder="Search users..."
+                                          placeholder="Search name, email or ID..."
+                                          className="admin-search-input"
                                           value={searchQuery}
                                           onChange={(e) => setSearchQuery(e.target.value)}
-                                          style={{ background: 'transparent', border: 'none', color: 'white', outline: 'none', width: '100%', fontSize: '0.85rem' }}
                                     />
                               </div>
                         </div>
 
                         {loading ? (
-                              <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Loading Directory...</div>
+                              <div style={{ padding: '4rem', textAlign: 'center' }}>
+                                    <div className="animate-spin" style={{ display: 'inline-block', width: '2rem', height: '2rem', border: '3px solid rgba(139, 92, 246, 0.2)', borderTopColor: '#8b5cf6', borderRadius: '50%' }}></div>
+                                    <p style={{ marginTop: '1rem', color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>Accessing directory database...</p>
+                              </div>
                         ) : (
-                              <div style={{ width: '100%', maxWidth: '100%', display: 'block' }}>
-                                    {/* Desktop Table View */}
-                                    <div className="mobile-hide">
-                                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                              <>
+                                    {/* Desktop Table */}
+                                    <div className="table-container mobile-hide" style={{ border: 'none', borderRadius: 0 }}>
+                                          <table className="admin-table">
                                                 <thead>
-                                                      <tr style={{ background: 'rgba(0,0,0,0.2)', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>User ID / Registration</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Identity</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Network Trace</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Account Status</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>KYC Status</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600, textAlign: 'right' }}>Wallet Balance</th>
+                                                      <tr>
+                                                            <th>User Profile</th>
+                                                            <th>Contact & ID</th>
+                                                            <th>Network Path</th>
+                                                            <th>Status</th>
+                                                            <th>Verification</th>
+                                                            <th style={{ textAlign: 'right' }}>Capitalization</th>
                                                       </tr>
                                                 </thead>
                                                 <tbody>
                                                       {filteredUsers.length === 0 ? (
-                                                            <tr><td colSpan="6" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>No records found matching your query.</td></tr>
-                                                      ) : filteredUsers.map((u) => (
-                                                            <tr
-                                                                  key={u.id}
-                                                                  onClick={() => setSelectedUserId(u.id)}
-                                                                  style={{ borderTop: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'all 0.2s', background: 'transparent' }}
-                                                                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.03)', transform: 'translateY(-1px)' })}
-                                                                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent', transform: 'none' })}
-                                                            >
-                                                                  <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                        <div style={{ color: '#8b5cf6', fontWeight: 600, fontSize: '0.9rem' }}>{String(u.id).padStart(5, '0')}</div>
-                                                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>{new Date(u.createdAt).toLocaleDateString()}</div>
-                                                                  </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                        <div style={{ fontWeight: 600, color: 'white' }}>{u.fullName}</div>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.2rem' }}>{u.email}</div>
-                                                                  </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                        <div style={{ color: '#4ade80', fontWeight: 600, fontSize: '0.85rem', letterSpacing: '0.05em' }}>{u.referralCode}</div>
-                                                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>Inviter: {u.inviter ? <span style={{ color: '#c4b5fd' }}>{u.inviter}</span> : 'Organic'}</div>
-                                                                  </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                        <span style={{ padding: '0.25rem 0.6rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 600, background: u.status === 'ACTIVE' ? 'rgba(16, 185, 129, 0.15)' : u.status === 'INACTIVE' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: u.status === 'ACTIVE' ? '#10b981' : u.status === 'INACTIVE' ? '#f59e0b' : '#ef4444' }}>
-                                                                              {u.status}
-                                                                        </span>
-                                                                  </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                        <span style={{ fontSize: '0.85rem', fontWeight: 600, color: u.kycStatus === 'VERIFIED' ? '#10b981' : u.kycStatus === 'PENDING' ? '#f59e0b' : '#ef4444' }}>
-                                                                              {u.kycStatus}
-                                                                        </span>
-                                                                  </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem', fontWeight: 600, color: '#3b82f6', textAlign: 'right', fontSize: '1.1rem' }}>
-                                                                        ₹{(u.walletBalance || 0).toLocaleString('en-IN')}
+                                                            <tr>
+                                                                  <td colSpan="6" style={{ padding: '4rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>
+                                                                        No user records aligned with "{searchQuery}"
                                                                   </td>
                                                             </tr>
-                                                      ))}
+                                                      ) : (
+                                                            filteredUsers.map((u) => (
+                                                                  <tr key={u.id} className="clickable-row" onClick={() => setSelectedUserId(u.id)}>
+                                                                        <td>
+                                                                              <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                                                                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', display: 'flex', alignItems: 'center', justifyCenter: 'center', color: 'white', fontWeight: 700, fontSize: '0.9rem', boxShadow: '0 4px 12px rgba(139, 92, 246, 0.2)' }}>
+                                                                                          {(u.fullName || 'U').charAt(0)}
+                                                                                    </div>
+                                                                                    <div>
+                                                                                          <div style={{ fontWeight: 600, color: 'white' }}>{u.fullName}</div>
+                                                                                          <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.1rem', display: 'flex', alignItems: 'center', gap: '0.3rem' }}>
+                                                                                                <Calendar size={12} /> Joined {new Date(u.createdAt).toLocaleDateString()}
+                                                                                          </div>
+                                                                                    </div>
+                                                                              </div>
+                                                                        </td>
+                                                                        <td>
+                                                                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.2rem' }}>
+                                                                                    <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
+                                                                                          <Mail size={12} style={{ color: '#3b82f6' }} /> {u.email}
+                                                                                    </div>
+                                                                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)' }}>UID: {String(u.id).padStart(6, '0')}</div>
+                                                                              </div>
+                                                                        </td>
+                                                                        <td>
+                                                                              <div style={{ color: '#10b981', fontWeight: 700, fontSize: '0.85rem', letterSpacing: '0.05em' }}>{u.referralCode}</div>
+                                                                              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.1rem' }}>
+                                                                                    Lead: {u.inviter ? <span style={{ color: '#c4b5fd' }}>{u.inviter}</span> : 'Direct'}
+                                                                              </div>
+                                                                        </td>
+                                                                        <td>
+                                                                              <span className={`badge ${getStatusBadge(u.status)}`}>{u.status}</span>
+                                                                        </td>
+                                                                        <td>
+                                                                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                                                    <ShieldCheck size={14} style={{ color: u.kycStatus === 'VERIFIED' ? '#10b981' : 'rgba(255,255,255,0.2)' }} />
+                                                                                    <span style={{ fontSize: '0.85rem', fontWeight: 600, color: u.kycStatus === 'VERIFIED' ? '#10b981' : u.kycStatus === 'PENDING' ? '#f59e0b' : '#ef4444' }}>
+                                                                                          {u.kycStatus}
+                                                                                    </span>
+                                                                              </div>
+                                                                        </td>
+                                                                        <td style={{ textAlign: 'right' }}>
+                                                                              <div style={{ color: '#3b82f6', fontWeight: 800, fontSize: '1.1rem' }}>
+                                                                                    ₹{(u.walletBalance || 0).toLocaleString('en-IN')}
+                                                                              </div>
+                                                                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.3)', marginTop: '0.1rem' }}>Current Liquidity</div>
+                                                                        </td>
+                                                                  </tr>
+                                                            ))
+                                                      )}
                                                 </tbody>
                                           </table>
                                     </div>
 
-                                    {/* Mobile Card View */}
-                                    <div className="mobile-show">
-                                          <div className="admin-card-list">
+                                    {/* Mobile Card List */}
+                                    <div className="mobile-show" style={{ padding: '1rem' }}>
+                                          <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
                                                 {filteredUsers.length === 0 ? (
-                                                      <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)' }}>No records found.</div>
-                                                ) : filteredUsers.map((u) => (
-                                                      <div key={u.id} className="admin-card" onClick={() => setSelectedUserId(u.id)}>
-                                                            <div className="admin-card-row">
-                                                                  <div>
-                                                                        <div style={{ color: '#8b5cf6', fontWeight: 700, fontSize: '0.8rem' }}>#{String(u.id).padStart(5, '0')}</div>
-                                                                        <div className="admin-card-value" style={{ fontSize: '1.05rem', marginTop: '0.2rem' }}>{u.fullName}</div>
-                                                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>{u.email}</div>
+                                                      <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>No users found.</div>
+                                                ) : (
+                                                      filteredUsers.map((u) => (
+                                                            <div
+                                                                  key={u.id}
+                                                                  onClick={() => setSelectedUserId(u.id)}
+                                                                  style={{ background: 'rgba(255,255,255,0.03)', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)', padding: '1.25rem' }}
+                                                            >
+                                                                  <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                                                        <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                                                              <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: 'linear-gradient(135deg, #8b5cf6 0%, #6366f1 100%)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: 'white', fontWeight: 700 }}>
+                                                                                    {(u.fullName || 'U').charAt(0)}
+                                                                              </div>
+                                                                              <div>
+                                                                                    <div style={{ fontWeight: 600, color: 'white' }}>{u.fullName}</div>
+                                                                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>UID: {String(u.id).padStart(6, '0')}</div>
+                                                                              </div>
+                                                                        </div>
+                                                                        <ChevronRight size={18} style={{ color: 'rgba(255,255,255,0.2)' }} />
                                                                   </div>
-                                                                  <div style={{ textAlign: 'right' }}>
-                                                                        <div className="admin-card-label">Balance</div>
-                                                                        <div style={{ color: '#3b82f6', fontWeight: 700, fontSize: '1.1rem' }}>₹{(u.walletBalance || 0).toLocaleString('en-IN')}</div>
-                                                                  </div>
-                                                            </div>
-                                                            <div className="admin-card-row" style={{ marginTop: '0.5rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                                                  <div>
-                                                                        <div className="admin-card-label">Status</div>
-                                                                        <span style={{ display: 'inline-block', marginTop: '0.25rem', padding: '0.2rem 0.5rem', borderRadius: '0.5rem', fontSize: '0.7rem', fontWeight: 700, background: u.status === 'ACTIVE' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(239, 68, 68, 0.15)', color: u.status === 'ACTIVE' ? '#10b981' : '#ef4444' }}>
-                                                                              {u.status}
-                                                                        </span>
-                                                                  </div>
-                                                                  <div>
-                                                                        <div className="admin-card-label">KYC</div>
-                                                                        <div style={{ marginTop: '0.25rem', fontSize: '0.75rem', fontWeight: 700, color: u.kycStatus === 'VERIFIED' ? '#10b981' : '#f59e0b' }}>
-                                                                              {u.kycStatus}
+
+                                                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', padding: '1rem', background: 'rgba(0,0,0,0.2)', borderRadius: '0.75rem' }}>
+                                                                        <div>
+                                                                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Status</div>
+                                                                              <span className={`badge ${getStatusBadge(u.status)}`} style={{ fontSize: '0.65rem' }}>{u.status}</span>
+                                                                        </div>
+                                                                        <div style={{ textAlign: 'right' }}>
+                                                                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Liquidity</div>
+                                                                              <div style={{ color: '#3b82f6', fontWeight: 700 }}>₹{(u.walletBalance || 0).toLocaleString('en-IN')}</div>
+                                                                        </div>
+                                                                        <div>
+                                                                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>KYC</div>
+                                                                              <div style={{ fontSize: '0.85rem', fontWeight: 600, color: u.kycStatus === 'VERIFIED' ? '#10b981' : '#f59e0b' }}>{u.kycStatus}</div>
+                                                                        </div>
+                                                                        <div style={{ textAlign: 'right' }}>
+                                                                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.25rem' }}>Joined</div>
+                                                                              <div style={{ fontSize: '0.85rem', color: 'white' }}>{new Date(u.createdAt).toLocaleDateString()}</div>
                                                                         </div>
                                                                   </div>
-                                                                  <div style={{ textAlign: 'right' }}>
-                                                                        <div className="admin-card-label">Joined</div>
-                                                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.25rem' }}>{new Date(u.createdAt).toLocaleDateString()}</div>
-                                                                  </div>
                                                             </div>
-                                                      </div>
-                                                ))}
+                                                      ))
+                                                )}
                                           </div>
                                     </div>
-                              </div>
+                              </>
                         )}
                   </div>
 

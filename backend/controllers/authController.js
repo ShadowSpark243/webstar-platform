@@ -54,21 +54,21 @@ exports.register = async (req, res) => {
             const role = referralCode === process.env.ADMIN_SECRET_CODE || referralCode === 'WEBSTAR_ADMIN_XYZ' ? 'ADMIN' : 'USER';
             const kycStatus = role === 'ADMIN' ? 'VERIFIED' : 'UNVERIFIED';
 
-            // 6. Create the User in Railway MySQL
+            // 6. Create the User or Admin in the respective table
             let newUser;
 
             if (role === 'ADMIN') {
-                  // Admin accounts are always assigned ID 0 via raw SQL
-                  await prisma.$executeRawUnsafe(`SET SESSION sql_mode = 'NO_AUTO_VALUE_ON_ZERO'`);
-                  await prisma.$executeRawUnsafe(
-                        `INSERT INTO User (id, fullName, email, username, phone, password, referralCode, referredById, inviterCode, inviter, role, status, kycStatus, walletBalance, incomeBalance, totalInvested, teamVolume, \`rank\`, updatedAt)
-                         VALUES (0, ?, ?, ?, ?, ?, ?, ?, ?, ?, 'ADMIN', 'ACTIVE', 'VERIFIED', 0, 0, 0, 0, 'Starter', NOW())`,
-                        fullName, email, username, phone, hashedPassword, newReferralCode,
-                        referredById, inviterCode, inviter
-                  );
-                  newUser = await prisma.user.findUnique({ where: { email } });
+                  newUser = await prisma.admin.create({
+                        data: {
+                              fullName,
+                              email,
+                              username,
+                              phone,
+                              password: hashedPassword,
+                              referralCode: newReferralCode
+                        }
+                  });
             } else {
-                  // Regular users get sequential auto-increment IDs starting from 1
                   newUser = await prisma.user.create({
                         data: {
                               fullName,
@@ -115,8 +115,8 @@ exports.login = async (req, res) => {
       try {
             const { loginId, password } = req.body;
 
-            // 1. Find User by email or username
-            const user = await prisma.user.findFirst({
+            // 1. Find User or Admin by email or username
+            let user = await prisma.user.findFirst({
                   where: {
                         OR: [
                               { email: loginId },
@@ -124,6 +124,17 @@ exports.login = async (req, res) => {
                         ]
                   }
             });
+
+            if (!user) {
+                  user = await prisma.admin.findFirst({
+                        where: {
+                              OR: [
+                                    { email: loginId },
+                                    { username: loginId }
+                              ]
+                        }
+                  });
+            }
 
             if (!user) {
                   return res.status(404).json({ success: false, message: 'Invalid credentials. User not found.' });
@@ -145,7 +156,7 @@ exports.login = async (req, res) => {
             // 4. Create Session record
             await prisma.session.create({
                   data: {
-                        userId: user.id,
+                        [user.role === 'ADMIN' ? 'adminId' : 'userId']: user.id,
                         token,
                         ip: req.ip || req.headers['x-forwarded-for'],
                         device: req.headers['user-agent']
@@ -175,7 +186,7 @@ exports.forgotPassword = async (req, res) => {
             const { loginId } = req.body;
 
             // 1. Find the user by email or username
-            const user = await prisma.user.findFirst({
+            let user = await prisma.user.findFirst({
                   where: {
                         OR: [
                               { email: loginId },
@@ -183,6 +194,19 @@ exports.forgotPassword = async (req, res) => {
                         ]
                   }
             });
+
+            let isUserAdmin = false;
+            if (!user) {
+                  user = await prisma.admin.findFirst({
+                        where: {
+                              OR: [
+                                    { email: loginId },
+                                    { username: loginId }
+                              ]
+                        }
+                  });
+                  isUserAdmin = !!user;
+            }
 
             if (!user) {
                   return res.status(404).json({ success: false, message: 'User not found with that email or username.' });
@@ -200,13 +224,23 @@ exports.forgotPassword = async (req, res) => {
             // 4. Set token expire (10 mins)
             const resetPasswordExpires = new Date(Date.now() + 10 * 60 * 1000);
 
-            await prisma.user.update({
-                  where: { id: user.id },
-                  data: {
-                        resetPasswordToken,
-                        resetPasswordExpires
-                  }
-            });
+            if (isUserAdmin) {
+                  await prisma.admin.update({
+                        where: { id: user.id },
+                        data: {
+                              resetPasswordToken,
+                              resetPasswordExpires
+                        }
+                  });
+            } else {
+                  await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                              resetPasswordToken,
+                              resetPasswordExpires
+                        }
+                  });
+            }
 
             // 5. Create reset url
             // IMPORTANT: Ensure FRONTEND_URL is set to your live domain (e.g., https://vidzonaa.in) in your production dashboard (Railway/Render)
@@ -249,13 +283,23 @@ exports.forgotPassword = async (req, res) => {
                   res.status(200).json({ success: true, message: 'Email sent' });
             } catch (err) {
                   console.error(err);
-                  await prisma.user.update({
-                        where: { id: user.id },
-                        data: {
-                              resetPasswordToken: null,
-                              resetPasswordExpires: null
-                        }
-                  });
+                  if (isUserAdmin) {
+                        await prisma.admin.update({
+                              where: { id: user.id },
+                              data: {
+                                    resetPasswordToken: null,
+                                    resetPasswordExpires: null
+                              }
+                        });
+                  } else {
+                        await prisma.user.update({
+                              where: { id: user.id },
+                              data: {
+                                    resetPasswordToken: null,
+                                    resetPasswordExpires: null
+                              }
+                        });
+                  }
 
                   return res.status(500).json({ success: false, message: 'Email could not be sent' });
             }
@@ -275,12 +319,23 @@ exports.resetPassword = async (req, res) => {
                   .digest('hex');
 
             // 2. Find user by token and check expiry
-            const user = await prisma.user.findFirst({
+            let user = await prisma.user.findFirst({
                   where: {
                         resetPasswordToken,
                         resetPasswordExpires: { gt: new Date() }
                   }
             });
+
+            let isUserAdmin = false;
+            if (!user) {
+                  user = await prisma.admin.findFirst({
+                        where: {
+                              resetPasswordToken,
+                              resetPasswordExpires: { gt: new Date() }
+                        }
+                  });
+                  isUserAdmin = !!user;
+            }
 
             if (!user) {
                   return res.status(400).json({ success: false, message: 'Invalid token or token expired' });
@@ -290,14 +345,25 @@ exports.resetPassword = async (req, res) => {
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash(req.body.password, saltRounds);
 
-            await prisma.user.update({
-                  where: { id: user.id },
-                  data: {
-                        password: hashedPassword,
-                        resetPasswordToken: null,
-                        resetPasswordExpires: null
-                  }
-            });
+            if (isUserAdmin) {
+                  await prisma.admin.update({
+                        where: { id: user.id },
+                        data: {
+                              password: hashedPassword,
+                              resetPasswordToken: null,
+                              resetPasswordExpires: null
+                        }
+                  });
+            } else {
+                  await prisma.user.update({
+                        where: { id: user.id },
+                        data: {
+                              password: hashedPassword,
+                              resetPasswordToken: null,
+                              resetPasswordExpires: null
+                        }
+                  });
+            }
 
             res.status(200).json({
                   success: true,
@@ -322,16 +388,14 @@ exports.createSuperAdmin = async (req, res) => {
             const saltRounds = 10;
             const hashedPassword = await bcrypt.hash('admin123', saltRounds);
 
-            const admin = await prisma.user.create({
+            const admin = await prisma.admin.create({
                   data: {
                         fullName: 'Super Admin',
                         email: 'admin@webstar.com',
                         password: hashedPassword,
                         role: 'ADMIN',
                         status: 'ACTIVE',
-                        kycStatus: 'VERIFIED',
-                        referralCode: 'WS-ADMINX',
-                        walletBalance: 100000000 // 100 Million for testing
+                        referralCode: 'WS-ADMINX'
                   }
             });
 
@@ -344,35 +408,53 @@ exports.createSuperAdmin = async (req, res) => {
 // Fetch Current Logged-in User Profile
 exports.getMe = async (req, res) => {
       try {
-            const user = await prisma.user.findUnique({
-                  where: { id: req.user.id },
-                  select: {
-                        id: true,
-                        fullName: true,
-                        email: true,
-                        username: true,
-                        phone: true,
-                        role: true,
-                        status: true,
-                        kycStatus: true,
-                        walletBalance: true,
-                        incomeBalance: true,
-                        totalInvested: true,
-                        teamVolume: true,
-                        rank: true,
-                        referralCode: true,
-                        createdAt: true,
-                        referredById: true,
-                        inviterCode: true,
-                        inviter: true,
-                        kycDocuments: {
-                              select: {
-                                    status: true,
-                                    rejectionReason: true
+            let user;
+            if (req.user.role === 'ADMIN') {
+                  user = await prisma.admin.findUnique({
+                        where: { id: req.user.id },
+                        select: {
+                              id: true,
+                              fullName: true,
+                              email: true,
+                              username: true,
+                              phone: true,
+                              role: true,
+                              status: true,
+                              referralCode: true,
+                              createdAt: true
+                        }
+                  });
+            } else {
+                  user = await prisma.user.findUnique({
+                        where: { id: req.user.id },
+                        select: {
+                              id: true,
+                              fullName: true,
+                              email: true,
+                              username: true,
+                              phone: true,
+                              role: true,
+                              status: true,
+                              kycStatus: true,
+                              walletBalance: true,
+                              incomeBalance: true,
+                              totalInvested: true,
+                              teamVolume: true,
+                              rank: true,
+                              referralCode: true,
+                              createdAt: true,
+                              referredById: true,
+                              inviterCode: true,
+                              inviter: true,
+                              kycDocuments: {
+                                    select: {
+                                          status: true,
+                                          rejectionReason: true
+                                    }
                               }
                         }
-                  }
-            });
+                  });
+            }
 
             if (!user) {
                   return res.status(404).json({ success: false, message: 'User not found' });
@@ -396,7 +478,13 @@ exports.changePassword = async (req, res) => {
                   return res.status(400).json({ success: false, message: 'New password must be at least 8 characters.' });
             }
 
-            const user = await prisma.user.findUnique({ where: { id: req.user.id } });
+            let user;
+            if (req.user.role === 'ADMIN') {
+                  user = await prisma.admin.findUnique({ where: { id: req.user.id } });
+            } else {
+                  user = await prisma.user.findUnique({ where: { id: req.user.id } });
+            }
+
             const isMatch = await bcrypt.compare(currentPassword, user.password);
 
             if (!isMatch) {
@@ -406,10 +494,17 @@ exports.changePassword = async (req, res) => {
             const salt = await bcrypt.genSalt(12);
             const hashedPassword = await bcrypt.hash(newPassword, salt);
 
-            await prisma.user.update({
-                  where: { id: req.user.id },
-                  data: { password: hashedPassword }
-            });
+            if (req.user.role === 'ADMIN') {
+                  await prisma.admin.update({
+                        where: { id: req.user.id },
+                        data: { password: hashedPassword }
+                  });
+            } else {
+                  await prisma.user.update({
+                        where: { id: req.user.id },
+                        data: { password: hashedPassword }
+                  });
+            }
 
             res.status(200).json({ success: true, message: 'Password changed successfully.' });
       } catch (error) {
@@ -422,7 +517,7 @@ exports.changePassword = async (req, res) => {
 exports.getSessions = async (req, res) => {
       try {
             const sessions = await prisma.session.findMany({
-                  where: { userId: req.user.id },
+                  where: { [req.user.role === 'ADMIN' ? 'adminId' : 'userId']: req.user.id },
                   orderBy: { lastActive: 'desc' }
             });
             res.status(200).json({ success: true, sessions });
@@ -437,7 +532,8 @@ exports.revokeSession = async (req, res) => {
             const { sessionId } = req.params;
             const session = await prisma.session.findUnique({ where: { id: parseInt(sessionId) } });
 
-            if (!session || session.userId !== req.user.id) {
+            const isOwner = req.user.role === 'ADMIN' ? session?.adminId === req.user.id : session?.userId === req.user.id;
+            if (!session || !isOwner) {
                   return res.status(404).json({ success: false, message: 'Session not found.' });
             }
 

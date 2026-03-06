@@ -2,8 +2,9 @@ import React, { useState, useEffect } from 'react';
 import { useLocation } from 'react-router-dom';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import { Film, AlertCircle, PlaySquare, ChevronRight, X, TrendingUp, Clock, Target, Users, IndianRupee, Info, CheckCircle2, XCircle, Loader2, ChevronDown, ChevronUp } from 'lucide-react';
+import { Film, AlertCircle, PlaySquare, ChevronRight, X, TrendingUp, Clock, Target, Users, IndianRupee, Info, CheckCircle2, XCircle, Loader2, ChevronDown, ChevronUp, Sparkles } from 'lucide-react';
 import './Dashboard.css';
+import './ProjectsPage.css';
 
 const ProjectsPage = () => {
       const location = useLocation();
@@ -15,6 +16,7 @@ const ProjectsPage = () => {
       const [investAmount, setInvestAmount] = useState('');
       const [isProcessing, setIsProcessing] = useState(false);
       const [confirmInvest, setConfirmInvest] = useState(false);
+      const [agreementAccepted, setAgreementAccepted] = useState(false);
       const [resultModal, setResultModal] = useState(null); // { success: bool, message: string }
       const [myInvestments, setMyInvestments] = useState([]);
       const [loadingPortfolio, setLoadingPortfolio] = useState(true);
@@ -62,6 +64,7 @@ const ProjectsPage = () => {
             setInvestAmount(String(project.minInvestment));
             setShowInvestModal(true);
             setConfirmInvest(false);
+            setAgreementAccepted(false);
       };
 
       const handleInvest = () => {
@@ -90,7 +93,8 @@ const ProjectsPage = () => {
             try {
                   const res = await api.post('/wallet/invest', {
                         projectId: selectedProject.id,
-                        amount: parseFloat(investAmount)
+                        amount: parseFloat(investAmount),
+                        agreementAccepted
                   });
 
                   if (res.data.success) {
@@ -98,7 +102,7 @@ const ProjectsPage = () => {
                         setShowInvestModal(false);
                         setConfirmInvest(false);
                         setSelectedProject(null);
-                        setResultModal({ success: true, message: 'Investment successful! 5-Level Commission has been distributed to your network.' });
+                        setResultModal({ success: true, message: 'Participation confirmed! 5-Level referral commission has been distributed to your network.' });
                         fetchProjects();
                         fetchMyInvestments();
                   }
@@ -114,21 +118,21 @@ const ProjectsPage = () => {
 
       const portfolioStats = myInvestments.reduce((acc, inv) => {
             acc.totalInvested += inv.amount;
-            acc.totalExpectedReturn += inv.expectedReturn;
+            acc.totalEstimatedRevShare += inv.estimatedRevShare;
             return acc;
-      }, { totalInvested: 0, totalExpectedReturn: 0 });
+      }, { totalInvested: 0, totalEstimatedRevShare: 0 });
 
       const groupedInvestmentsMap = myInvestments.reduce((acc, inv) => {
             if (!acc[inv.projectId]) {
                   acc[inv.projectId] = {
                         project: inv.project,
                         totalInvested: 0,
-                        totalExpectedReturn: 0,
+                        totalEstimatedRevShare: 0,
                         investments: []
                   };
             }
             acc[inv.projectId].totalInvested += inv.amount;
-            acc[inv.projectId].totalExpectedReturn += inv.expectedReturn;
+            acc[inv.projectId].totalEstimatedRevShare += inv.estimatedRevShare;
             acc[inv.projectId].investments.push(inv);
             return acc;
       }, {});
@@ -136,107 +140,109 @@ const ProjectsPage = () => {
       const groupedPortfolio = Object.values(groupedInvestmentsMap);
 
       return (
-            <div className="dashboard-page relative">
+            <div className="dashboard-page relative p-page-fade">
                   <header className="page-header">
                         <div>
-                              <h1 className="page-title">Live Projects</h1>
-                              <p className="page-subtitle">Fund upcoming blockbuster content and earn profit shares.</p>
+                              <h1 className="page-title">Blockbuster Opportunities</h1>
+                              <p className="page-subtitle">Participate in high-potential content projects and secure your revenue shares.</p>
                         </div>
                   </header>
+                  
 
-                  {/* Current Wallet Banner */}
-                  <div className="alert-banner" style={{ background: 'rgba(59, 130, 246, 0.1)', borderColor: 'rgba(59, 130, 246, 0.3)', marginBottom: '1.5rem' }}>
-                        <div className="alert-content" style={{ display: 'flex', justifyContent: 'space-between', width: '100%', alignItems: 'center' }}>
-                              <div>
-                                    <h4 style={{ color: '#3b82f6' }}>Available Balance</h4>
-                                    <p>₹{user?.walletBalance?.toLocaleString('en-IN') || '0'}</p>
+                  <div className="alert-banner p-balance-banner">
+                        <div className="alert-content">
+                              <div className="p-bal-info">
+                                    <span className="p-bal-label">Available Balance</span>
+                                    <h2 className="p-bal-value">₹{user?.walletBalance?.toLocaleString('en-IN') || '0'}</h2>
                               </div>
                         </div>
                   </div>
 
-                  {/* Tabs */}
                   <div className="projects-tabs">
                         <button
                               onClick={() => setActiveTab('opportunities')}
                               className={`projects-tab-btn ${activeTab === 'opportunities' ? 'active' : 'inactive'}`}
                         >
-                              <Film size={18} /> Available Opportunities ({projects.length})
+                              <Film size={18} /> Opportunities ({projects.length})
                         </button>
                         <button
                               onClick={() => setActiveTab('portfolio')}
                               className={`projects-tab-btn ${activeTab === 'portfolio' ? 'active' : 'inactive'}`}
                         >
-                              <TrendingUp size={18} /> My Portfolio ({myInvestments.length})
+                              <TrendingUp size={18} /> Portfolio ({myInvestments.length})
                         </button>
                   </div>
 
-                  {/* My Portfolio Section */}
                   {activeTab === 'portfolio' && (
-                        <section style={{ marginBottom: '3rem', animation: 'fadeIn 0.3s ease' }}>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                                    <TrendingUp className="text-primary" size={24} />
-                                    <h2 style={{ fontSize: '1.5rem', margin: 0 }}>My Portfolio</h2>
+                        <section className="p-section-fade">
+                              <div className="ov-sec-hdr">
+                                    <h2 style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                          <Sparkles size={20} className="text-primary" /> My Portfolio Analysis
+                                    </h2>
                               </div>
 
                               {loadingPortfolio ? (
-                                    <div style={{ padding: '2rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>Loading portfolio...</div>
+                                    <div className="p-loading-box">Analyzing your portfolio...</div>
                               ) : groupedPortfolio.length === 0 ? (
-                                    <div className="glass-panel" style={{ padding: '2rem', textAlign: 'center', borderRadius: '1rem', border: '1px dashed rgba(255,255,255,0.1)' }}>
-                                          <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0 }}>You haven't participated in any projects yet.</p>
+                                    <div className="p-empty-state">
+                                          <TrendingUp size={48} />
+                                          <p>Your portfolio is currently empty. Start by exploring opportunities.</p>
                                     </div>
                               ) : (
                                     <>
-                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
-                                                <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>Total Invested</p>
-                                                      <h3 style={{ margin: '0.25rem 0 0', fontSize: '1.5rem', color: 'white' }}>₹{portfolioStats.totalInvested.toLocaleString('en-IN')}</h3>
+                                          <div className="p-stats-row">
+                                                <div className="p-stat-card">
+                                                      <span className="p-stat-label">Total Contribution</span>
+                                                      <h3 className="p-stat-value">₹{portfolioStats.totalInvested.toLocaleString('en-IN')}</h3>
                                                 </div>
-                                                <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>Expected Returns</p>
-                                                      <h3 style={{ margin: '0.25rem 0 0', fontSize: '1.5rem', color: '#10b981' }}>₹{portfolioStats.totalExpectedReturn.toLocaleString('en-IN')}</h3>
+                                                <div className="p-stat-card">
+                                                      <span className="p-stat-label">Active Projects</span>
+                                                      <h3 className="p-stat-value text-primary">{groupedPortfolio.length}</h3>
                                                 </div>
-                                                <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
-                                                      <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.5)' }}>Projects Invested</p>
-                                                      <h3 style={{ margin: '0.25rem 0 0', fontSize: '1.5rem', color: '#3b82f6' }}>{groupedPortfolio.length}</h3>
+                                                <div className="p-stat-card">
+                                                      <span className="p-stat-label">Estimated Returns</span>
+                                                      <h3 className="p-stat-value text-success">₹{portfolioStats.totalEstimatedRevShare.toLocaleString('en-IN')}</h3>
                                                 </div>
                                           </div>
 
-                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(340px, 1fr))', gap: '1.25rem' }}>
+                                          <div className="p-portfolio-grid">
                                                 {groupedPortfolio.map(grp => (
-                                                      <div key={grp.project.id} className="glass-panel" style={{ padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)', position: 'relative' }}>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem' }}>
-                                                                  <div>
-                                                                        <h4 style={{ margin: 0, fontSize: '1.2rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                              <PlaySquare size={16} className="text-primary" /> {grp.project?.title}
-                                                                        </h4>
-                                                                        <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{grp.project?.genre} · {grp.investments.length} {grp.investments.length === 1 ? 'Investment' : 'Investments'}</span>
+                                                      <div key={grp.project.id} className="p-item">
+                                                            <div className="p-item-header">
+                                                                  <div className="p-item-info">
+                                                                        <h4>{grp.project?.title}</h4>
+                                                                        <span>{grp.project?.genre} · {grp.investments.length} Slots</span>
                                                                   </div>
-                                                                  <div style={{ textAlign: 'right' }}>
-                                                                        <div style={{ color: '#10b981', fontWeight: 700, fontSize: '1.1rem' }}>₹{grp.totalInvested.toLocaleString('en-IN')}</div>
-                                                                        <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)' }}>Total Invested</div>
+                                                                  <div className="p-item-total">
+                                                                        <div className="p-item-amt">₹{grp.totalInvested.toLocaleString('en-IN')}</div>
+                                                                        <div className="p-stat-label">Contributed</div>
                                                                   </div>
                                                             </div>
 
-                                                            <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '0.85rem', borderRadius: '0.75rem', marginBottom: '1rem' }}>
-                                                                  <div>
-                                                                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>Total Expected Return</p>
-                                                                        <p style={{ margin: '0.2rem 0 0', fontSize: '1rem', fontWeight: 600, color: '#3b82f6' }}>₹{grp.totalExpectedReturn.toLocaleString('en-IN')}</p>
+                                                            <div className="p-item-summary">
+                                                                  <div className="p-summary-box">
+                                                                        <div className="p-stat-label"><TrendingUp size={14} /> Est. Rev Share</div>
+                                                                        <div className="p-stat-value text-primary">₹{grp.totalEstimatedRevShare.toLocaleString('en-IN')}</div>
                                                                   </div>
-                                                                  <div>
-                                                                        <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>Project Status</p>
-                                                                        <p style={{ margin: '0.2rem 0 0', fontSize: '1rem', fontWeight: 600, color: grp.project.status === 'ACTIVE' ? '#10b981' : '#f59e0b' }}>{grp.project.status}</p>
+                                                                  <div className="p-summary-box">
+                                                                        <div className="p-stat-label"><AlertCircle size={14} /> Status</div>
+                                                                        <div className="p-stat-value">{grp.project.status}</div>
                                                                   </div>
                                                             </div>
 
                                                             <button
                                                                   onClick={() => toggleProject(grp.project.id)}
-                                                                  style={{ width: '100%', padding: '0.75rem', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.05)', color: 'rgba(255,255,255,0.7)', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', fontSize: '0.85rem', transition: 'all 0.2s' }}
+                                                                  className="p-history-toggle"
                                                             >
-                                                                  {expandedProjects[grp.project.id] ? <><ChevronUp size={16} /> Hide History</> : <><ChevronDown size={16} /> View Investment History</>}
+                                                                  {expandedProjects[grp.project.id] ? (
+                                                                        <><ChevronUp size={16} /> Hide History</>
+                                                                  ) : (
+                                                                        <><ChevronDown size={16} /> View Contribution History ({grp.investments.length})</>
+                                                                  )}
                                                             </button>
 
                                                             {expandedProjects[grp.project.id] && (
-                                                                  <div style={{ marginTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.1)', paddingTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', animation: 'fadeIn 0.2s ease' }}>
+                                                                  <div className="p-history-list">
                                                                         {grp.investments.map((inv) => {
                                                                               const start = new Date(inv.createdAt).getTime();
                                                                               const end = new Date(inv.maturityDate).getTime();
@@ -247,39 +253,33 @@ const ProjectsPage = () => {
                                                                               const isMatured = now >= end;
 
                                                                               return (
-                                                                                    <div key={inv.id} style={{ background: 'rgba(255,255,255,0.02)', padding: '1rem', borderRadius: '0.75rem', border: isMatured ? '1px solid rgba(16, 185, 129, 0.2)' : '1px solid transparent' }}>
-                                                                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '0.75rem' }}>
-                                                                                                <div>
-                                                                                                      <div style={{ color: 'white', fontSize: '1rem', fontWeight: 600 }}>₹{inv.amount.toLocaleString('en-IN')}</div>
-                                                                                                      <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.75rem', marginTop: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                                                                            <Clock size={12} /> Started: {new Date(inv.createdAt).toLocaleDateString()}
-                                                                                                      </div>
-                                                                                                </div>
-                                                                                                <div style={{ textAlign: 'right' }}>
-                                                                                                      <div style={{ color: isMatured ? '#10b981' : '#3b82f6', fontSize: '0.7rem', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em', marginBottom: '0.2rem' }}>
-                                                                                                            {isMatured ? 'MATURED' : 'EARNING'}
-                                                                                                      </div>
-                                                                                                      <div style={{ color: '#10b981', fontSize: '0.9rem', fontWeight: 700 }}>+₹{(inv.expectedReturn - inv.amount).toLocaleString('en-IN')}</div>
+                                                                                    <div key={inv.id} className="p-history-card">
+                                                                                          <div className="p-hist-item">
+                                                                                                <div className="p-hist-label"><IndianRupee size={12} /> Amount</div>
+                                                                                                <div className="p-hist-value amount">₹{inv.amount.toLocaleString('en-IN')}</div>
+                                                                                          </div>
+                                                                                          <div className="p-hist-item">
+                                                                                                <div className="p-hist-label"><Clock size={12} /> Date</div>
+                                                                                                <div className="p-hist-value">{new Date(inv.createdAt).toLocaleDateString()}</div>
+                                                                                          </div>
+                                                                                          <div className="p-hist-item">
+                                                                                                <div className="p-hist-label"><TrendingUp size={12} /> Expected</div>
+                                                                                                <div className="p-hist-value returns">₹{inv.estimatedRevShare.toLocaleString('en-IN')}</div>
+                                                                                          </div>
+                                                                                          <div className="p-hist-item">
+                                                                                                <div className="p-hist-label"><CheckCircle2 size={12} /> Status</div>
+                                                                                                <div className={`p-hist-value ${isMatured ? 'text-success' : 'text-primary'}`}>
+                                                                                                      {isMatured ? 'COMPLETED' : 'ACTIVE'}
                                                                                                 </div>
                                                                                           </div>
-
-                                                                                          <div style={{ marginBottom: '0.5rem' }}>
-                                                                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.3rem' }}>
-                                                                                                      <span>Maturity Progress</span>
-                                                                                                      <span>{progress.toFixed(1)}%</span>
+                                                                                          <div className="p-hist-item" style={{ gridColumn: 'span 2' }}>
+                                                                                                <div className="p-hist-label"><Target size={12} /> Progress ({progress.toFixed(0)}%)</div>
+                                                                                                <div className="p-progress-bar" style={{ marginTop: '0.4rem', height: '6px' }}>
+                                                                                                      <div className="p-progress-fill" style={{ width: `${progress}%` }} />
                                                                                                 </div>
-                                                                                                <div style={{ width: '100%', height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '2px', overflow: 'hidden' }}>
-                                                                                                      <div style={{ width: `${progress}%`, height: '100%', background: isMatured ? '#10b981' : 'linear-gradient(90deg, #3b82f6, #8b5cf6)', transition: 'width 1s ease' }} />
+                                                                                                <div className="p-hist-label" style={{ marginTop: '0.4rem', justifyContent: 'flex-end' }}>
+                                                                                                      Ends: {new Date(inv.maturityDate).toLocaleDateString()}
                                                                                                 </div>
-                                                                                          </div>
-
-                                                                                          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', fontSize: '0.75rem' }}>
-                                                                                                <span style={{ color: 'rgba(255,255,255,0.4)' }}>Ends: {new Date(inv.maturityDate).toLocaleDateString()}</span>
-                                                                                                {isMatured && (
-                                                                                                      <span style={{ color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem', fontWeight: 600 }}>
-                                                                                                            <CheckCircle2 size={12} /> Principal + ROI credited
-                                                                                                      </span>
-                                                                                                )}
                                                                                           </div>
                                                                                     </div>
                                                                               );
@@ -296,77 +296,94 @@ const ProjectsPage = () => {
 
                   {/* Available Opportunities Section */}
                   {activeTab === 'opportunities' && (
-                        <section style={{ marginBottom: '3rem', animation: 'fadeIn 0.3s ease' }}>
+                        <section className="p-section-fade">
                               {/* Removed duplicate heading since tabs already indicate the section */}
 
                               {projects.length === 0 ? (
-                                    <div className="dashboard-card glass-panel" style={{ padding: '3rem', textAlign: 'center' }}>
-                                          <Film size={48} style={{ color: 'rgba(255,255,255,0.2)', marginBottom: '1rem' }} />
-                                          <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1.1rem' }}>No projects available at the moment.</p>
-                                          <p style={{ color: 'rgba(255,255,255,0.3)', fontSize: '0.9rem' }}>Check back soon for exciting investment opportunities.</p>
+                                    <div className="p-empty-state">
+                                          <Film size={48} />
+                                          <p>No projects available at the moment.</p>
+                                          <p>Check back soon for exciting project opportunities.</p>
                                     </div>
                               ) : (
-                                    <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(340px, 1fr))', gap: '2rem' }}>
-                                          {projects.map((project) => {
+                                    <div className="p-grid">
+                                          {projects.map((project, index) => {
                                                 const progress = project.targetAmount > 0 ? Math.min((project.raisedAmount / project.targetAmount) * 100, 100) : 0;
                                                 const isFunded = project.status === 'FUNDED';
                                                 const isComingSoon = project.status === 'COMING_SOON';
+                                                const isCompleted = project.status === 'COMPLETED';
+                                                
+                                                let badgeClass = 'badge-open';
+                                                let badgeText = 'OPEN';
+                                                
+                                                if (isFunded) {
+                                                      badgeClass = 'badge-funded';
+                                                      badgeText = 'FULLY FUNDED';
+                                                } else if (isComingSoon) {
+                                                      badgeClass = 'badge-coming';
+                                                      badgeText = 'COMING SOON';
+                                                } else if (isCompleted) {
+                                                      badgeClass = 'badge-completed';
+                                                      badgeText = 'COMPLETED';
+                                                }
+
                                                 return (
-                                                      <div key={project.id} className="dashboard-card glass-panel" style={{ padding: 0, overflow: 'hidden', display: 'flex', flexDirection: 'column' }}>
-                                                            <div style={{ position: 'relative', height: '200px' }}>
-                                                                  <img src={project.imageUrl} alt={project.title} style={{ width: '100%', height: '100%', objectFit: 'cover' }} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2025&auto=format&fit=crop'; }} />
-                                                                  <div style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'rgba(0,0,0,0.7)', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.8rem', fontWeight: 600, color: '#3b82f6', border: '1px solid rgba(59,130,246,0.3)' }}>
-                                                                        {project.genre}
+                                                      <div
+                                                            key={project.id}
+                                                            className="p-card"
+                                                            style={{ animationDelay: `${index * 0.1}s` }}
+                                                      >
+                                                            <div className="p-card-header">
+                                                                  <img src={project.imageUrl} alt={project.title} onError={(e) => { e.target.src = 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?q=80&w=2025&auto=format&fit=crop'; }} />
+                                                                  <div className={`p-status-badge ${badgeClass}`}>
+                                                                        {badgeText}
                                                                   </div>
-                                                                  {isFunded && (
-                                                                        <div style={{ position: 'absolute', top: '1rem', left: '1rem', background: 'rgba(16,185,129,0.85)', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'white' }}>FULLY FUNDED</div>
-                                                                  )}
-                                                                  {isComingSoon && (
-                                                                        <div style={{ position: 'absolute', top: '1rem', left: '1rem', background: 'rgba(245,158,11,0.85)', padding: '0.25rem 0.75rem', borderRadius: '1rem', fontSize: '0.75rem', fontWeight: 700, color: 'white' }}>COMING SOON</div>
-                                                                  )}
                                                             </div>
 
-                                                            <div style={{ padding: '1.5rem', flex: 1, display: 'flex', flexDirection: 'column' }}>
-                                                                  <h3 style={{ fontSize: '1.4rem', margin: '0 0 0.5rem 0', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                            <div className="p-card-body">
+                                                                  <h3 className="p-title">
                                                                         <PlaySquare size={22} className="text-primary" /> {project.title}
                                                                   </h3>
 
-                                                                  <div style={{ marginBottom: '1rem' }}>
-                                                                        <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', marginBottom: '0.5rem', color: 'rgba(255,255,255,0.7)' }}>
+                                                                  <div className="p-progress-container">
+                                                                        <div className="p-progress-labels">
                                                                               <span>Raised: ₹{(project.raisedAmount / 100000).toFixed(1)}L</span>
                                                                               <span>Target: ₹{(project.targetAmount / 100000).toFixed(1)}L</span>
                                                                         </div>
-                                                                        <div style={{ width: '100%', height: '6px', background: 'rgba(255,255,255,0.1)', borderRadius: '3px', overflow: 'hidden' }}>
-                                                                              <div style={{ width: `${progress}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', transition: 'width 0.5s ease' }} />
+                                                                        <div className="p-progress-bar">
+                                                                              <div className="p-progress-fill" style={{ width: `${progress}%` }} />
                                                                         </div>
                                                                   </div>
 
-                                                                  <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '0.75rem', marginBottom: '1.25rem' }}>
-                                                                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '0.5rem' }}>
-                                                                              <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>Min Investment</p>
-                                                                              <p style={{ margin: '0.2rem 0 0', fontSize: '1rem', fontWeight: 600, color: 'white' }}>₹{project.minInvestment.toLocaleString('en-IN')}</p>
+                                                                  <div className="p-stats-grid">
+                                                                        <div className="p-card-info-box">
+                                                                              <p className="p-stat-label">Min Contribution</p>
+                                                                              <p className="p-stat-value">₹{project.minInvestment.toLocaleString('en-IN')}</p>
                                                                         </div>
-                                                                        <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.75rem', borderRadius: '0.5rem' }}>
-                                                                              <p style={{ margin: 0, fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)' }}>Expected ROI</p>
-                                                                              <p style={{ margin: '0.2rem 0 0', fontSize: '1rem', fontWeight: 600, color: '#10b981' }}>{project.roiPercentage}%</p>
+                                                                        <div className="p-card-info-box">
+                                                                              <p className="p-stat-label">Projected Rev. Share</p>
+                                                                              <p className="p-stat-value text-success">{project.revenueSharePercent}%</p>
                                                                         </div>
                                                                   </div>
 
-                                                                  <div style={{ marginTop: 'auto', display: 'flex', gap: '0.75rem' }}>
+                                                                  <div className="p-card-btn-group">
                                                                         <button
-                                                                              onClick={() => openDetails(project)}
+                                                                              onClick={(e) => { e.stopPropagation(); openDetails(project); }}
                                                                               className="btn btn-outline"
-                                                                              style={{ flex: 1, display: 'flex', justifyContent: 'center', gap: '0.4rem', alignItems: 'center', padding: '0.75rem', borderColor: 'rgba(255,255,255,0.15)', color: 'rgba(255,255,255,0.8)' }}
+                                                                              style={{ flex: 1 }}
                                                                         >
                                                                               <Info size={16} /> Details
                                                                         </button>
                                                                         <button
                                                                               className="btn btn-primary"
-                                                                              style={{ flex: 2, display: 'flex', justifyContent: 'center', gap: '0.4rem', padding: '0.75rem', opacity: (isFunded || isComingSoon) ? 0.5 : 1, cursor: (isFunded || isComingSoon) ? 'not-allowed' : 'pointer' }}
-                                                                              onClick={() => !isFunded && !isComingSoon && openInvest(project)}
-                                                                              disabled={isFunded || isComingSoon}
+                                                                              style={{ flex: 2, opacity: (isFunded || isComingSoon || isCompleted) ? 0.5 : 1, cursor: (isFunded || isComingSoon || isCompleted) ? 'not-allowed' : 'pointer' }}
+                                                                              onClick={(e) => { 
+                                                                                    e.stopPropagation(); 
+                                                                                    if (!isFunded && !isComingSoon && !isCompleted) openInvest(project); 
+                                                                              }}
+                                                                              disabled={isFunded || isComingSoon || isCompleted}
                                                                         >
-                                                                              {isFunded ? 'Fully Funded' : isComingSoon ? 'Coming Soon' : <><IndianRupee size={16} /> Invest Now</>}
+                                                                              {isCompleted ? 'Completed' : isFunded ? 'Fully Funded' : isComingSoon ? 'Coming Soon' : 'Participate Now'}
                                                                         </button>
                                                                   </div>
                                                             </div>
@@ -379,118 +396,130 @@ const ProjectsPage = () => {
                   )}
 
                   {/* Project Details Modal */}
-                  {selectedProject && !showInvestModal && (
-                        <div onClick={() => setSelectedProject(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
-                              <div onClick={(e) => e.stopPropagation()} className="glass-panel" style={{ width: '95%', maxWidth: '600px', maxHeight: '90vh', overflow: 'auto', position: 'relative' }}>
-                                    <div style={{ height: '3px', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)' }} />
-                                    <div style={{ padding: '1.5rem 2rem' }}>
-                                          <button onClick={() => setSelectedProject(null)} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={20} /></button>
-
-                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem', marginBottom: '1rem' }}>
-                                                <PlaySquare size={28} className="text-primary" />
-                                                <div>
-                                                      <h2 style={{ margin: 0, fontSize: '1.3rem' }}>{selectedProject.title}</h2>
-                                                      <span style={{ fontSize: '0.8rem', color: '#3b82f6', fontWeight: 600 }}>{selectedProject.genre}</span>
-                                                </div>
-                                          </div>
-
-                                          <p style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>{selectedProject.description}</p>
-
-                                          {/* Stats Grid */}
-                                          <div style={{ display: 'grid', gridTemplateColumns: 'repeat(2, 1fr)', gap: '0.75rem', marginBottom: '1.5rem' }}>
-                                                {[
-                                                      { icon: <Target size={16} />, label: 'Target', value: `₹${(selectedProject.targetAmount / 100000).toFixed(1)}L`, color: '#3b82f6' },
-                                                      { icon: <TrendingUp size={16} />, label: 'Raised', value: `₹${(selectedProject.raisedAmount / 100000).toFixed(1)}L`, color: '#8b5cf6' },
-                                                      { icon: <IndianRupee size={16} />, label: 'Min Investment', value: `₹${selectedProject.minInvestment.toLocaleString('en-IN')}`, color: '#f59e0b' },
-                                                      { icon: <TrendingUp size={16} />, label: 'ROI', value: `${selectedProject.roiPercentage}%`, color: '#10b981' },
-                                                      { icon: <Clock size={16} />, label: 'Duration', value: `${selectedProject.durationMonths} months`, color: '#6366f1' },
-                                                      { icon: <Users size={16} />, label: 'Investors', value: selectedProject._count?.investments || 0, color: '#ec4899' }
-                                                ].map((s, i) => (
-                                                      <div key={i} style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', padding: '0.75rem', borderRadius: '0.75rem' }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', color: s.color, fontSize: '0.75rem', marginBottom: '0.25rem' }}>{s.icon} {s.label}</div>
-                                                            <div style={{ color: 'white', fontWeight: 600, fontSize: '1rem' }}>{s.value}</div>
+                  {
+                        selectedProject && !showInvestModal && (
+                              <div className="p-modal-overlay" onClick={() => setSelectedProject(null)}>
+                                    <div className="p-modal" onClick={(e) => e.stopPropagation()}>
+                                          <div className="p-modal-accent" />
+                                          <button className="p-modal-close" onClick={() => setSelectedProject(null)}><X size={18} /></button>
+                                          <div className="p-modal-scroll">
+                                                <div className="p-modal-header">
+                                                      <div className="p-modal-title-row">
+                                                            <PlaySquare size={28} className="text-primary" />
+                                                            <div>
+                                                                  <h2 className="p-modal-title">{selectedProject.title}</h2>
+                                                                  <span className="p-modal-genre">{selectedProject.genre}</span>
+                                                            </div>
                                                       </div>
-                                                ))}
-                                          </div>
-
-                                          {/* Progress Bar */}
-                                          <div style={{ marginBottom: '1.5rem' }}>
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem' }}>
-                                                      <span>Funding Progress</span>
-                                                      <span>{Math.min(((selectedProject.raisedAmount / selectedProject.targetAmount) * 100), 100).toFixed(1)}%</span>
                                                 </div>
-                                                <div style={{ width: '100%', height: '8px', background: 'rgba(255,255,255,0.1)', borderRadius: '4px', overflow: 'hidden' }}>
-                                                      <div style={{ width: `${Math.min((selectedProject.raisedAmount / selectedProject.targetAmount) * 100, 100)}%`, height: '100%', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', transition: 'width 0.5s ease' }} />
-                                                </div>
-                                          </div>
 
-                                          <button
-                                                className="btn btn-primary"
-                                                style={{ width: '100%', padding: '0.85rem', fontSize: '1rem', opacity: (selectedProject.status === 'FUNDED' || selectedProject.status === 'COMING_SOON') ? 0.5 : 1 }}
-                                                onClick={() => { setSelectedProject(selectedProject); openInvest(selectedProject); }}
-                                                disabled={selectedProject.status === 'FUNDED' || selectedProject.status === 'COMING_SOON'}
-                                          >
-                                                {selectedProject.status === 'FUNDED' ? 'Fully Funded' : selectedProject.status === 'COMING_SOON' ? 'Coming Soon' : 'Invest in This Project'}
-                                          </button>
+                                                <p className="p-modal-desc">{selectedProject.description}</p>
+
+                                                <div className="p-detail-stats-grid">
+                                                      {[
+                                                            { icon: <Target size={16} />, label: 'Target', value: `₹${(selectedProject.targetAmount / 100000).toFixed(1)}L`, color: '#3b82f6' },
+                                                            { icon: <TrendingUp size={16} />, label: 'Raised', value: `₹${(selectedProject.raisedAmount / 100000).toFixed(1)}L`, color: '#8b5cf6' },
+                                                            { icon: <IndianRupee size={16} />, label: 'Min Contribution', value: `₹${selectedProject.minInvestment.toLocaleString('en-IN')}`, color: '#f59e0b' },
+                                                            { icon: <TrendingUp size={16} />, label: 'Rev. Share', value: `${selectedProject.revenueSharePercent}%`, color: '#10b981' },
+                                                            { icon: <Clock size={16} />, label: 'Duration', value: `${selectedProject.durationMonths} months`, color: '#6366f1' },
+                                                            { icon: <Users size={16} />, label: 'Contributors', value: selectedProject._count?.investments || 0, color: '#ec4899' }
+                                                      ].map((s, i) => (
+                                                            <div key={i} className="p-detail-stat-box">
+                                                                  <div className="p-detail-stat-label" style={{ color: s.color }}>{s.icon} {s.label}</div>
+                                                                  <div className="p-detail-stat-value">{s.value}</div>
+                                                            </div>
+                                                      ))}
+                                                </div>
+
+                                                <div className="p-detail-progress-section">
+                                                      <div className="p-detail-progress-labels">
+                                                            <span>Funding Progress</span>
+                                                            <span>{Math.min(((selectedProject.raisedAmount / selectedProject.targetAmount) * 100), 100).toFixed(1)}%</span>
+                                                      </div>
+                                                      <div className="p-progress-bar">
+                                                            <div className="p-progress-fill" style={{ width: `${Math.min((selectedProject.raisedAmount / selectedProject.targetAmount) * 100, 100)}%` }} />
+                                                      </div>
+                                                </div>
+
+                                                <button
+                                                      className="btn btn-primary p-modal-cta"
+                                                      onClick={() => { setSelectedProject(selectedProject); openInvest(selectedProject); }}
+                                                      disabled={selectedProject.status === 'FUNDED' || selectedProject.status === 'COMING_SOON' || selectedProject.status === 'COMPLETED'}
+                                                      style={{ opacity: (selectedProject.status === 'FUNDED' || selectedProject.status === 'COMING_SOON' || selectedProject.status === 'COMPLETED') ? 0.5 : 1 }}
+                                                >
+                                                      {selectedProject.status === 'COMPLETED' ? 'Completed' : selectedProject.status === 'FUNDED' ? 'Fully Funded' : selectedProject.status === 'COMING_SOON' ? 'Coming Soon' : 'Participate in This Project'}
+                                                </button>
+                                          </div>
                                     </div>
                               </div>
-                        </div>
-                  )
+                        )
                   }
 
                   {/* Investment Modal */}
                   {
                         showInvestModal && selectedProject && !confirmInvest && (
-                              <div onClick={() => { setShowInvestModal(false); setSelectedProject(null); }} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 100, padding: '1rem' }}>
-                                    <div onClick={(e) => e.stopPropagation()} className="glass-panel" style={{ width: '90%', maxWidth: '480px', position: 'relative' }}>
-                                          <div style={{ height: '3px', background: 'linear-gradient(90deg, #10b981, #3b82f6)' }} />
-                                          <div style={{ padding: '1.5rem 2rem' }}>
-                                                <button onClick={() => { setShowInvestModal(false); setSelectedProject(null); }} style={{ position: 'absolute', top: '1rem', right: '1rem', background: 'none', border: 'none', color: 'rgba(255,255,255,0.5)', cursor: 'pointer' }}><X size={20} /></button>
-
-                                                <h2 style={{ margin: '0 0 0.25rem 0', fontSize: '1.2rem' }}>Participate in Project</h2>
-                                                <p className="text-primary" style={{ fontWeight: 600, fontSize: '1.1rem', marginBottom: '1.5rem' }}>{selectedProject.title}</p>
-
-                                                <div style={{ display: 'flex', justifyContent: 'space-between', background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', padding: '0.75rem 1rem', borderRadius: '0.75rem', marginBottom: '1.25rem', fontSize: '0.85rem' }}>
-                                                      <span style={{ color: 'rgba(255,255,255,0.5)' }}>Your Balance</span>
-                                                      <span style={{ color: 'white', fontWeight: 600 }}>₹{user?.walletBalance?.toLocaleString('en-IN') || '0'}</span>
+                              <div className="p-modal-overlay" onClick={() => { setShowInvestModal(false); setSelectedProject(null); }}>
+                                    <div className="p-modal p-modal-sm" onClick={(e) => e.stopPropagation()}>
+                                          <div className="p-modal-accent p-modal-accent-green" />
+                                          <div className="p-modal-close" onClick={() => { setShowInvestModal(false); setSelectedProject(null); setConfirmInvest(false); }}>
+                                                <X size={20} />
+                                          </div>
+                                          <div className="p-modal-scroll">
+                                                <h2 className="p-modal-title">Project Participation</h2>
+                                                <div className="p-modal-genre" style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white', marginBottom: '1.5rem' }}>{selectedProject.title}</div>
+                                                <div className="p-invest-balance-row">
+                                                      <span>Your Balance</span>
+                                                      <span className="p-invest-balance-val">₹{user?.walletBalance?.toLocaleString('en-IN') || '0'}</span>
                                                 </div>
 
-                                                <div style={{ marginBottom: '1.25rem' }}>
-                                                      <label style={{ display: 'block', marginBottom: '0.4rem', color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem', fontWeight: 600 }}>Investment Amount (₹)</label>
+                                                <div className="p-invest-input-wrap">
+                                                      <label className="p-invest-label">Participation Amount (₹)</label>
                                                       <input
                                                             type="number"
                                                             min={selectedProject.minInvestment}
                                                             step="10000"
                                                             required
+                                                            placeholder={`Min: ₹${selectedProject.minInvestment.toLocaleString('en-IN')}`}
                                                             value={investAmount}
                                                             onChange={(e) => setInvestAmount(e.target.value)}
-                                                            style={{ width: '100%', padding: '0.85rem 1rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '0.75rem', fontSize: '1.1rem', outline: 'none', boxSizing: 'border-box' }}
+                                                            className="p-invest-input"
                                                       />
-                                                      <small style={{ color: 'rgba(255,255,255,0.4)', display: 'block', marginTop: '0.4rem' }}>
-                                                            Minimum: ₹{selectedProject.minInvestment.toLocaleString('en-IN')} | ROI: {selectedProject.roiPercentage}% over {selectedProject.durationMonths} months
+                                                      <small className="p-invest-hint">
+                                                            Minimum: ₹{selectedProject.minInvestment.toLocaleString('en-IN')} | Revenue Share: {selectedProject.revenueSharePercent}% over {selectedProject.durationMonths} months (not guaranteed)
                                                       </small>
                                                 </div>
 
                                                 {investAmount && parseFloat(investAmount) >= selectedProject.minInvestment && (
-                                                      <div style={{ background: 'rgba(16,185,129,0.05)', border: '1px solid rgba(16,185,129,0.15)', padding: '0.75rem 1rem', borderRadius: '0.75rem', marginBottom: '1.25rem' }}>
-                                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)' }}>
-                                                                  <span>Expected Return</span>
-                                                                  <span style={{ color: '#10b981', fontWeight: 600 }}>₹{(parseFloat(investAmount) * (1 + selectedProject.roiPercentage / 100)).toLocaleString('en-IN')}</span>
-                                                            </div>
+                                                      <div className="p-invest-estimate">
+                                                            <span>Estimated Revenue Share</span>
+                                                            <span className="p-invest-estimate-val">₹{(parseFloat(investAmount) * (1 + selectedProject.revenueSharePercent / 100)).toLocaleString('en-IN')}</span>
                                                       </div>
                                                 )}
 
                                                 {user?.kycStatus !== 'VERIFIED' && (
-                                                      <div style={{ display: 'flex', gap: '0.5rem', color: '#ef4444', marginBottom: '1.25rem', fontSize: '0.85rem', background: 'rgba(239,68,68,0.1)', padding: '0.75rem 1rem', borderRadius: '0.5rem', alignItems: 'flex-start' }}>
-                                                            <AlertCircle size={18} style={{ flexShrink: 0, marginTop: '0.1rem' }} />
-                                                            <span>Your KYC is not verified. Please complete verification to invest.</span>
+                                                      <div className="p-invest-kyc-warn">
+                                                            <AlertCircle size={18} />
+                                                            <span>Your KYC is not verified. Please complete verification to participate.</span>
                                                       </div>
                                                 )}
 
+                                                <div className="p-agreement">
+                                                      <input
+                                                            type="checkbox"
+                                                            id="agreement"
+                                                            checked={agreementAccepted}
+                                                            onChange={(e) => setAgreementAccepted(e.target.checked)}
+                                                      />
+                                                      <label htmlFor="agreement">
+                                                            I have read and agree to the <a href={selectedProject.revenueAgreementUrl || '#'} target="_blank" rel="noopener noreferrer">Revenue Sharing Agreement</a>. I understand that my contribution is for project funding and returns depend on actual revenue, not guaranteed fixed ROI.
+                                                      </label>
+                                                </div>
+
                                                 <button
-                                                      className="btn btn-primary"
-                                                      style={{ width: '100%', padding: '0.85rem', fontSize: '1.05rem' }}
+                                                      className="btn btn-primary p-modal-cta"
                                                       onClick={handleInvest}
+                                                      disabled={!agreementAccepted}
+                                                      style={{ opacity: agreementAccepted ? 1 : 0.5 }}
                                                 >
                                                       Proceed to Confirm
                                                 </button>
@@ -503,32 +532,32 @@ const ProjectsPage = () => {
                   {/* Investment Confirmation Modal */}
                   {
                         confirmInvest && selectedProject && (
-                              <div onClick={() => setConfirmInvest(false)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.8)', backdropFilter: 'blur(8px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: '1rem' }}>
-                                    <div onClick={(e) => e.stopPropagation()} style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #111 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', width: '100%', maxWidth: '420px', overflow: 'hidden' }}>
-                                          <div style={{ height: '3px', background: 'linear-gradient(90deg, #f59e0b, #10b981)' }} />
-                                          <div style={{ padding: '1.5rem' }}>
-                                                <h3 style={{ margin: '0 0 0.75rem 0', color: 'white', fontSize: '1.1rem', fontWeight: 700 }}>⚡ Confirm Investment</h3>
-                                                <div style={{ background: 'rgba(255,255,255,0.03)', border: '1px solid rgba(255,255,255,0.06)', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1rem' }}>
-                                                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Project</span>
-                                                            <span style={{ color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>{selectedProject.title}</span>
+                              <div className="p-modal-overlay" onClick={() => setConfirmInvest(false)} style={{ zIndex: 200 }}>
+                                    <div className="p-modal p-modal-sm" onClick={(e) => e.stopPropagation()}>
+                                          <div className="p-modal-accent p-modal-accent-warn" />
+                                          <div className="p-modal-scroll">
+                                                <h3 className="p-confirm-title">⚡ Confirm Participation</h3>
+                                                <div className="p-confirm-box">
+                                                      <div className="p-confirm-row">
+                                                            <span className="p-confirm-label">Project</span>
+                                                            <span className="p-confirm-val">{selectedProject.title}</span>
                                                       </div>
-                                                      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '0.5rem' }}>
-                                                            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Amount</span>
-                                                            <span style={{ color: '#f59e0b', fontWeight: 700, fontSize: '1rem' }}>₹{parseFloat(investAmount).toLocaleString('en-IN')}</span>
+                                                      <div className="p-confirm-row">
+                                                            <span className="p-confirm-label">Amount</span>
+                                                            <span className="p-confirm-val" style={{ color: '#f59e0b', fontSize: '1rem' }}>₹{parseFloat(investAmount).toLocaleString('en-IN')}</span>
                                                       </div>
-                                                      <div style={{ display: 'flex', justifyContent: 'space-between' }}>
-                                                            <span style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.85rem' }}>Expected Return</span>
-                                                            <span style={{ color: '#10b981', fontWeight: 600, fontSize: '0.85rem' }}>₹{(parseFloat(investAmount) * (1 + selectedProject.roiPercentage / 100)).toLocaleString('en-IN')}</span>
+                                                      <div className="p-confirm-row">
+                                                            <span className="p-confirm-label">Est. Revenue Share</span>
+                                                            <span className="p-confirm-val" style={{ color: '#10b981' }}>₹{(parseFloat(investAmount) * (1 + selectedProject.revenueSharePercent / 100)).toLocaleString('en-IN')}</span>
                                                       </div>
                                                 </div>
-                                                <p style={{ margin: '0 0 1.25rem 0', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', lineHeight: 1.5 }}>
-                                                      This will deduct ₹{parseFloat(investAmount).toLocaleString('en-IN')} from your wallet. 5-level commissions will be distributed to your network upline.
+                                                <p className="p-confirm-disclaimer">
+                                                      This will deduct ₹{parseFloat(investAmount).toLocaleString('en-IN')} from your wallet. 5-level referral commissions will be distributed to your network upline. Revenue share is not guaranteed and depends on actual project performance.
                                                 </p>
-                                                <div style={{ display: 'flex', gap: '0.75rem' }}>
-                                                      <button onClick={() => setConfirmInvest(false)} disabled={isProcessing} style={{ flex: 1, padding: '0.65rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}>Cancel</button>
-                                                      <button onClick={executeInvest} disabled={isProcessing} style={{ flex: 2, padding: '0.65rem', background: '#10b981', border: 'none', color: 'white', borderRadius: '0.5rem', cursor: isProcessing ? 'not-allowed' : 'pointer', fontWeight: 600, fontSize: '0.85rem', opacity: isProcessing ? 0.6 : 1, display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
-                                                            {isProcessing ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : 'Confirm Investment'}
+                                                <div className="p-confirm-actions">
+                                                      <button className="p-confirm-cancel" onClick={() => setConfirmInvest(false)} disabled={isProcessing}>Cancel</button>
+                                                      <button className="p-confirm-submit" onClick={executeInvest} disabled={isProcessing} style={{ opacity: isProcessing ? 0.6 : 1 }}>
+                                                            {isProcessing ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : 'Confirm Participation'}
                                                       </button>
                                                 </div>
                                           </div>
@@ -540,17 +569,17 @@ const ProjectsPage = () => {
                   {/* Result Modal (Success/Error) */}
                   {
                         resultModal && (
-                              <div onClick={() => setResultModal(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 300, padding: '1rem' }}>
-                                    <div onClick={(e) => e.stopPropagation()} style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #111 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', width: '100%', maxWidth: '400px', overflow: 'hidden' }}>
-                                          <div style={{ height: '3px', background: resultModal.success ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #f87171, #ef4444)' }} />
-                                          <div style={{ padding: '2rem', textAlign: 'center' }}>
+                              <div className="p-modal-overlay" onClick={() => setResultModal(null)} style={{ zIndex: 300 }}>
+                                    <div className="p-modal p-modal-sm" onClick={(e) => e.stopPropagation()}>
+                                          <div className="p-modal-accent" style={{ background: resultModal.success ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #f87171, #ef4444)' }} />
+                                          <div className="p-result-body">
                                                 {resultModal.success ?
-                                                      <CheckCircle2 size={48} style={{ color: '#10b981', marginBottom: '1rem' }} /> :
-                                                      <XCircle size={48} style={{ color: '#ef4444', marginBottom: '1rem' }} />
+                                                      <CheckCircle2 size={48} className="p-result-icon p-result-success" /> :
+                                                      <XCircle size={48} className="p-result-icon p-result-error" />
                                                 }
-                                                <h3 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '1.1rem' }}>{resultModal.success ? 'Success!' : 'Error'}</h3>
-                                                <p style={{ margin: '0 0 1.5rem 0', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: 1.5 }}>{resultModal.message}</p>
-                                                <button onClick={() => setResultModal(null)} style={{ padding: '0.6rem 2rem', background: resultModal.success ? '#10b981' : '#ef4444', border: 'none', color: 'white', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.9rem' }}>Got it</button>
+                                                <h3 className="p-result-title">{resultModal.success ? 'Success!' : 'Error'}</h3>
+                                                <p className="p-result-msg">{resultModal.message}</p>
+                                                <button className={`p-result-btn ${resultModal.success ? 'p-result-btn-success' : 'p-result-btn-error'}`} onClick={() => setResultModal(null)}>Got it</button>
                                           </div>
                                     </div>
                               </div>

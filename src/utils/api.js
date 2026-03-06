@@ -25,7 +25,7 @@ api.interceptors.response.use(
             if (error.response?.status === 401) {
                   // Token expired or invalid — clear and redirect to login
                   localStorage.removeItem('webstar_token');
-                  if (window.location.pathname.startsWith('/dashboard')) {
+                  if (window.location.pathname.startsWith('/dashboard') || window.location.pathname.startsWith('/admin')) {
                         window.location.href = '/';
                   }
             }

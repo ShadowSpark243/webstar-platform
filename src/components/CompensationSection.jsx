@@ -22,7 +22,7 @@ const CompensationSection = () => {
                                     Industry-Leading <span className="text-gradient">Compensation Plan</span>
                               </h2>
                               <p className="section-subtitle">
-                                    Multiple avenues to earn from our content’s success, rewarding both personal participation and network building.
+                                    Multiple avenues to benefit from our content's success, rewarding both personal contribution and network building.
                               </p>
                         </div>
 
@@ -41,10 +41,10 @@ const CompensationSection = () => {
 
                                     <h3 className="comp-title-flex">
                                           <Network className="text-primary" />
-                                          8.5% Level Commission
+                                          8.5% Referral Commission
                                     </h3>
                                     <p className="comp-text">
-                                          Paid instantly upon new successful participations into your network hierarchy. One-time payout per participation.
+                                          Paid upon new successful contributions into your network hierarchy. One-time payout per contribution, distributed across 5 levels.
                                     </p>
 
                                     <div className="comp-table">
@@ -65,7 +65,7 @@ const CompensationSection = () => {
                                     </div>
                               </motion.div>
 
-                              {/* Monthly Bonus */}
+                              {/* Monthly Revenue Share */}
                               <motion.div
                                     initial={{ opacity: 0, x: 30 }}
                                     whileInView={{ opacity: 1, x: 0 }}
@@ -78,34 +78,34 @@ const CompensationSection = () => {
 
                                     <h3 className="comp-title-flex">
                                           <Gem className="text-primary" />
-                                          1% Monthly Bonus
+                                          Up to 1% Monthly Revenue Share
                                     </h3>
 
                                     <div className="comp-alert">
                                           <AlertTriangle className="text-primary" size={20} style={{ flexShrink: 0, marginTop: '2px' }} />
                                           <p className="comp-alert-text">
-                                                "Monthly bonuses are paid up to 1% based on profit availability from active projects. Bonuses are performance-based and not guaranteed."
+                                                "Monthly revenue share is paid up to 1% based on actual revenue generated from active projects. This is performance-based and NOT guaranteed. Zero revenue means zero distribution."
                                           </p>
                                     </div>
 
                                     <div className="comp-list">
                                           <div className="comp-list-item">
                                                 <ArrowUpRight className="text-accent" />
-                                                <p>Target Annual Bonus: <strong className="text-white">12%</strong></p>
+                                                <p>Projected Annual Revenue Share: Up to <strong className="text-white">12%</strong> <em style={{ opacity: 0.6, fontSize: '0.85em' }}>(subject to project performance)</em></p>
                                           </div>
                                           <div className="comp-list-item">
                                                 <ArrowUpRight className="text-accent" />
-                                                <p>Paid exclusively from actual <strong className="text-white">active project profits</strong>.</p>
+                                                <p>Paid exclusively from actual <strong className="text-white">project revenue</strong> — OTT licensing, satellite rights, theatrical, and more.</p>
                                           </div>
                                           <div className="comp-list-item">
                                                 <ArrowUpRight className="text-accent" />
-                                                <p>Example: Participate with <strong className="text-white">₹1,00,000</strong> → Receive up to <strong className="text-white">₹1,000/month</strong> if profitable.</p>
+                                                <p>Example: Contribute <strong className="text-white">₹1,00,000</strong> → Receive up to <strong className="text-white">₹1,000/month</strong> if project generates sufficient revenue.</p>
                                           </div>
                                     </div>
                               </motion.div>
                         </div>
 
-                        {/* Profit Split Pools */}
+                        {/* Revenue Split Pools */}
                         <motion.div
                               initial={{ opacity: 0, y: 30 }}
                               whileInView={{ opacity: 1, y: 0 }}
@@ -113,8 +113,8 @@ const CompensationSection = () => {
                               className="glass-panel"
                         >
                               <div className="comp-split-header">
-                                    <h3 className="comp-split-title">20% Project Profit Split</h3>
-                                    <p className="text-muted">Distributed from the Net Profit of every successful Web Series or Movie.</p>
+                                    <h3 className="comp-split-title">20% Project Revenue Split</h3>
+                                    <p className="text-muted">Distributed from the Net Revenue of every successful Web Series or Movie, based on actual project earnings.</p>
                               </div>
 
                               <div className="comp-split-grid">
@@ -122,9 +122,9 @@ const CompensationSection = () => {
 
                                     <div className="comp-pool">
                                           <div className="comp-pool-circle accent">10%</div>
-                                          <h4 className="comp-pool-title">Network Profit Pool</h4>
+                                          <h4 className="comp-pool-title">Network Revenue Pool</h4>
                                           <p className="text-muted" style={{ fontSize: '0.875rem' }}>
-                                                Distributed among the first 10,000 volunteers (Min ₹1L). Weighted fairly: 50% Personal Participation + 50% Network Volume.
+                                                Distributed among verified contributors (Min ₹1L). Weighted fairly: 50% Personal Contribution + 50% Network Volume.
                                           </p>
                                     </div>
 
@@ -132,7 +132,7 @@ const CompensationSection = () => {
                                           <div className="comp-pool-circle primary">10%</div>
                                           <h4 className="comp-pool-title">Rank Achievement Pool</h4>
                                           <p className="text-muted" style={{ fontSize: '0.875rem' }}>
-                                                Exclusive to Top 100 Achievers. Distributed equally or tiered based on leadership ranks (Manager, Senior Manager, Director).
+                                                Exclusive to Top Achievers. Distributed equally or tiered based on leadership ranks (Manager, Senior Manager, Director).
                                           </p>
                                     </div>
                               </div>

@@ -86,8 +86,8 @@ exports.getMyInvestments = async (req, res) => {
                         project: {
                               select: {
                                     id: true, title: true, genre: true, imageUrl: true,
-                                    targetAmount: true, raisedAmount: true, roiPercentage: true,
-                                    durationMonths: true, status: true
+                                    targetAmount: true, raisedAmount: true, revenueSharePercent: true,
+                                    durationMonths: true, status: true, spvName: true, spvRegistration: true, revenueAgreementUrl: true
                               }
                         }
                   }
@@ -113,8 +113,8 @@ exports.getDashboardData = async (req, res) => {
                               project: {
                                     select: {
                                           id: true, title: true, genre: true, imageUrl: true,
-                                          targetAmount: true, raisedAmount: true, roiPercentage: true,
-                                          durationMonths: true, status: true
+                                          targetAmount: true, raisedAmount: true, revenueSharePercent: true,
+                                          durationMonths: true, status: true, spvName: true, spvRegistration: true, revenueAgreementUrl: true
                                     }
                               }
                         }
@@ -153,7 +153,7 @@ exports.getDashboardData = async (req, res) => {
 
             const portfolio = {
                   totalInvestedAmount: activeInvestmentsData.reduce((sum, inv) => sum + inv.amount, 0),
-                  estimatedProfit: activeInvestmentsData.reduce((sum, inv) => sum + (inv.expectedReturn - inv.amount), 0),
+                  estimatedProfit: activeInvestmentsData.reduce((sum, inv) => sum + (inv.estimatedRevShare - inv.amount), 0),
                   activeInvestments: activeInvestmentsData.length,
                   totalPaidOut: investments.reduce((sum, inv) => sum + (inv.totalPaidOut || 0), 0)
             };
@@ -179,11 +179,15 @@ exports.getDashboardData = async (req, res) => {
 
 exports.investInProject = async (req, res) => {
       try {
-            const { projectId, amount } = req.body;
+            const { projectId, amount, agreementAccepted } = req.body;
             const investAmount = parseFloat(amount);
 
             if (!projectId || !amount || isNaN(investAmount) || investAmount <= 0) {
                   return res.status(400).json({ success: false, message: 'Invalid investment request.' });
+            }
+
+            if (!agreementAccepted) {
+                  return res.status(400).json({ success: false, message: 'You must accept the revenue-sharing agreement to participate.' });
             }
 
             // 1. Verify User Balance and KYC (outside transaction — read-only checks)
@@ -207,8 +211,8 @@ exports.investInProject = async (req, res) => {
                   return res.status(400).json({ success: false, message: `Minimum investment for this project is ₹${project.minInvestment.toLocaleString('en-IN')}.` });
             }
 
-            // 3. Calculate expected return and maturity date from real project data
-            const expectedReturn = investAmount * (1 + project.roiPercentage / 100);
+            // 3. Calculate estimated revenue share and maturity date from real project data
+            const estimatedRevShare = investAmount * (1 + project.revenueSharePercent / 100);
             const maturityDate = new Date();
             maturityDate.setMonth(maturityDate.getMonth() + project.durationMonths);
             const projectWillBeFunded = project.raisedAmount + investAmount >= project.targetAmount;
@@ -221,7 +225,9 @@ exports.investInProject = async (req, res) => {
                               userId: req.user.id,
                               projectId: project.id,
                               amount: investAmount,
-                              expectedReturn,
+                              estimatedRevShare,
+                              agreementAccepted: true,
+                              agreementTimestamp: new Date(),
                               maturityDate,
                               status: 'ACTIVE'
                         }

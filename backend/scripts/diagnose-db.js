@@ -22,7 +22,7 @@ async function diagnoseAll() {
             console.log('  ⚠️  EMPTY — No investment records exist');
       } else {
             investments.forEach(inv => {
-                  console.log(`  #${inv.id} | User: @${inv.user.username} | Project: ${inv.project.title} | Amount: ₹${inv.amount} | Return: ₹${inv.expectedReturn} | Status: ${inv.status}`);
+                  console.log(`  #${inv.id} | User: @${inv.user.username} | Project: ${inv.project.title} | Amount: ₹${inv.amount} | RevShare(Est): ₹${inv.estimatedRevShare} | Status: ${inv.status}`);
             });
       }
 
@@ -67,7 +67,7 @@ async function diagnoseAll() {
       });
       console.log(`\n📦 PROJECT TABLE (${projects.length} rows):`);
       projects.forEach(p => {
-            console.log(`  #${p.id} | ${p.title} | Status: ${p.status} | Raised: ₹${p.raisedAmount}/${p.targetAmount} | Investors: ${p._count.investments} | ROI: ${p.roiPercentage}%`);
+            console.log(`  #${p.id} | ${p.title} | Status: ${p.status} | Raised: ₹${p.raisedAmount}/${p.targetAmount} | Investors: ${p._count.investments} | RevShare: ${p.revenueSharePercent}%`);
       });
 
       // 6. NetworkLevelStat

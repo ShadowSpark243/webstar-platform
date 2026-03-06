@@ -50,7 +50,7 @@ const Navbar = () => {
                         <a href="/" onClick={handleLogoClick} className="nav-logo">
                               <PlaySquare className="text-primary" size={32} />
                               <span>
-                                    WEB<span className="text-primary">STAR</span>
+                                    ITRAM <span className="text-primary">WEBPRO</span>
                               </span>
                         </a>
 

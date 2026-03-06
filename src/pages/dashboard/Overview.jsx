@@ -4,9 +4,9 @@ import { useNavigate } from 'react-router-dom';
 import api from '../../utils/api';
 import {
       Wallet, TrendingUp, Film, Users, ShieldAlert, ArrowUpRight,
-      ArrowDownLeft, Clock, ChevronRight,
-      Sparkles, CircleDollarSign, Layers, ArrowRight,
-      Crown, Star, Trophy, Award, Lock
+      ArrowDownLeft, Clock, ChevronRight, ChevronDown, ChevronUp,
+      Sparkles, CircleDollarSign, Layers, ArrowRight, IndianRupee,
+      Crown, Star, Trophy, Award, Lock, Target, CheckCircle2
 } from 'lucide-react';
 import './Overview.css';
 
@@ -44,6 +44,11 @@ const Overview = () => {
       const navigate = useNavigate();
       const [data, setData] = useState(null);
       const [loading, setLoading] = useState(true);
+      const [expandedProjects, setExpandedProjects] = useState({});
+
+      const toggleProjectHistory = (projectId) => {
+            setExpandedProjects(prev => ({ ...prev, [projectId]: !prev[projectId] }));
+      };
 
       useEffect(() => {
             api.get('/wallet/dashboard')
@@ -56,9 +61,27 @@ const Overview = () => {
       const tx = data?.recentTransactions || [];
       const pf = data?.portfolio || {};
       const rp = data?.rankProgress || { current: { name: user?.rank || 'Starter', icon: '🌱', color: '#94a3b8' }, next: null, progressPercent: 0, upcomingRanks: [], isMaxRank: false, teamVolume: 0 };
-      const name = user?.fullName?.split(' ')[0] || 'Investor';
+      const name = user?.fullName?.split(' ')[0] || 'Contributor';
       const hour = new Date().getHours();
       const greet = hour < 12 ? 'Good Morning' : hour < 17 ? 'Good Afternoon' : 'Good Evening';
+
+      // ── Group investments by project ──
+      const groupedMap = inv.reduce((acc, item) => {
+            const pid = item.projectId;
+            if (!acc[pid]) {
+                  acc[pid] = {
+                        project: item.project,
+                        totalAmount: 0,
+                        totalEstRevShare: 0,
+                        investments: []
+                  };
+            }
+            acc[pid].totalAmount += item.amount;
+            acc[pid].totalEstRevShare += item.estimatedRevShare;
+            acc[pid].investments.push(item);
+            return acc;
+      }, {});
+      const groupedProjects = Object.values(groupedMap);
 
       return (
             <div className="ov">
@@ -78,7 +101,7 @@ const Overview = () => {
                   {user?.kycStatus === 'UNVERIFIED' && (
                         <div className="ov-kyc">
                               <ShieldAlert size={18} className="ov-kyc-ic" />
-                              <span>Complete KYC to start investing</span>
+                              <span>Complete KYC to start participating in projects</span>
                               <button onClick={() => navigate('/dashboard/kyc')}>Verify <ChevronRight size={12} /></button>
                         </div>
                   )}
@@ -103,21 +126,21 @@ const Overview = () => {
                               <Sparkles size={16} className="ov-stat-ic" style={{ color: '#f59e0b' }} />
                               <div>
                                     <span className="ov-sv" style={{ color: '#f59e0b' }}>{fmtINR(data?.balances?.roi || 0)}</span>
-                                    <span className="ov-sl">ROI Wallet</span>
+                                    <span className="ov-sl">Revenue Share Wallet</span>
                               </div>
                         </div>
                         <div className="ov-stat ov-s3">
                               <Film size={16} className="ov-stat-ic" />
                               <div>
                                     <span className="ov-sv">{fmtINR(pf.totalInvestedAmount)}</span>
-                                    <span className="ov-sl">Invested</span>
+                                    <span className="ov-sl">Contributed</span>
                               </div>
                         </div>
                         <div className="ov-stat ov-s4">
                               <CircleDollarSign size={16} className="ov-stat-ic" />
                               <div>
                                     <span className="ov-sv">{fmtINR(pf.estimatedProfit)}</span>
-                                    <span className="ov-sl">Profit (Est.)</span>
+                                    <span className="ov-sl">Revenue Share (Est.)</span>
                               </div>
                         </div>
                   </div>
@@ -169,48 +192,115 @@ const Overview = () => {
 
                   {/* ─── Two-column layout ─── */}
                   <div className="ov-grid">
-                        {/* Investments */}
+                        {/* Participations — Grouped by Project */}
                         <div className="ov-col-main">
                               <div className="ov-sec-hdr">
-                                    <h2><Layers size={16} /> My Investments</h2>
+                                    <h2><Layers size={16} /> My Participations</h2>
                                     {inv.length > 0 && <button className="ov-link" onClick={() => navigate('/dashboard/projects', { state: { activeTab: 'portfolio' } })}>See more <ArrowRight size={12} /></button>}
                               </div>
 
                               {loading ? (
                                     <div className="ov-skel-grid">{[1, 2].map(i => <div key={i} className="ov-skel" />)}</div>
-                              ) : inv.length === 0 ? (
+                              ) : groupedProjects.length === 0 ? (
                                     <div className="ov-empty">
                                           <Film size={32} />
-                                          <h3>No Investments Yet</h3>
-                                          <p>Start investing in OTT projects today.</p>
+                                          <h3>No Participations Yet</h3>
+                                          <p>Start contributing to OTT projects today.</p>
                                           <button className="ov-btn ov-btn-p" onClick={() => navigate('/dashboard/projects', { state: { activeTab: 'opportunities' } })}><Film size={14} /> Browse Projects</button>
                                     </div>
                               ) : (
-                                    <div className="ov-inv-grid">
-                                          {inv.slice(0, 3).map(item => {
-                                                const proj = item.project;
-                                                const sc = statusColors[item.status] || statusColors.ACTIVE;
+                                    <div className="ov-inv-grouped">
+                                          {groupedProjects.map(grp => {
+                                                const proj = grp.project;
+                                                const sc = statusColors[proj?.status] || statusColors.ACTIVE;
                                                 const prog = proj?.targetAmount > 0 ? Math.min((proj.raisedAmount / proj.targetAmount) * 100, 100) : 0;
-                                                const profit = item.expectedReturn - item.amount;
+                                                const isExpanded = expandedProjects[proj?.id];
+
                                                 return (
-                                                      <div key={item.id} className="ov-inv">
-                                                            <div className="ov-inv-img">
-                                                                  {proj?.imageUrl ? <img src={proj.imageUrl} alt={proj.title} onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} /> : null}
-                                                                  <div className="ov-inv-img-fb" style={{ display: proj?.imageUrl ? 'none' : 'flex' }}><Film size={20} /></div>
-                                                                  <span className="ov-inv-badge" style={{ background: sc.bg, color: sc.c }}>{item.status}</span>
-                                                            </div>
-                                                            <div className="ov-inv-body">
-                                                                  <h4>{proj?.title || 'Project'}</h4>
-                                                                  <span className="ov-inv-meta">{proj?.genre} · {proj?.durationMonths}mo · {proj?.roiPercentage}% ROI</span>
-                                                                  <div className="ov-inv-bar"><div style={{ width: `${prog}%` }} /></div>
-                                                                  <div className="ov-inv-nums">
-                                                                        <div><span className="ov-inv-nv">{fmtINR(item.amount)}</span><span className="ov-inv-nl">Invested</span></div>
-                                                                        <div><span className="ov-inv-nv ov-green">+{fmtINR(profit)}</span><span className="ov-inv-nl">Profit</span></div>
-                                                                        <div><span className="ov-inv-nv ov-green">{fmtINR(item.expectedReturn)}</span><span className="ov-inv-nl">Return</span></div>
-                                                                        <div><span className="ov-inv-nv">{prog.toFixed(0)}%</span><span className="ov-inv-nl">Funded</span></div>
+                                                      <div key={proj?.id} className="ov-inv-project-card">
+                                                            {/* Project Header */}
+                                                            <div className="ov-inv-proj-top">
+                                                                  <div className="ov-inv-proj-img">
+                                                                        {proj?.imageUrl ? <img src={proj.imageUrl} alt={proj.title} onError={e => { e.target.style.display = 'none'; e.target.nextSibling.style.display = 'flex'; }} /> : null}
+                                                                        <div className="ov-inv-img-fb" style={{ display: proj?.imageUrl ? 'none' : 'flex' }}><Film size={16} /></div>
                                                                   </div>
-                                                                  <span className="ov-inv-dt"><Clock size={10} /> {new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                                                  <div className="ov-inv-proj-info">
+                                                                        <h4>{proj?.title || 'Project'}</h4>
+                                                                        <span className="ov-inv-meta">{proj?.genre} · {proj?.durationMonths}mo · {proj?.revenueSharePercent}% Rev. Share</span>
+                                                                  </div>
+                                                                  <span className="ov-inv-proj-status" style={{ background: sc.bg, color: sc.c }}>{proj?.status}</span>
                                                             </div>
+
+                                                            {/* Aggregated Stats */}
+                                                            <div className="ov-inv-proj-stats">
+                                                                  <div className="ov-inv-proj-stat">
+                                                                        <span className="ov-inv-nv">{fmtINR(grp.totalAmount)}</span>
+                                                                        <span className="ov-inv-nl">Contributed</span>
+                                                                  </div>
+                                                                  <div className="ov-inv-proj-stat">
+                                                                        <span className="ov-inv-nv ov-green">{fmtINR(grp.totalEstRevShare)}</span>
+                                                                        <span className="ov-inv-nl">Est. Return</span>
+                                                                  </div>
+                                                                  <div className="ov-inv-proj-stat">
+                                                                        <span className="ov-inv-nv">{grp.investments.length}</span>
+                                                                        <span className="ov-inv-nl">Slots</span>
+                                                                  </div>
+                                                                  <div className="ov-inv-proj-stat">
+                                                                        <span className="ov-inv-nv">{prog.toFixed(0)}%</span>
+                                                                        <span className="ov-inv-nl">Funded</span>
+                                                                  </div>
+                                                            </div>
+
+                                                            {/* Progress Bar */}
+                                                            <div className="ov-inv-bar"><div style={{ width: `${prog}%` }} /></div>
+
+                                                            {/* View Contribution History Toggle */}
+                                                            <button className="ov-inv-hist-toggle" onClick={() => toggleProjectHistory(proj?.id)}>
+                                                                  {isExpanded ? <><ChevronUp size={14} /> Hide History</> : <><ChevronDown size={14} /> View Contribution History ({grp.investments.length})</>}
+                                                            </button>
+
+                                                            {/* Expanded History */}
+                                                            {isExpanded && (
+                                                                  <div className="ov-inv-hist-list">
+                                                                        {grp.investments.map(item => {
+                                                                              const start = new Date(item.createdAt).getTime();
+                                                                              const end = new Date(item.maturityDate).getTime();
+                                                                              const now = Date.now();
+                                                                              const total = end - start;
+                                                                              const elapsed = now - start;
+                                                                              const itemProg = Math.min(Math.max((elapsed / total) * 100, 0), 100);
+                                                                              const isMatured = now >= end;
+
+                                                                              return (
+                                                                                    <div key={item.id} className="ov-inv-hist-entry">
+                                                                                          <div className="ov-inv-hist-row">
+                                                                                                <div className="ov-inv-hist-cell">
+                                                                                                      <span className="ov-inv-hist-lbl"><IndianRupee size={10} /> Amount</span>
+                                                                                                      <span className="ov-inv-hist-val ov-green">₹{item.amount.toLocaleString('en-IN')}</span>
+                                                                                                </div>
+                                                                                                <div className="ov-inv-hist-cell">
+                                                                                                      <span className="ov-inv-hist-lbl"><Clock size={10} /> Date</span>
+                                                                                                      <span className="ov-inv-hist-val">{new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                                                                                </div>
+                                                                                                <div className="ov-inv-hist-cell">
+                                                                                                      <span className="ov-inv-hist-lbl"><TrendingUp size={10} /> Expected</span>
+                                                                                                      <span className="ov-inv-hist-val" style={{ color: '#3b82f6' }}>₹{item.estimatedRevShare.toLocaleString('en-IN')}</span>
+                                                                                                </div>
+                                                                                                <div className="ov-inv-hist-cell">
+                                                                                                      <span className="ov-inv-hist-lbl"><CheckCircle2 size={10} /> Status</span>
+                                                                                                      <span className={`ov-inv-hist-val ${isMatured ? 'ov-green' : ''}`} style={!isMatured ? { color: '#3b82f6' } : {}}>{isMatured ? 'COMPLETED' : 'ACTIVE'}</span>
+                                                                                                </div>
+                                                                                          </div>
+                                                                                          <div className="ov-inv-hist-prog">
+                                                                                                <span className="ov-inv-hist-lbl"><Target size={10} /> Progress ({itemProg.toFixed(0)}%)</span>
+                                                                                                <div className="ov-inv-hist-prog-bar"><div style={{ width: `${itemProg}%` }} /></div>
+                                                                                                <span className="ov-inv-hist-end">Ends: {new Date(item.maturityDate).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
+                                                                                          </div>
+                                                                                    </div>
+                                                                              );
+                                                                        })}
+                                                                  </div>
+                                                            )}
                                                       </div>
                                                 );
                                           })}

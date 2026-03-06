@@ -1,7 +1,8 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
 import {
       X, User, ShieldCheck, Ban, Wallet, Network,
-      CreditCard, Clock, CheckCircle, FileText, ArrowDownToLine, ArrowUpRight, Users, Loader2, TrendingUp
+      CreditCard, Clock, CheckCircle, FileText, ArrowDownToLine, ArrowUpRight, Users, Loader2, TrendingUp,
+      ChevronDown, ChevronUp, Target, IndianRupee
 } from 'lucide-react';
 import api from '../utils/api';
 import './UserDetailsModal.css';
@@ -11,6 +12,26 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
       const [loading, setLoading] = useState(true);
       const [actionLoading, setActionLoading] = useState(false);
       const [activeTab, setActiveTab] = useState('OVERVIEW'); // OVERVIEW, PORTFOLIO, LEDGER
+      const [expandedProjects, setExpandedProjects] = useState({});
+
+      const toggleProject = (projectId) => {
+            setExpandedProjects(prev => ({ ...prev, [projectId]: !prev[projectId] }));
+      };
+
+      const groupedPortfolio = useMemo(() => {
+            if (!user?.investments) return [];
+            const groups = user.investments.reduce((acc, inv) => {
+                  const pid = inv.projectId;
+                  if (!acc[pid]) {
+                        acc[pid] = { project: inv.project, investments: [], totalContributed: 0, totalEstRevShare: 0 };
+                  }
+                  acc[pid].investments.push(inv);
+                  acc[pid].totalContributed += inv.amount;
+                  acc[pid].totalEstRevShare += inv.estimatedRevShare;
+                  return acc;
+            }, {});
+            return Object.values(groups).sort((a, b) => b.totalContributed - a.totalContributed);
+      }, [user?.investments]);
 
       const fetchUser = async () => {
             try {
@@ -204,7 +225,7 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
                                                             <div className="finance-value">₹{user.walletBalance?.toLocaleString('en-IN') || 0}</div>
                                                       </div>
                                                       <div className="finance-card invested">
-                                                            <div className="finance-label"><CreditCard size={16} /> Total Invested</div>
+                                                            <div className="finance-label"><CreditCard size={16} /> Total Contributed</div>
                                                             <div className="finance-value">₹{user.totalInvested?.toLocaleString('en-IN') || 0}</div>
                                                       </div>
                                                       <div className="finance-card volume">
@@ -311,42 +332,97 @@ const UserDetailsModal = ({ userId, onClose, onUpdate }) => {
                                     {activeTab === 'PORTFOLIO' && (
                                           <div>
                                                 <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
-                                                      <h3 className="section-title" style={{ margin: 0 }}><TrendingUp className="text-secondary" /> Investment Portfolio</h3>
+                                                      <h3 className="section-title" style={{ margin: 0 }}><TrendingUp className="text-secondary" /> SPV Participation Portfolio</h3>
                                                       <div style={{ fontSize: '0.9rem', color: 'rgba(255,255,255,0.6)' }}>
                                                             Unique Projects: <span style={{ color: 'white', fontWeight: 700, marginLeft: '0.4rem' }}>{user.uniqueProjectsCount || 0}</span>
                                                       </div>
                                                 </div>
 
-                                                {user.investments?.length > 0 ? (
-                                                      <div className="user-portfolio-grid">
-                                                            {user.investments.map(inv => (
-                                                                  <div key={inv.id} className="portfolio-card">
+                                                {groupedPortfolio.length > 0 ? (
+                                                      <div className="user-portfolio-grid" style={{ display: 'flex', flexDirection: 'column', gap: '1.25rem' }}>
+                                                            {groupedPortfolio.map(grp => (
+                                                                  <div key={grp.project?.id} className="portfolio-card" style={{ padding: '1.25rem', background: 'rgba(15, 23, 42, 0.4)', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.05)' }}>
+                                                                        {/* Card Header */}
                                                                         <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '1rem', alignItems: 'flex-start' }}>
                                                                               <div>
-                                                                                    <div style={{ fontWeight: 700, color: 'white', fontSize: '1.05rem', marginBottom: '0.2rem' }}>{inv.project?.title}</div>
-                                                                                    <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{inv.project?.genre}</div>
+                                                                                    <div style={{ fontWeight: 700, color: 'white', fontSize: '1.1rem', marginBottom: '0.2rem' }}>{grp.project?.title}</div>
+                                                                                    <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{grp.project?.genre} · {grp.investments.length} Slots</div>
                                                                               </div>
-                                                                              <span className={`status-badge ${inv.status?.toLowerCase()}`}>{inv.status}</span>
+                                                                              <span className={`status-badge ${grp.project?.status?.toLowerCase()}`}>{grp.project?.status}</span>
                                                                         </div>
-                                                                        <div style={{ display: 'flex', gap: '1.5rem', marginTop: '1.5rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1.25rem' }}>
-                                                                              <div style={{ flex: 1 }}>
-                                                                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Capital</div>
-                                                                                    <div style={{ fontWeight: 700, color: 'white', fontSize: '1.1rem' }}>₹{inv.amount.toLocaleString('en-IN')}</div>
+
+                                                                        {/* Aggregated Stats */}
+                                                                        <div style={{ display: 'grid', gridTemplateColumns: '1fr 1fr', gap: '1rem', background: 'rgba(0,0,0,0.2)', padding: '1rem', borderRadius: '0.75rem', marginBottom: '1rem' }}>
+                                                                              <div>
+                                                                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Total Contributed</div>
+                                                                                    <div style={{ fontWeight: 700, color: 'white', fontSize: '1.1rem' }}>₹{grp.totalContributed.toLocaleString('en-IN')}</div>
                                                                               </div>
-                                                                              <div style={{ flex: 1 }}>
-                                                                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.4rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Expected ROI</div>
-                                                                                    <div style={{ fontWeight: 700, color: '#3b82f6', fontSize: '1.1rem' }}>₹{inv.expectedReturn.toLocaleString('en-IN')}</div>
+                                                                              <div>
+                                                                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.25rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>Est. Rev Share</div>
+                                                                                    <div style={{ fontWeight: 700, color: '#3b82f6', fontSize: '1.1rem' }}>₹{grp.totalEstRevShare.toLocaleString('en-IN')}</div>
                                                                               </div>
                                                                         </div>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '1.5rem', display: 'flex', alignItems: 'center', gap: '0.4rem' }}>
-                                                                              <Clock size={14} /> Invested on {new Date(inv.createdAt).toLocaleDateString()}
-                                                                        </div>
+
+                                                                        {/* Toggle Button */}
+                                                                        <button
+                                                                              onClick={() => toggleProject(grp.project?.id)}
+                                                                              style={{ width: '100%', padding: '0.75rem', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.1)', color: '#3b82f6', borderRadius: '0.5rem', cursor: 'pointer', display: 'flex', justifyContent: 'center', alignItems: 'center', gap: '0.5rem', fontWeight: 600, fontSize: '0.85rem', transition: 'all 0.2s' }}
+                                                                              onMouseOver={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.1)'}
+                                                                              onMouseOut={(e) => e.currentTarget.style.background = 'rgba(59, 130, 246, 0.05)'}
+                                                                        >
+                                                                              {expandedProjects[grp.project?.id] ? <><ChevronUp size={16} /> Hide History</> : <><ChevronDown size={16} /> View Contribution History</>}
+                                                                        </button>
+
+                                                                        {/* Expanded History List */}
+                                                                        {expandedProjects[grp.project?.id] && (
+                                                                              <div style={{ marginTop: '1rem', display: 'flex', flexDirection: 'column', gap: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)', paddingTop: '1rem' }}>
+                                                                                    {grp.investments.map(inv => {
+                                                                                          const start = new Date(inv.createdAt).getTime();
+                                                                                          const end = new Date(inv.maturityDate).getTime();
+                                                                                          const now = Date.now();
+                                                                                          const progress = Math.min(Math.max(((now - start) / (end - start)) * 100, 0), 100);
+                                                                                          const isMatured = now >= end;
+
+                                                                                          return (
+                                                                                                <div key={inv.id} style={{ background: 'rgba(15, 23, 42, 0.6)', padding: '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.03)' }}>
+                                                                                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(4, 1fr)', gap: '0.5rem', marginBottom: '0.75rem' }}>
+                                                                                                            <div>
+                                                                                                                  <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><IndianRupee size={10} /> Amount</div>
+                                                                                                                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: 'white' }}>₹{inv.amount.toLocaleString('en-IN')}</div>
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                  <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><Clock size={10} /> Date</div>
+                                                                                                                  <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.8)' }}>{new Date(inv.createdAt).toLocaleDateString()}</div>
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                  <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><TrendingUp size={10} /> Expected</div>
+                                                                                                                  <div style={{ fontSize: '0.9rem', fontWeight: 700, color: '#3b82f6' }}>₹{inv.estimatedRevShare.toLocaleString('en-IN')}</div>
+                                                                                                            </div>
+                                                                                                            <div>
+                                                                                                                  <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.2rem', display: 'flex', alignItems: 'center', gap: '0.2rem' }}><CheckCircle size={10} /> Status</div>
+                                                                                                                  <div style={{ fontSize: '0.8rem', fontWeight: 600, color: isMatured ? '#10b981' : '#3b82f6' }}>{isMatured ? 'COMPLETED' : 'ACTIVE'}</div>
+                                                                                                            </div>
+                                                                                                      </div>
+                                                                                                      <div>
+                                                                                                            <div style={{ display: 'flex', justifyContent: 'space-between', fontSize: '0.7rem', color: 'rgba(255,255,255,0.5)', marginBottom: '0.3rem' }}>
+                                                                                                                  <span style={{ display: 'flex', alignItems: 'center', gap: '0.3rem' }}><Target size={12} /> Progress ({progress.toFixed(0)}%)</span>
+                                                                                                                  <span>Ends: {new Date(inv.maturityDate).toLocaleDateString()}</span>
+                                                                                                            </div>
+                                                                                                            <div style={{ height: '4px', background: 'rgba(255,255,255,0.05)', borderRadius: '4px', overflow: 'hidden' }}>
+                                                                                                                  <div style={{ height: '100%', background: 'linear-gradient(90deg, #3b82f6, #8b5cf6)', width: `${progress}%`, borderRadius: '4px' }} />
+                                                                                                            </div>
+                                                                                                      </div>
+                                                                                                </div>
+                                                                                          );
+                                                                                    })}
+                                                                              </div>
+                                                                        )}
                                                                   </div>
                                                             ))}
                                                       </div>
                                                 ) : (
                                                       <div className="user-empty-state">
-                                                            No active investments found.
+                                                            No active participations found.
                                                       </div>
                                                 )}
                                           </div>

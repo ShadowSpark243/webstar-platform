@@ -27,7 +27,7 @@ const HeroSection = () => {
                               className="hero-inner"
                         >
                               <div className="hero-badge animate-pulseGlow">
-                                    Project-Based Profit Sharing Model
+                                    Project-Based Revenue Sharing Model
                               </div>
 
                               <h1 className="hero-title">
@@ -36,7 +36,8 @@ const HeroSection = () => {
                               </h1>
 
                               <p className="hero-subtitle">
-                                    Fund premium web series and movies. Earn up to <span className="hero-subtitle-highlight">1% Monthly Bonus</span> and share <span className="hero-subtitle-highlight">20% of Net Profits</span> from successful projects.
+                                    Fund premium web series and movies. Receive up to <span className="hero-subtitle-highlight">1% Monthly Revenue Share*</span> and share <span className="hero-subtitle-highlight">20% of Net Profits</span> from successful projects.
+                                    <br /><small style={{ opacity: 0.6, fontSize: '0.75em' }}>*Subject to actual project revenue. Not guaranteed.</small>
                               </p>
 
                               <div className="hero-actions">
@@ -57,15 +58,15 @@ const HeroSection = () => {
                               <div className="hero-stats">
                                     <div className="hero-stat-item">
                                           <p className="hero-stat-value">₹1L</p>
-                                          <p className="hero-stat-label">Minimum Participation</p>
+                                          <p className="hero-stat-label">Minimum Contribution</p>
                                     </div>
                                     <div className="hero-stat-item">
                                           <p className="hero-stat-value">8.5%</p>
-                                          <p className="hero-stat-label">Level Commission</p>
+                                          <p className="hero-stat-label">Referral Commission</p>
                                     </div>
                                     <div className="hero-stat-item">
                                           <p className="hero-stat-value">20%</p>
-                                          <p className="hero-stat-label">Project Profit Pool</p>
+                                          <p className="hero-stat-label">Project Revenue Pool</p>
                                     </div>
                               </div>
                         </motion.div>

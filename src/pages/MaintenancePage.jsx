@@ -82,7 +82,7 @@ const MaintenancePage = () => {
                               lineHeight: 1.6,
                               marginBottom: '2.5rem'
                         }}>
-                              We are currently upgrading the WEBSTAR infrastructure to provide you with a more secure and powerful investment experience.
+                              We are currently upgrading the ITRAM WEBPRO infrastructure to provide you with a more secure and powerful platform experience.
                         </p>
 
                         <div style={{
@@ -114,7 +114,7 @@ const MaintenancePage = () => {
                         </div>
 
                         <button
-                              onClick={() => window.location.reload()}
+                              onClick={() => window.location.href = '/'}
                               style={{
                                     padding: '0.8rem 1.5rem',
                                     background: '#3b82f6',

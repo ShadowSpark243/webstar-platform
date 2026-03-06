@@ -35,7 +35,7 @@ const RanksSection = () => {
                                     Leadership <span className="text-gradient">Rank Structure</span>
                               </h2>
                               <p className="section-subtitle">
-                                    Climb the ranks by building massive network volume and unlock exclusive shares in the 10% Rank Achievement Pool.
+                                    Climb the ranks by building network volume and unlock exclusive shares in the 10% Rank Achievement Pool — distributed from actual project revenue.
                               </p>
                         </div>
 
@@ -77,20 +77,20 @@ const RanksSection = () => {
 
                               <div className="eligibility-grid">
                                     <div>
-                                          <h4 className="eligibility-section-title">Bonus Qualification</h4>
+                                          <h4 className="eligibility-section-title">Revenue Share Qualification</h4>
                                           <ul className="eligibility-list">
-                                                <li><span className="text-primary">•</span> Maintain an active participation holding.</li>
-                                                <li><span className="text-primary">•</span> Complete mandatory KYC verification.</li>
-                                                <li><span className="text-primary">•</span> Active Platform ID status required at payout.</li>
+                                                <li><span className="text-primary">•</span> Maintain an active contribution holding.</li>
+                                                <li><span className="text-primary">•</span> Complete mandatory KYC verification (Aadhaar + PAN).</li>
+                                                <li><span className="text-primary">•</span> Active Platform ID status required at distribution.</li>
                                           </ul>
                                     </div>
 
                                     <div>
-                                          <h4 className="eligibility-section-title">Network Pool (10%)</h4>
+                                          <h4 className="eligibility-section-title">Network Revenue Pool (10%)</h4>
                                           <ul className="eligibility-list">
-                                                <li><span className="text-primary">•</span> Minimum personal participation of ₹1 Lakh.</li>
+                                                <li><span className="text-primary">•</span> Minimum personal contribution of ₹1 Lakh.</li>
                                                 <li><span className="text-primary">•</span> Active ID with no policy violations.</li>
-                                                <li><span className="text-primary">•</span> Raising Awareness of our Brand with strictly <strong className="text-white">10,000 Volunteers</strong> only. You will remain with us until you make your full settlement.</li>
+                                                <li><span className="text-primary">•</span> Revenue pool distributions are contingent on actual project revenue realization. Limited to verified, private contributors only.</li>
                                           </ul>
                                     </div>
                               </div>

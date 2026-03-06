@@ -239,7 +239,7 @@ const adminReply = async (req, res) => {
                   prisma.supportMessage.create({
                         data: {
                               ticketId,
-                              senderId: req.user.id,
+                              adminId: req.user.id,
                               senderRole: 'ADMIN',
                               message: cleanMessage,
                         },

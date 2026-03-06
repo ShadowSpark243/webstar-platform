@@ -5,32 +5,32 @@ import './AboutSection.css';
 
 const AboutSection = () => {
       const stats = [
-            { label: "Active Projects", value: "12+" },
-            { label: "Volunteers", value: "8,500+" },
-            { label: "Total Funding", value: "₹50Cr+" },
-            { label: "Avg. Returns", value: "11.5%" }
+            { label: "Active Projects", value: "Growing" },
+            { label: "Contributors", value: "Private" },
+            { label: "Project Funding", value: "SPV-Based" },
+            { label: "Revenue Streams", value: "5+" }
       ];
 
       const features = [
             {
                   icon: <MonitorPlay className="text-primary" size={32} style={{ marginBottom: '1rem' }} />,
                   title: "Premium Content",
-                  description: "We produce high-quality web series and blockbuster movies tailored for leading OTT platforms."
+                  description: "We produce high-quality web series and blockbuster movies tailored for leading OTT platforms like Netflix, Amazon Prime, and more."
             },
             {
                   icon: <TrendingUp className="text-primary" size={32} style={{ marginBottom: '1rem' }} />,
                   title: "Multiple Revenue Streams",
-                  description: "Profits generated through Subscriptions, Ads, Licensing, Satellite Rights, and Brand Integrations."
+                  description: "Revenue generated through OTT licensing, theatrical release, satellite TV rights, music rights, and brand integrations."
             },
             {
                   icon: <Film className="text-primary" size={32} style={{ marginBottom: '1rem' }} />,
-                  title: "Project-Specific Funding",
-                  description: "Your participation goes directly into content creation, not general company operations."
+                  title: "Project-Specific SPV Funding",
+                  description: "Your contribution goes into a dedicated project SPV (Special Purpose Vehicle), not general company operations."
             },
             {
                   icon: <Activity className="text-primary" size={32} style={{ marginBottom: '1rem' }} />,
                   title: "Transparent Performance",
-                  description: "Track project milestones, box office/OTT metrics, and profit distributions in real-time."
+                  description: "Track project milestones, OTT metrics, and revenue distributions in real-time through your dashboard."
             }
       ];
 
@@ -44,10 +44,10 @@ const AboutSection = () => {
                                           Redefining <span className="text-gradient">Entertainment Participation</span>
                                     </h2>
                                     <p className="about-text">
-                                          Our vision is to democratize content production. We operate a cutting-edge OTT platform and production house where the community funds the stories they want to see.
+                                          Our vision is to democratize content production. We operate a cutting-edge OTT platform and production house where the community funds the stories they want to see — through legally structured project SPVs.
                                     </p>
                                     <p className="about-text">
-                                          Unlike traditional models where studios keep all the profits, we distribute 20% of net profits back to the active network that helped fund the project.
+                                          Unlike traditional models where studios keep all the profits, we distribute 20% of net project revenue back to the active network that helped fund the project, based on actual project performance.
                                     </p>
 
                                     <div className="about-stats-grid">
@@ -77,8 +77,8 @@ const AboutSection = () => {
                                                 <TrendingUp />
                                           </div>
                                           <div>
-                                                <p className="about-floating-data">₹85.2L</p>
-                                                <p className="about-floating-label">Profit Distributed</p>
+                                                <p className="about-floating-data">5+ Streams</p>
+                                                <p className="about-floating-label">Revenue Sources</p>
                                           </div>
                                     </motion.div>
                               </div>

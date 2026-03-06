@@ -52,7 +52,7 @@ const DashboardLayout = () => {
                   <div className="dashboard-mobile-header">
                         <a href="/" className="dashboard-logo">
                               <PlaySquare className="text-primary" size={24} />
-                              <span>WEB<span className="text-primary">STAR</span></span>
+                              <span>ITRAM <span className="text-primary">WEBPRO</span></span>
                         </a>
                         <button onClick={() => setIsSidebarOpen(!isSidebarOpen)} className="mobile-menu-btn">
                               {isSidebarOpen ? <X size={24} /> : <Menu size={24} />}
@@ -64,7 +64,7 @@ const DashboardLayout = () => {
                         <div className="sidebar-header">
                               <a href="/" className="dashboard-logo">
                                     <PlaySquare className="text-primary" size={28} />
-                                    <span>WEB<span className="text-primary">STAR</span></span>
+                                    <span>ITRAM <span className="text-primary">WEBPRO</span></span>
                               </a>
                         </div>
 

@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { Search, User, ArrowDownToLine, ArrowUpRight, Activity, Wallet, Briefcase, Network, Filter, Loader2 } from 'lucide-react';
+import { Search, User, ArrowDownToLine, ArrowUpRight, Activity, Wallet, Briefcase, Network, Filter, Loader2, CheckCircle, XCircle } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 import TransactionDetailsModal from '../../components/TransactionDetailsModal';
 
@@ -19,49 +19,33 @@ const AdminLedger = () => {
       const [selectedUserId, setSelectedUserId] = useState(null);
       const [selectedTransaction, setSelectedTransaction] = useState(null);
 
-      const fetchDeposits = async () => {
-            try {
-                  const res = await api.get('/admin/deposits');
-                  setPendingDeposits(res.data.deposits);
-            } catch (error) {
-                  console.error("Failed to fetch pending deposits", error);
-            }
-      };
-
-      const fetchWithdrawals = async () => {
-            try {
-                  const res = await api.get('/admin/withdrawals');
-                  setPendingWithdrawals(res.data.withdrawals);
-            } catch (error) {
-                  console.error("Failed to fetch pending withdrawals", error);
-            }
-      };
-
-      const fetchTransactions = async () => {
-            setLoadingHistory(true);
-            try {
-                  const res = await api.get('/admin/transactions');
-                  setTransactions(res.data.transactions);
-            } catch (error) {
-                  console.error("Failed to fetch global transactions", error);
-            } finally {
-                  setLoadingHistory(false);
-            }
-      };
+      const [confirmModal, setConfirmModal] = useState({ isOpen: false, transactionId: null, type: 'DEPOSIT', status: null, isLoading: false, rejectionReason: '' });
 
       const fetchData = async () => {
             setLoading(true);
-            await Promise.all([fetchDeposits(), fetchWithdrawals(), fetchTransactions()]);
-            setLoading(false);
+            try {
+                  const [depRes, withRes, txRes] = await Promise.all([
+                        api.get('/admin/deposits'),
+                        api.get('/admin/withdrawals'),
+                        api.get('/admin/transactions')
+                  ]);
+                  setPendingDeposits(depRes.data.deposits || []);
+                  setPendingWithdrawals(withRes.data.withdrawals || []);
+                  setTransactions(txRes.data.transactions || []);
+            } catch (error) {
+                  console.error("Failed to fetch ledger data", error);
+            } finally {
+                  setLoading(false);
+                  setLoadingHistory(false);
+            }
       };
 
       useEffect(() => {
             fetchData();
       }, []);
 
-      const [confirmModal, setConfirmModal] = useState({ isOpen: false, transactionId: null, type: 'DEPOSIT', status: null, isLoading: false, rejectionReason: '' });
-
-      const handleReviewClick = (transactionId, type, status) => {
+      const handleReviewClick = (transactionId, type, status, e) => {
+            if (e) e.stopPropagation();
             setConfirmModal({ isOpen: true, transactionId, type, status, isLoading: false, rejectionReason: '' });
       };
 
@@ -76,35 +60,29 @@ const AdminLedger = () => {
             setConfirmModal(prev => ({ ...prev, isLoading: true }));
             try {
                   const endpoint = type === 'DEPOSIT' ? '/admin/deposits/review' : '/admin/withdrawals/review';
-                  const res = await api.put(endpoint, { transactionId: parseInt(transactionId), status, rejectionReason });
-                  if (res.data.success) {
-                        alert(`Success: ${type} has been ${status === 'APPROVED' ? 'Approved' : 'Rejected'}.`);
-                        setConfirmModal({ isOpen: false, transactionId: null, type: 'DEPOSIT', status: null, isLoading: false, rejectionReason: '' });
-                        fetchData();
-                  }
+                  await api.put(endpoint, { transactionId, status, rejectionReason });
+                  setConfirmModal({ isOpen: false, transactionId: null, type: 'DEPOSIT', status: null, isLoading: false, rejectionReason: '' });
+                  fetchData();
             } catch (error) {
-                  alert("Failed to process request: " + (error.response?.data?.message || 'Unknown error'));
+                  alert("Failed to process request: " + (error.response?.data?.message || error.message));
                   setConfirmModal(prev => ({ ...prev, isLoading: false }));
             }
       };
 
       const filteredDeposits = pendingDeposits.filter(d =>
-            (d.user?.fullName || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-            (d.user?.email || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-            (d.bankReference || '').toLowerCase().includes((searchQuery || '').toLowerCase())
+            (d.user?.fullName || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (d.user?.email || '').toLowerCase().includes(searchQuery.toLowerCase()) ||
+            (d.bankReference || '').toLowerCase().includes(searchQuery.toLowerCase())
       );
 
       const filteredWithdrawals = pendingWithdrawals.filter(w =>
-            (w.user?.fullName || '').toLowerCase().includes((withdrawalSearchQuery || '').toLowerCase()) ||
-            (w.user?.email || '').toLowerCase().includes((withdrawalSearchQuery || '').toLowerCase()) ||
-            (w.bankName || '').toLowerCase().includes((withdrawalSearchQuery || '').toLowerCase()) ||
-            (w.accountNumber || '').toLowerCase().includes((withdrawalSearchQuery || '').toLowerCase())
+            (w.user?.fullName || '').toLowerCase().includes(withdrawalSearchQuery.toLowerCase()) ||
+            (w.user?.email || '').toLowerCase().includes(withdrawalSearchQuery.toLowerCase())
       );
 
       const filteredTransactions = transactions.filter(t => {
-            const matchesSearch = (t.description || '').toLowerCase().includes((txSearchQuery || '').toLowerCase()) ||
-                  (t.user?.fullName || '').toLowerCase().includes((txSearchQuery || '').toLowerCase()) ||
-                  (t.user?.email || '').toLowerCase().includes((txSearchQuery || '').toLowerCase());
+            const matchesSearch = (t.description || '').toLowerCase().includes(txSearchQuery.toLowerCase()) ||
+                  (t.user?.fullName || '').toLowerCase().includes(txSearchQuery.toLowerCase());
 
             if (!matchesSearch) return false;
 
@@ -114,405 +92,265 @@ const AdminLedger = () => {
             return matchesType && matchesStatus;
       });
 
-      // High-Level Financial Metrics
-      const totalCollected = transactions.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((sum, t) => sum + t.amount, 0);
-      const totalInvested = transactions.filter(t => t.type === 'INVESTMENT').reduce((sum, t) => sum + t.amount, 0);
-      const totalCommissionsPaid = transactions.filter(t => t.type === 'COMMISSION').reduce((sum, t) => sum + t.amount, 0);
-      const totalWithdrawals = transactions.filter(t => t.type === 'WITHDRAWAL' && (t.status === 'APPROVED' || t.status === 'PENDING')).reduce((sum, t) => sum + t.amount, 0);
+      // Stats calculation
+      const stats = {
+            totalCollected: transactions.filter(t => t.type === 'DEPOSIT' && t.status === 'APPROVED').reduce((sum, t) => sum + t.amount, 0),
+            totalInvested: transactions.filter(t => t.type === 'INVESTMENT').reduce((sum, t) => sum + t.amount, 0),
+            totalWithdrawals: transactions.filter(t => t.type === 'WITHDRAWAL' && t.status === 'APPROVED').reduce((sum, t) => sum + t.amount, 0),
+            totalLiabilities: transactions.filter(t => t.type === 'WITHDRAWAL' && t.status === 'PENDING').reduce((sum, t) => sum + t.amount, 0),
+      };
+
+      if (loading && transactions.length === 0) return (
+            <div style={{ padding: '5rem', textAlign: 'center' }}>
+                  <Loader2 size={48} className="animate-spin" style={{ color: '#8b5cf6', margin: '0 auto 1.5rem auto' }} />
+                  <p style={{ color: 'rgba(255,255,255,0.5)' }}>Accessing global ledger records...</p>
+            </div>
+      );
 
       return (
-            <div>
-                  <h1 className="admin-page-title">Global Ledger</h1>
-                  <p className="admin-page-subtitle" style={{ marginBottom: '2rem' }}>Platform-wide financial tracking and deposit approvals.</p>
+            <div className="fade-in">
+                  <header style={{ marginBottom: '2rem' }}>
+                        <h1 className="admin-page-title">Global Ledger</h1>
+                        <p className="admin-page-subtitle">Platform-wide financial tracking and operational approvals.</p>
+                  </header>
 
-                  {/* Financial Overview Cards */}
-                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(220px, 1fr))', gap: '1.5rem', marginBottom: '2rem' }}>
-                        {/* Collected Capital */}
-                        <div className="dashboard-card glass-panel" style={{ padding: '1.5rem', borderLeft: '4px solid #10b981' }}>
+                  {/* Financial Stats Grid */}
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem', marginBottom: '2.5rem' }}>
+                        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(16, 185, 129, 0.2)', background: 'rgba(16, 185, 129, 0.05)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <h3 style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Total Collected</h3>
-                                    <div style={{ padding: '0.5rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '0.5rem' }}>
-                                          <Wallet size={18} className="text-green-400" />
-                                    </div>
+                                    <span style={{ fontSize: '0.8rem', color: 'rgba(16, 185, 129, 0.8)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Asset Inflow</span>
+                                    <ArrowDownToLine size={20} style={{ color: '#10b981' }} />
                               </div>
-                              <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'white' }}>₹{totalCollected.toLocaleString('en-IN')}</div>
+                              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'white' }}>₹{(stats.totalCollected).toLocaleString('en-IN')}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>Total Cleared Deposits</div>
                         </div>
 
-                        {/* Active Investments */}
-                        <div className="dashboard-card glass-panel" style={{ padding: '1.5rem', borderLeft: '4px solid #3b82f6' }}>
+                        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(59, 130, 246, 0.2)', background: 'rgba(59, 130, 246, 0.05)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <h3 style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Active Investments</h3>
-                                    <div style={{ padding: '0.5rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '0.5rem' }}>
-                                          <Briefcase size={18} className="text-blue-400" />
-                                    </div>
+                                    <span style={{ fontSize: '0.8rem', color: 'rgba(59, 130, 246, 0.8)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Active Capital</span>
+                                    <Briefcase size={20} style={{ color: '#3b82f6' }} />
                               </div>
-                              <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'white' }}>₹{totalInvested.toLocaleString('en-IN')}</div>
+                              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'white' }}>₹{(stats.totalInvested).toLocaleString('en-IN')}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>Total Platform Contributions</div>
                         </div>
 
-                        {/* Network Commissions */}
-                        <div className="dashboard-card glass-panel" style={{ padding: '1.5rem', borderLeft: '4px solid #8b5cf6' }}>
+                        <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '1.25rem', border: '1px solid rgba(239, 68, 68, 0.2)', background: 'rgba(239, 68, 68, 0.05)' }}>
                               <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <h3 style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Commissions Paid</h3>
-                                    <div style={{ padding: '0.5rem', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '0.5rem' }}>
-                                          <Network size={18} style={{ color: '#c4b5fd' }} />
-                                    </div>
+                                    <span style={{ fontSize: '0.8rem', color: 'rgba(239, 68, 68, 0.8)', fontWeight: 700, textTransform: 'uppercase', letterSpacing: '0.05em' }}>Capital Outflow</span>
+                                    <ArrowUpRight size={20} style={{ color: '#ef4444' }} />
                               </div>
-                              <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'white' }}>₹{totalCommissionsPaid.toLocaleString('en-IN')}</div>
-                        </div>
-
-                        {/* Capital Withdrawals */}
-                        <div className="dashboard-card glass-panel" style={{ padding: '1.5rem', borderLeft: '4px solid #ef4444' }}>
-                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
-                                    <h3 style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', textTransform: 'uppercase', letterSpacing: '0.05em', margin: 0 }}>Total Withdrawals</h3>
-                                    <div style={{ padding: '0.5rem', background: 'rgba(239, 68, 68, 0.1)', borderRadius: '0.5rem' }}>
-                                          <ArrowUpRight size={18} className="text-red-400" />
-                                    </div>
-                              </div>
-                              <div style={{ fontSize: '1.8rem', fontWeight: 700, color: 'white' }}>₹{totalWithdrawals.toLocaleString('en-IN')}</div>
+                              <div style={{ fontSize: '2rem', fontWeight: 800, color: 'white' }}>₹{(stats.totalWithdrawals).toLocaleString('en-IN')}</div>
+                              <div style={{ fontSize: '0.8rem', color: 'rgba(239, 68, 68, 0.6)', marginTop: '0.5rem' }}>Incl. ₹{stats.totalLiabilities.toLocaleString('en-IN')} Pending</div>
                         </div>
                   </div>
 
-                  <div style={{ display: 'grid', gridTemplateColumns: '1fr', gap: '2rem' }}>
-
-                        {/* Pending Deposits Queue */}
-                        <div className="dashboard-card glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                              <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(16, 185, 129, 0.05)' }}>
-                                    <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                          <ArrowDownToLine className="text-green-400" size={20} /> Deposit Verifications Queue
+                  <div style={{ display: 'flex', flexDirection: 'column', gap: '3rem' }}>
+                        {/* Deposit Verifications */}
+                        <section>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h2 style={{ fontSize: '1.25rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
+                                          <ArrowDownToLine size={22} style={{ color: '#10b981' }} /> Deposit Verify Queue <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400 }}>({pendingDeposits.length})</span>
                                     </h2>
-                                    <div style={{ position: 'relative', minWidth: '280px', flex: '1 1 auto' }}>
-                                          <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
-                                          <input
-                                                type="text"
-                                                placeholder="Search UTR, name, or email..."
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                style={{
-                                                      width: '100%',
-                                                      padding: '0.65rem 1rem 0.65rem 2.5rem',
-                                                      background: 'rgba(0,0,0,0.3)',
-                                                      border: '1px solid rgba(255,255,255,0.1)',
-                                                      color: 'white',
-                                                      borderRadius: '2rem',
-                                                      outline: 'none',
-                                                      fontSize: '0.85rem'
-                                                }}
-                                          />
+                                    <div className="search-wrapper">
+                                          <Search size={18} className="search-icon" />
+                                          <input type="text" placeholder="Search UTR or User..." className="admin-search-input" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
                                     </div>
                               </div>
-                              {loading ? (
-                                    <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Loading deposits...</div>
-                              ) : (
-                                    <div style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', display: 'block', WebkitOverflowScrolling: 'touch' }}>
-                                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                              <div className="glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '1rem' }}>
+                                    <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+                                          <table className="admin-table">
                                                 <thead>
-                                                      <tr style={{ background: 'rgba(0,0,0,0.2)', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>User Identity</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Bank Reference (UTR)</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Requested Capital</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Proof</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600, textAlign: 'right' }}>Actions</th>
+                                                      <tr>
+                                                            <th>User Profile</th>
+                                                            <th>Bank Reference (UTR)</th>
+                                                            <th>Amount</th>
+                                                            <th style={{ textAlign: 'right' }}>Management</th>
                                                       </tr>
                                                 </thead>
                                                 <tbody>
                                                       {filteredDeposits.length === 0 ? (
-                                                            <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)' }}>No pending deposit requests found in the queue.</td></tr>
-                                                      ) : filteredDeposits.map((dep) => (
-                                                            <tr
-                                                                  key={dep.id}
-                                                                  style={{ borderTop: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'all 0.2s' }}
-                                                                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(16, 185, 129, 0.05)' })}
-                                                                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
-                                                            >
-                                                                  <td style={{ padding: '1.25rem 1.5rem' }} onClick={() => setSelectedTransaction(dep)}>
-                                                                        <div style={{ fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: '0.4rem' }}><User size={14} className="text-blue-400" /> {dep.user?.fullName}</div>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.2rem' }}>{dep.user?.email}</div>
-                                                                  </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem', color: '#3b82f6', letterSpacing: '1px', fontSize: '0.9rem', fontWeight: 500 }} onClick={() => setSelectedTransaction(dep)}>{dep.bankReference}</td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem', fontWeight: 700, color: '#10b981', fontSize: '1.1rem' }} onClick={() => setSelectedTransaction(dep)}>₹{dep.amount?.toLocaleString('en-IN')}</td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                        {dep.receiptUrl ? (
-                                                                              <a
-                                                                                    href={dep.receiptUrl}
-                                                                                    target="_blank"
-                                                                                    rel="noopener noreferrer"
-                                                                                    style={{ fontSize: '0.8rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.3rem', textDecoration: 'none' }}
-                                                                                    onClick={(e) => e.stopPropagation()}
-                                                                              >
-                                                                                    <ArrowUpRight size={14} /> View Receipt
-                                                                              </a>
-                                                                        ) : (
-                                                                              <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.2)' }}>No Proof</span>
-                                                                        )}
-                                                                  </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                                                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', width: '100%' }}>
-                                                                              <button
-                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'DEPOSIT', 'APPROVED') }}
-                                                                                    className="btn btn-primary"
-                                                                                    style={{
-                                                                                          padding: '0.55rem 0',
-                                                                                          fontSize: '0.8rem',
-                                                                                          background: '#10b981',
-                                                                                          border: 'none',
-                                                                                          flex: 1,
-                                                                                          minWidth: '100px',
-                                                                                          fontWeight: 700,
-                                                                                          borderRadius: '0.5rem'
-                                                                                    }}
-                                                                              >
-                                                                                    Credit Funds
-                                                                              </button>
-                                                                              <button
-                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(dep.id, 'DEPOSIT', 'REJECTED') }}
-                                                                                    className="btn btn-outline"
-                                                                                    style={{
-                                                                                          padding: '0.55rem 0',
-                                                                                          fontSize: '0.8rem',
-                                                                                          borderColor: 'rgba(239, 68, 68, 0.5)',
-                                                                                          color: '#ef4444',
-                                                                                          background: 'rgba(239, 68, 68, 0.05)',
-                                                                                          flex: 1,
-                                                                                          minWidth: '80px',
-                                                                                          fontWeight: 700,
-                                                                                          borderRadius: '0.5rem'
-                                                                                    }}
-                                                                              >
-                                                                                    Reject
-                                                                              </button>
-                                                                        </div>
-                                                                  </td>
-                                                            </tr>
-                                                      ))}
+                                                            <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>No pending verifications found.</td></tr>
+                                                      ) : (
+                                                            filteredDeposits.map(dep => (
+                                                                  <tr key={dep.id} className="clickable-row">
+                                                                        <td onClick={() => setSelectedUserId(dep.userId)}>
+                                                                              <div style={{ fontWeight: 600, color: 'white' }}>{dep.user?.fullName}</div>
+                                                                              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{dep.user?.email}</div>
+                                                                        </td>
+                                                                        <td>
+                                                                              <div style={{ color: '#3b82f6', fontWeight: 600, letterSpacing: '0.5px' }}>{dep.bankReference}</div>
+                                                                              {dep.receiptUrl && (
+                                                                                    <a href={dep.receiptUrl} target="_blank" rel="noreferrer" style={{ fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '4px', marginTop: '0.2rem', textDecoration: 'none' }}>
+                                                                                          <Eye size={12} /> View Document
+                                                                                    </a>
+                                                                              )}
+                                                                        </td>
+                                                                        <td>
+                                                                              <div style={{ color: '#10b981', fontWeight: 800, fontSize: '1.1rem' }}>₹{dep.amount.toLocaleString('en-IN')}</div>
+                                                                        </td>
+                                                                        <td style={{ textAlign: 'right' }}>
+                                                                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                                                    <button onClick={(e) => handleReviewClick(dep.id, 'DEPOSIT', 'APPROVED', e)} style={{ background: '#10b981', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Credit</button>
+                                                                                    <button onClick={(e) => handleReviewClick(dep.id, 'DEPOSIT', 'REJECTED', e)} style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Reject</button>
+                                                                              </div>
+                                                                        </td>
+                                                                  </tr>
+                                                            ))
+                                                      )}
                                                 </tbody>
                                           </table>
                                     </div>
-                              )}
-                        </div>
+                              </div>
+                        </section>
 
-                        {/* Pending Withdrawals Queue */}
-                        <div className="dashboard-card glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                              <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center', background: 'rgba(239, 68, 68, 0.05)' }}>
-                                    <h2 className="card-title" style={{ margin: 0, display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                          <ArrowUpRight className="text-red-400" size={20} /> Withdrawal Requests Queue
+                        {/* Withdrawal Requests */}
+                        <section>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h2 style={{ fontSize: '1.25rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
+                                          <ArrowUpRight size={22} style={{ color: '#ef4444' }} /> Payout Requests <span style={{ color: 'rgba(255,255,255,0.2)', fontWeight: 400 }}>({pendingWithdrawals.length})</span>
                                     </h2>
-                                    <div style={{ position: 'relative', minWidth: '280px', flex: '1 1 auto' }}>
-                                          <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.4)' }} />
-                                          <input
-                                                type="text"
-                                                placeholder="Search user, bank, or account..."
-                                                value={withdrawalSearchQuery}
-                                                onChange={(e) => setWithdrawalSearchQuery(e.target.value)}
-                                                style={{
-                                                      width: '100%',
-                                                      padding: '0.65rem 1rem 0.65rem 2.5rem',
-                                                      background: 'rgba(0,0,0,0.3)',
-                                                      border: '1px solid rgba(255,255,255,0.1)',
-                                                      color: 'white',
-                                                      borderRadius: '2rem',
-                                                      outline: 'none',
-                                                      fontSize: '0.85rem'
-                                                }}
-                                          />
+                                    <div className="search-wrapper">
+                                          <Search size={18} className="search-icon" />
+                                          <input type="text" placeholder="Search user..." className="admin-search-input" value={withdrawalSearchQuery} onChange={(e) => setWithdrawalSearchQuery(e.target.value)} />
                                     </div>
                               </div>
-                              {loading ? (
-                                    <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Loading withdrawals...</div>
-                              ) : (
-                                    <div style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', display: 'block', WebkitOverflowScrolling: 'touch' }}>
-                                          <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
+                              <div className="glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '1rem' }}>
+                                    <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+                                          <table className="admin-table">
                                                 <thead>
-                                                      <tr style={{ background: 'rgba(0,0,0,0.2)', color: 'rgba(255,255,255,0.6)', fontSize: '0.85rem', textTransform: 'uppercase', letterSpacing: '0.05em' }}>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>User Identity</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Withdrawal Method</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600 }}>Requested Amount</th>
-                                                            <th style={{ padding: '1rem 1.5rem', fontWeight: 600, textAlign: 'right' }}>Actions</th>
+                                                      <tr>
+                                                            <th>User Profile</th>
+                                                            <th>Settlement Method</th>
+                                                            <th>Amount</th>
+                                                            <th style={{ textAlign: 'right' }}>Management</th>
                                                       </tr>
                                                 </thead>
                                                 <tbody>
                                                       {filteredWithdrawals.length === 0 ? (
-                                                            <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)' }}>No pending withdrawal requests.</td></tr>
-                                                      ) : filteredWithdrawals.map((w) => (
-                                                            <tr
-                                                                  key={w.id}
-                                                                  style={{ borderTop: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'all 0.2s' }}
-                                                                  onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(239, 68, 68, 0.05)' })}
-                                                                  onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
-                                                            >
-                                                                  <td style={{ padding: '1.25rem 1.5rem' }} onClick={() => setSelectedTransaction(w)}>
-                                                                        <div style={{ fontWeight: 600, color: 'white' }}>{w.user?.fullName}</div>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{w.user?.email}</div>
-                                                                  </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem', fontSize: '0.9rem' }} onClick={() => setSelectedTransaction(w)}>
-                                                                        <div style={{ color: 'white' }}>{w.bankName}</div>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>{w.accountNumber} • {w.ifscCode}</div>
-                                                                        {w.upiId && <div style={{ fontSize: '0.8rem', color: '#60a5fa' }}>UPI: {w.upiId}</div>}
-                                                                  </td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem', fontWeight: 700, color: '#ef4444', fontSize: '1.1rem' }} onClick={() => setSelectedTransaction(w)}>₹{w.amount?.toLocaleString('en-IN')}</td>
-                                                                  <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                                                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
-                                                                              <button
-                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(w.id, 'WITHDRAWAL', 'APPROVED') }}
-                                                                                    className="btn btn-primary"
-                                                                                    style={{ background: '#3b82f6', border: 'none', padding: '0.55rem 1rem', fontSize: '0.8rem', fontWeight: 700 }}
-                                                                              >
-                                                                                    Disburse
-                                                                              </button>
-                                                                              <button
-                                                                                    onClick={(e) => { e.stopPropagation(); handleReviewClick(w.id, 'WITHDRAWAL', 'REJECTED') }}
-                                                                                    className="btn btn-outline"
-                                                                                    style={{ borderColor: 'rgba(239, 68, 68, 0.5)', color: '#ef4444', padding: '0.55rem 1rem', fontSize: '0.8rem', fontWeight: 700 }}
-                                                                              >
-                                                                                    Reject
-                                                                              </button>
-                                                                        </div>
-                                                                  </td>
-                                                            </tr>
-                                                      ))}
+                                                            <tr><td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>No payout requests currently.</td></tr>
+                                                      ) : (
+                                                            filteredWithdrawals.map(withd => (
+                                                                  <tr key={withd.id} className="clickable-row">
+                                                                        <td onClick={() => setSelectedUserId(withd.userId)}>
+                                                                              <div style={{ fontWeight: 600, color: 'white' }}>{withd.user?.fullName}</div>
+                                                                              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{withd.user?.email}</div>
+                                                                        </td>
+                                                                        <td>
+                                                                              <div style={{ color: 'white', fontSize: '0.9rem', fontWeight: 500 }}>{withd.bankName}</div>
+                                                                              <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{withd.accountNumber} • {withd.ifscCode}</div>
+                                                                              {withd.upiId && <div style={{ fontSize: '0.75rem', color: '#60a5fa', marginTop: '0.1rem' }}>UPI: {withd.upiId}</div>}
+                                                                        </td>
+                                                                        <td>
+                                                                              <div style={{ color: '#ef4444', fontWeight: 800, fontSize: '1.1rem' }}>₹{withd.amount.toLocaleString('en-IN')}</div>
+                                                                        </td>
+                                                                        <td style={{ textAlign: 'right' }}>
+                                                                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                                                    <button onClick={(e) => handleReviewClick(withd.id, 'WITHDRAWAL', 'APPROVED', e)} style={{ background: '#3b82f6', color: 'white', border: 'none', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Disburse</button>
+                                                                                    <button onClick={(e) => handleReviewClick(withd.id, 'WITHDRAWAL', 'REJECTED', e)} style={{ background: 'rgba(239, 68, 68, 0.15)', color: '#ef4444', border: '1px solid rgba(239, 68, 68, 0.3)', padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 700, fontSize: '0.8rem', cursor: 'pointer' }}>Reject</button>
+                                                                              </div>
+                                                                        </td>
+                                                                  </tr>
+                                                            ))
+                                                      )}
                                                 </tbody>
                                           </table>
                                     </div>
-                              )}
-                        </div>
+                              </div>
+                        </section>
 
-                        {/* Complete Transaction History */}
-                        <div className="dashboard-card glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)' }}>
-                              <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }} className="wallet-header-flex">
-                                    <h2 className="card-title" style={{ margin: 0, fontSize: '1.1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                          <Activity size={20} className="text-secondary" /> Operational Ledger
+                        {/* Global Transaction Ledger */}
+                        <section style={{ marginBottom: '2rem' }}>
+                              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1.5rem', flexWrap: 'wrap', gap: '1rem' }}>
+                                    <h2 style={{ fontSize: '1.25rem', color: 'white', display: 'flex', alignItems: 'center', gap: '0.75rem', margin: 0 }}>
+                                          <Activity size={22} style={{ color: '#8b5cf6' }} /> Operational Ledger
                                     </h2>
-                                    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', flex: '1 1 300px', justifyContent: 'flex-end' }} className="wallet-actions-flex">
-                                          <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', flex: '1 1 auto', maxWidth: '100%' }}>
-                                                <Filter size={16} style={{ color: 'rgba(255,255,255,0.5)', marginLeft: '0.5rem' }} />
-                                                <select
-                                                      value={txTypeFilter}
-                                                      onChange={(e) => setTxTypeFilter(e.target.value)}
-                                                      style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.8rem', cursor: 'pointer', flex: 1, minWidth: '80px' }}
-                                                >
-                                                      <option value="ALL" style={{ background: '#1a1a2e' }}>All Types</option>
-                                                      <option value="DEPOSIT" style={{ background: '#1a1a2e' }}>Deposit</option>
-                                                      <option value="WITHDRAWAL" style={{ background: '#1a1a2e' }}>Withdrawal</option>
-                                                      <option value="INVESTMENT" style={{ background: '#1a1a2e' }}>Investment</option>
-                                                      <option value="RETURN" style={{ background: '#1a1a2e' }}>ROI Return</option>
-                                                      <option value="COMMISSION" style={{ background: '#1a1a2e' }}>Commission</option>
-                                                      <option value="BONUS" style={{ background: '#1a1a2e' }}>Bonus</option>
-                                                </select>
-
-                                                <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }}></div>
-
-                                                <select
-                                                      value={txStatusFilter}
-                                                      onChange={(e) => setTxStatusFilter(e.target.value)}
-                                                      style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.8rem', cursor: 'pointer', flex: 1, minWidth: '80px' }}
-                                                >
-                                                      <option value="ALL" style={{ background: '#1a1a2e' }}>All Status</option>
-                                                      <option value="APPROVED" style={{ background: '#1a1a2e' }}>Approved / Success</option>
-                                                      <option value="PENDING" style={{ background: '#1a1a2e' }}>Pending</option>
-                                                      <option value="REJECTED" style={{ background: '#1a1a2e' }}>Rejected</option>
+                                    <div style={{ display: 'flex', gap: '0.75rem', flexWrap: 'wrap' }}>
+                                          <div style={{ background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', padding: '0.2rem', borderRadius: '0.75rem', display: 'flex' }}>
+                                                <select value={txTypeFilter} onChange={(e) => setTxTypeFilter(e.target.value)} style={{ background: 'transparent', color: 'rgba(255,255,255,0.7)', border: 'none', padding: '0.4rem 0.8rem', outline: 'none', fontSize: '0.85rem' }}>
+                                                      <option value="ALL">All Types</option>
+                                                      <option value="DEPOSIT">Deposits</option>
+                                                      <option value="WITHDRAWAL">Withdrawals</option>
+                                                      <option value="INVESTMENT">Contributions</option>
+                                                      <option value="RETURN">Revenue Share</option>
+                                                      <option value="COMMISSION">Network Commission</option>
                                                 </select>
                                           </div>
-
-                                          <div style={{ position: 'relative', maxWidth: '100%', width: '100%', flex: '1 1 200px' }}>
-                                                <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
-                                                <input
-                                                      type="text"
-                                                      placeholder="Search transactions..."
-                                                      value={txSearchQuery}
-                                                      onChange={(e) => setTxSearchQuery(e.target.value)}
-                                                      style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.22rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem', fontSize: '0.85rem', outline: 'none' }}
-                                                />
+                                          <div className="search-wrapper">
+                                                <Search size={18} className="search-icon" />
+                                                <input type="text" placeholder="Search history..." className="admin-search-input" value={txSearchQuery} onChange={(e) => setTxSearchQuery(e.target.value)} />
                                           </div>
                                     </div>
                               </div>
-
-                              {loadingHistory ? (
-                                    <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Loading ledger history...</div>
-                              ) : filteredTransactions.length > 0 ? (
-                                    <div className="transaction-list" style={{ maxHeight: '600px', overflowY: 'auto' }}>
-                                          {filteredTransactions.map(tx => (
-                                                <div
-                                                      key={tx.id}
-                                                      className="transaction-item"
-                                                      onClick={() => setSelectedTransaction(tx)}
-                                                      style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
-                                                      onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.02)' })}
-                                                      onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
-                                                >
-                                                      <div className="tx-info" style={{ display: 'flex', gap: '1rem', alignItems: 'center' }}>
-                                                            <div style={{ background: ['DEPOSIT', 'COMMISSION'].includes(tx.type) ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)', color: ['DEPOSIT', 'COMMISSION'].includes(tx.type) ? '#10b981' : '#ef4444', padding: '0.75rem', borderRadius: '50%' }}>
-                                                                  {['DEPOSIT', 'COMMISSION'].includes(tx.type) ? <ArrowDownToLine size={20} /> : <ArrowUpRight size={20} />}
-                                                            </div>
-                                                            <div>
-                                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                        <p className="tx-desc" style={{ margin: '0 0 0.25rem 0', fontWeight: 600, color: 'white' }}>{tx.description || tx.type}</p>
-                                                                        <span style={{
-                                                                              fontSize: '0.7rem', padding: '0.1rem 0.4rem', borderRadius: '0.5rem', fontWeight: 600,
-                                                                              background: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.1)' : tx.status === 'PENDING' ? 'rgba(245, 158, 11, 0.1)' : 'rgba(239, 68, 68, 0.1)',
-                                                                              color: tx.status === 'APPROVED' ? '#10b981' : tx.status === 'PENDING' ? '#f59e0b' : '#ef4444'
-                                                                        }}>{tx.status}</span>
+                              <div className="glass-panel" style={{ padding: 0, borderRadius: '1rem', overflow: 'hidden' }}>
+                                    <div style={{ maxHeight: '600px', overflowY: 'auto' }}>
+                                          {filteredTransactions.length === 0 ? (
+                                                <div style={{ padding: '4rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>The ledger is currently clear.</div>
+                                          ) : (
+                                                filteredTransactions.map(tx => (
+                                                      <div key={tx.id} onClick={() => setSelectedTransaction(tx)} style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', padding: '1.25rem 1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'all 0.2s' }} className="clickable-row">
+                                                            <div style={{ display: 'flex', gap: '1.25rem', alignItems: 'center' }}>
+                                                                  <div style={{
+                                                                        width: '44px', height: '44px', borderRadius: '12px', display: 'flex', alignItems: 'center', justifyContent: 'center',
+                                                                        background: ['DEPOSIT', 'RETURN', 'COMMISSION'].includes(tx.type) ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)',
+                                                                        color: ['DEPOSIT', 'RETURN', 'COMMISSION'].includes(tx.type) ? '#10b981' : '#ef4444'
+                                                                  }}>
+                                                                        {['DEPOSIT', 'RETURN', 'COMMISSION'].includes(tx.type) ? <ArrowDownToLine size={20} /> : <ArrowUpRight size={20} />}
                                                                   </div>
-                                                                  <p className="tx-date" style={{ margin: 0, fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)' }}>
-                                                                        {new Date(tx.createdAt).toLocaleString()} {tx.user ? `• ${tx.user.fullName} (${tx.user.email})` : ''}
-                                                                  </p>
+                                                                  <div>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
+                                                                              <span style={{ fontWeight: 600, color: 'white' }}>{tx.description}</span>
+                                                                              <span className={`badge ${tx.status === 'APPROVED' ? 'badge-success' : tx.status === 'PENDING' ? 'badge-warning' : 'badge-danger'}`} style={{ fontSize: '0.65rem' }}>{tx.status}</span>
+                                                                        </div>
+                                                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>
+                                                                              {new Date(tx.createdAt).toLocaleString()} • {tx.user?.fullName}
+                                                                        </div>
+                                                                  </div>
+                                                            </div>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                  <div style={{
+                                                                        fontWeight: 800, fontSize: '1.1rem',
+                                                                        color: tx.status === 'REJECTED' ? '#475569' : (['DEPOSIT', 'RETURN', 'COMMISSION'].includes(tx.type) ? '#10b981' : '#ef4444'),
+                                                                        textDecoration: tx.status === 'REJECTED' ? 'line-through' : 'none'
+                                                                  }}>
+                                                                        {['DEPOSIT', 'RETURN', 'COMMISSION'].includes(tx.type) ? '+' : '-'} ₹{tx.amount.toLocaleString('en-IN')}
+                                                                  </div>
                                                             </div>
                                                       </div>
-                                                      <div className="tx-amount" style={{
-                                                            fontWeight: 700,
-                                                            fontSize: '1.1rem',
-                                                            color: tx.status === 'REJECTED' ? '#9ca3af' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? '#10b981' : '#ef4444'),
-                                                            textDecoration: tx.status === 'REJECTED' ? 'line-through' : 'none'
-                                                      }}>
-                                                            {tx.status === 'REJECTED' ? '' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? '+' : '-')}₹{tx.amount.toLocaleString('en-IN')}
-                                                      </div>
-                                                </div>
-                                          ))}
+                                                ))
+                                          )}
                                     </div>
-                              ) : (
-                                    <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.4)', background: 'rgba(0,0,0,0.2)' }}>
-                                          System ledger is empty or search yielded no results.
-                                    </div>
-                              )}
-                        </div>
+                              </div>
+                        </section>
                   </div>
 
-                  {/* Modals */}
+                  {/* Confirmation Modal */}
                   {confirmModal.isOpen && (
-                        <div style={{ position: 'fixed', top: 0, left: 0, right: 0, bottom: 0, background: 'rgba(0,0,0,0.8)', zIndex: 9999, display: 'flex', alignItems: 'center', justifyContent: 'center' }}>
-                              <div className="dashboard-card glass-panel" style={{ width: '90%', maxWidth: '400px', padding: '2rem', textAlign: 'center', border: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <h3 style={{ fontSize: '1.3rem', fontWeight: 700, color: 'white', marginBottom: '1rem' }}>Confirm {confirmModal.status === 'APPROVED' ? 'Approval' : 'Rejection'}</h3>
-                                    <p style={{ color: 'rgba(255,255,255,0.7)', marginBottom: '1.5rem', lineHeight: '1.5' }}>
-                                          Are you sure you want to <strong>{confirmModal.status}</strong> this transaction? This action will securely update the user's wallet database and process all internal network aggregates natively.
-                                    </p>
+                        <div onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} className="sidebar-overlay" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
+                              <div onClick={e => e.stopPropagation()} style={{ background: '#121826', borderRadius: '1.5rem', width: '100%', maxWidth: '400px', border: '1px solid rgba(255,255,255,0.1)', overflow: 'hidden' }}>
+                                    <div style={{ height: '4px', background: confirmModal.status === 'APPROVED' ? '#10b981' : '#ef4444' }} />
+                                    <div style={{ padding: '2rem' }}>
+                                          <h3 style={{ margin: '0 0 1rem 0', color: 'white' }}>Confirm {confirmModal.type} {confirmModal.status}</h3>
+                                          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                                                Are you sure you want to <strong>{confirmModal.status}</strong> this {confirmModal.type.toLowerCase()}? This action is immutable and will be logged in the audit trail.
+                                          </p>
 
-                                    {confirmModal.status === 'REJECTED' && (
-                                          <div style={{ textAlign: 'left', marginBottom: '1.5rem' }}>
-                                                <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Reason for Rejection *</label>
-                                                <textarea
-                                                      placeholder="e.g. Invalid UTR, Name mismatch..."
-                                                      style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.2)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '0.5rem', minHeight: '80px', resize: 'vertical' }}
-                                                      value={confirmModal.rejectionReason || ''}
-                                                      onChange={(e) => setConfirmModal({ ...confirmModal, rejectionReason: e.target.value })}
-                                                />
+                                          {confirmModal.status === 'REJECTED' && (
+                                                <div style={{ marginBottom: '1.5rem' }}>
+                                                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>Reason for Rejection *</label>
+                                                      <textarea
+                                                            value={confirmModal.rejectionReason}
+                                                            onChange={e => setConfirmModal({ ...confirmModal, rejectionReason: e.target.value })}
+                                                            style={{ width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.5rem', color: 'white', outline: 'none', resize: 'none', minHeight: '80px' }}
+                                                      />
+                                                </div>
+                                          )}
+
+                                          <div style={{ display: 'flex', gap: '1rem' }}>
+                                                <button onClick={() => setConfirmModal({ ...confirmModal, isOpen: false })} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', background: 'rgba(255,255,255,0.05)', color: 'white', border: 'none', cursor: 'pointer' }}>Cancel</button>
+                                                <button onClick={executeReview} disabled={confirmModal.isLoading} style={{ flex: 1, padding: '0.75rem', borderRadius: '0.75rem', background: confirmModal.status === 'APPROVED' ? '#10b981' : '#ef4444', color: 'white', border: 'none', fontWeight: 700, cursor: 'pointer', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.5rem' }}>
+                                                      {confirmModal.isLoading ? <Loader2 size={16} className="animate-spin" /> : 'Confirm'}
+                                                </button>
                                           </div>
-                                    )}
-
-                                    <div style={{ display: 'flex', gap: '1rem', justifyContent: 'center' }}>
-                                          <button
-                                                onClick={() => setConfirmModal({ isOpen: false, transactionId: null, type: 'DEPOSIT', status: null, isLoading: false, rejectionReason: '' })}
-                                                className="btn btn-outline"
-                                                style={{ padding: '0.75rem 1.5rem', flex: 1 }}
-                                                disabled={confirmModal.isLoading}
-                                          >
-                                                Cancel
-                                          </button>
-                                          <button
-                                                onClick={executeReview}
-                                                className="btn btn-primary"
-                                                style={{ padding: '0.75rem 1.5rem', flex: 1, background: confirmModal.status === 'APPROVED' ? '#10b981' : '#ef4444', border: 'none' }}
-                                                disabled={confirmModal.isLoading}
-                                          >
-                                                {confirmModal.isLoading ? 'Processing...' : `Confirm ${confirmModal.status}`}
-                                          </button>
                                     </div>
                               </div>
                         </div>

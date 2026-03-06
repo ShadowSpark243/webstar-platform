@@ -1,109 +1,84 @@
 import React, { useState, useEffect } from 'react';
-import { Network, Search, User, ChevronDown, ChevronUp } from 'lucide-react';
+import { Network, Search, User, ChevronDown, ChevronUp, Loader2, Globe, Users, Target } from 'lucide-react';
 import api from '../../utils/api';
 import UserDetailsModal from '../../components/UserDetailsModal';
 
-// Recursive Component for rendering the Deep Network Tree
 const AdminNetworkNode = ({ node, level = 0, onNodeClick, forceExpand }) => {
-      const [expanded, setExpanded] = useState(level < 1); // Auto-expand only first level
+      const [expanded, setExpanded] = useState(level < 1);
       const isRoot = level === 0;
 
       useEffect(() => {
             if (forceExpand) setExpanded(true);
       }, [forceExpand]);
 
+      const toggleExpand = (e) => {
+            e.stopPropagation();
+            setExpanded(!expanded);
+      };
+
       return (
-            <div style={{ marginLeft: level > 0 ? (window.innerWidth < 768 ? '0.75rem' : '1.5rem') : '0', marginTop: '0.75rem' }}>
+            <div style={{ marginLeft: level > 0 ? '1rem' : '0', marginTop: '0.75rem', position: 'relative' }}>
+                  {level > 0 && (
+                        <div style={{ position: 'absolute', left: '-0.5rem', top: '-0.75rem', bottom: '1.25rem', width: '1px', borderLeft: '1px dashed rgba(255,255,255,0.1)' }} />
+                  )}
                   <div
+                        className="glass-panel"
                         style={{
-                              position: 'relative',
-                              display: 'flex',
-                              flexDirection: 'column',
-                              gap: '0.75rem',
-                              background: isRoot ? 'rgba(59, 130, 246, 0.1)' : 'rgba(255,255,255,0.02)',
-                              border: isRoot ? '1px solid rgba(59, 130, 246, 0.3)' : '1px solid rgba(255,255,255,0.05)',
-                              padding: window.innerWidth < 768 ? '1rem' : '1.25rem',
-                              borderRadius: '0.75rem',
+                              padding: '1rem',
+                              borderRadius: '0.85rem',
+                              border: isRoot ? '1px solid rgba(139, 92, 246, 0.3)' : '1px solid rgba(255,255,255,0.05)',
+                              background: isRoot ? 'rgba(139, 92, 246, 0.05)' : 'rgba(255,255,255,0.02)',
                               cursor: 'pointer',
                               transition: 'all 0.2s',
-                              boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1)'
+                              position: 'relative',
                         }}
-                        onClick={() => setExpanded(!expanded)}
+                        onClick={toggleExpand}
                   >
-                        {/* Absolute Top Right Inspect Button */}
-                        <button
-                              onClick={(e) => { e.stopPropagation(); onNodeClick(node.id); }}
-                              className="btn btn-outline"
-                              style={{
-                                    position: 'absolute',
-                                    top: '1rem',
-                                    right: '1rem',
-                                    padding: '0.4rem 0.8rem',
-                                    fontSize: '0.75rem',
-                                    color: '#3b82f6',
-                                    borderColor: 'rgba(59, 130, 246, 0.4)',
-                                    display: 'flex',
-                                    alignItems: 'center',
-                                    gap: '0.4rem',
-                                    background: 'rgba(59, 130, 246, 0.1)',
-                                    borderRadius: '2rem',
-                                    fontWeight: 600,
-                                    backdropFilter: 'blur(4px)',
-                                    zIndex: 2,
-                                    transition: 'all 0.2s'
-                              }}
-                              onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(59, 130, 246, 0.2)' })}
-                              onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(59, 130, 246, 0.1)' })}
-                        >
-                              <User size={14} /> Inspect
-                        </button>
-
-                        {/* User Header Info */}
-                        <div style={{ display: 'flex', flexDirection: 'column', gap: '0.4rem', paddingRight: window.innerWidth < 768 ? '0' : '5.5rem' }}>
-                              <div style={{ fontWeight: 700, fontSize: window.innerWidth < 768 ? '1rem' : '1.15rem', color: isRoot ? '#60a5fa' : 'white', display: 'flex', alignItems: 'center', gap: '0.5rem', flexWrap: 'wrap', lineHeight: 1.2 }}>
-                                    {node.fullName}
+                        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', flexWrap: 'wrap', gap: '0.75rem' }}>
+                              <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
+                                    <div style={{ width: '40px', height: '40px', borderRadius: '50%', background: isRoot ? '#8b5cf6' : 'rgba(255,255,255,0.05)', display: 'flex', alignItems: 'center', justifyContent: 'center', color: isRoot ? 'white' : 'white', border: '1px solid rgba(255,255,255,0.1)' }}>
+                                          <User size={20} />
+                                    </div>
+                                    <div>
+                                          <div style={{ fontWeight: 700, color: 'white', fontSize: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
+                                                {node.fullName}
+                                                {node.status === 'ACTIVE' ? <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#10b981' }} /> : <div style={{ width: '6px', height: '6px', borderRadius: '50%', background: '#ef4444' }} />}
+                                          </div>
+                                          <div style={{ fontSize: '0.75rem', color: '#8b5cf6', fontWeight: 600 }}>@{node.username || 'user_' + node.id}</div>
+                                    </div>
                               </div>
-                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', flexWrap: 'wrap' }}>
-                                    <span style={{ fontSize: '0.75rem', color: '#c4b5fd', background: 'rgba(139, 92, 246, 0.15)', padding: '0.2rem 0.6rem', borderRadius: '2rem', fontWeight: 600, letterSpacing: '0.5px' }}>
-                                          @{node.username}
-                                    </span>
+                              <div style={{ display: 'flex', gap: '0.5rem' }}>
+                                    <button
+                                          onClick={(e) => { e.stopPropagation(); onNodeClick(node.id); }}
+                                          style={{ padding: '0.4rem 0.75rem', borderRadius: '0.5rem', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', border: 'none', fontSize: '0.75rem', fontWeight: 700, cursor: 'pointer' }}
+                                    >
+                                          Inspect
+                                    </button>
                                     {node.children && node.children.length > 0 && (
-                                          <span style={{ fontSize: '0.75rem', color: '#10b981', background: 'rgba(16, 185, 129, 0.15)', padding: '0.2rem 0.6rem', borderRadius: '2rem', fontWeight: 600, letterSpacing: '0.5px' }}>
-                                                {node.children.length} Direct Referrals
-                                          </span>
+                                          <div style={{ background: 'rgba(255,255,255,0.05)', padding: '0.4rem 0.6rem', borderRadius: '0.5rem', color: 'rgba(255,255,255,0.6)', display: 'flex', alignItems: 'center', gap: '4px' }}>
+                                                {expanded ? <ChevronUp size={14} /> : <ChevronDown size={14} />}
+                                          </div>
                                     )}
                               </div>
                         </div>
 
-                        {/* Stats Grid - 3 Equal Columns */}
-                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(3, 1fr)', gap: '0.4rem', background: 'rgba(0,0,0,0.25)', padding: window.innerWidth < 768 ? '0.75rem' : '1rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.03)', marginTop: '0.25rem' }}>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Invested</span>
-                                    <span style={{ fontSize: window.innerWidth < 768 ? '0.85rem' : '1.1rem', fontWeight: 700, color: 'white' }}>₹{(node.totalInvested || 0).toLocaleString('en-IN')}</span>
+                        <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(100px, 1fr))', gap: '1rem', marginTop: '1rem', paddingTop: '1rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
+                              <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Personal</div>
+                                    <div style={{ fontWeight: 700, color: 'white' }}>₹{(node.totalInvested || 0).toLocaleString()}</div>
                               </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center', textAlign: 'center', borderLeft: '1px solid rgba(255,255,255,0.1)', borderRight: '1px solid rgba(255,255,255,0.1)' }}>
-                                    <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Team Vol</span>
-                                    <span style={{ fontSize: window.innerWidth < 768 ? '0.85rem' : '1.1rem', fontWeight: 700, color: '#4ade80' }}>₹{(node.teamVolume || 0).toLocaleString('en-IN')}</span>
+                              <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Team Vol</div>
+                                    <div style={{ fontWeight: 700, color: '#10b981' }}>₹{(node.teamVolume || 0).toLocaleString()}</div>
                               </div>
-                              <div style={{ display: 'flex', flexDirection: 'column', gap: '0.25rem', alignItems: 'center', textAlign: 'center' }}>
-                                    <span style={{ fontSize: '0.6rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase', letterSpacing: '0.5px', fontWeight: 600 }}>Status</span>
-                                    <span style={{ fontSize: '0.75rem', fontWeight: 800, color: node.status === 'ACTIVE' ? '#10b981' : '#ef4444' }}>{node.status}</span>
+                              <div style={{ textAlign: 'center' }}>
+                                    <div style={{ fontSize: '0.65rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase', marginBottom: '0.2rem' }}>Directs</div>
+                                    <div style={{ fontWeight: 700, color: '#8b5cf6' }}>{node.children?.length || 0} Members</div>
                               </div>
                         </div>
-
-                        {/* Expand/Collapse Indicator */}
-                        {node.children && node.children.length > 0 && (
-                              <div style={{ borderTop: '1px dashed rgba(255,255,255,0.1)', paddingTop: '0.75rem', marginTop: '0.25rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)', fontSize: '0.8rem', display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '0.4rem', fontWeight: 600, transition: 'color 0.2s' }}>
-                                    {expanded ? (
-                                          <><ChevronUp size={16} className="text-purple-400" /> Hide Downline</>
-                                    ) : (
-                                          <><ChevronDown size={16} className="text-purple-400" /> Show Downline Matrix</>
-                                    )}
-                              </div>
-                        )}
                   </div>
                   {expanded && node.children && node.children.length > 0 && (
-                        <div style={{ marginTop: '0.5rem', borderLeft: '2px dashed rgba(255,255,255,0.1)' }}>
+                        <div style={{ paddingLeft: '0.5rem' }}>
                               {node.children.map(child => (
                                     <AdminNetworkNode key={child.id} node={child} level={level + 1} onNodeClick={onNodeClick} forceExpand={forceExpand} />
                               ))}
@@ -122,8 +97,8 @@ const AdminNetwork = () => {
       const fetchNetwork = async () => {
             setLoading(true);
             try {
-                  const adminRes = await api.get('/admin/network');
-                  setNetworkTree(adminRes.data.tree);
+                  const res = await api.get('/admin/network');
+                  setNetworkTree(res.data.tree || []);
             } catch (error) {
                   console.error('Error fetching global network tree:', error);
             } finally {
@@ -135,56 +110,88 @@ const AdminNetwork = () => {
             fetchNetwork();
       }, []);
 
-      // Recursive physical tree search
       const filterTree = (nodes, term) => {
             if (!term) return nodes;
             const lowerTerm = term.toLowerCase();
-
             return nodes.map(node => {
-                  const matches = node.fullName.toLowerCase().includes(lowerTerm) || (node.username && node.username.toLowerCase().includes(lowerTerm)) || node.email?.toLowerCase().includes(lowerTerm);
+                  const matches = node.fullName.toLowerCase().includes(lowerTerm) || node.username?.toLowerCase().includes(lowerTerm);
                   const filteredChildren = filterTree(node.children || [], term);
-
                   if (matches || filteredChildren.length > 0) {
-                        return { ...node, children: filteredChildren, forceExpand: term ? true : false };
+                        return { ...node, children: filteredChildren, forceExpand: true };
                   }
                   return null;
-            }).filter(n => n !== null);
+            }).filter(Boolean);
       };
 
       const filteredTree = filterTree(networkTree, searchQuery);
 
+      // Summary Stats
+      const calculateStats = (nodes) => {
+            let totalMembers = 0;
+            let totalVolume = 0;
+            const traverse = (n) => {
+                  totalMembers++;
+                  totalVolume += (n.totalInvested || 0);
+                  n.children?.forEach(traverse);
+            };
+            nodes.forEach(traverse);
+            return { totalMembers, totalVolume };
+      };
+
+      const stats = calculateStats(networkTree);
+
+      if (loading && networkTree.length === 0) return (
+            <div style={{ padding: '5rem', textAlign: 'center' }}>
+                  <Loader2 size={48} className="animate-spin" style={{ color: '#8b5cf6', margin: '0 auto 1.5rem auto' }} />
+                  <p style={{ color: 'rgba(255,255,255,0.5)' }}>Analyzing platform matrix structure...</p>
+            </div>
+      );
+
       return (
-            <div>
-                  <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
-                        <div style={{ flex: '1 1 300px' }}>
-                              <h1 className="admin-page-title" style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}><Network size={28} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.5rem', color: '#8b5cf6' }} /> Global Matrix</h1>
-                              <p className="admin-page-subtitle" style={{ marginBottom: 0, fontSize: '0.85rem' }}>Multi-level marketing tree downlines.</p>
-                        </div>
-                        <div style={{ position: 'relative', width: '100%', maxWidth: '300px', flex: '1 1 200px' }}>
-                              <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
-                              <input
-                                    type="text"
-                                    placeholder="Search matrix..."
-                                    value={searchQuery}
-                                    onChange={(e) => setSearchQuery(e.target.value)}
-                                    style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '0.5rem', outline: 'none', fontSize: '0.85rem' }}
-                              />
-                        </div>
+            <div className="fade-in">
+                  <header style={{ marginBottom: '2rem' }}>
+                        <h1 className="admin-page-title">Global Matrix</h1>
+                        <p className="admin-page-subtitle">Multi-level relationship and volume tracking.</p>
                   </header>
 
-                  <div className="dashboard-card glass-panel" style={{ padding: '2rem', border: '1px solid rgba(139, 92, 246, 0.2)' }}>
-                        {loading ? (
-                              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: '3rem' }}>Computing global up-line architecture...</div>
-                        ) : filteredTree.length > 0 ? (
+                  <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(200px, 1fr))', gap: '1rem', marginBottom: '2rem' }}>
+                        <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <div style={{ padding: '0.75rem', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '0.75rem', color: '#8b5cf6' }}><Globe size={24} /></div>
                               <div>
-                                    {filteredTree.map(rootNode => (
-                                          <AdminNetworkNode key={rootNode.id} node={rootNode} onNodeClick={setSelectedUserId} forceExpand={searchQuery ? true : false} />
-                                    ))}
+                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Network Size</div>
+                                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white' }}>{stats.totalMembers} Nodes</div>
                               </div>
+                        </div>
+                        <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <div style={{ padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', borderRadius: '0.75rem', color: '#10b981' }}><Target size={24} /></div>
+                              <div>
+                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Total Capacity</div>
+                                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white' }}>₹{(stats.totalVolume).toLocaleString()}</div>
+                              </div>
+                        </div>
+                        <div className="glass-panel" style={{ padding: '1.25rem', borderRadius: '1rem', display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                              <div style={{ padding: '0.75rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '0.75rem', color: '#3b82f6' }}><Users size={24} /></div>
+                              <div>
+                                    <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', textTransform: 'uppercase' }}>Root Clusters</div>
+                                    <div style={{ fontSize: '1.25rem', fontWeight: 800, color: 'white' }}>{networkTree.length} Lineages</div>
+                              </div>
+                        </div>
+                  </div>
+
+                  <div style={{ display: 'flex', justifyContent: 'flex-end', marginBottom: '1.5rem' }}>
+                        <div className="search-wrapper">
+                              <Search size={18} className="search-icon" />
+                              <input type="text" placeholder="Search lineage..." className="admin-search-input" value={searchQuery} onChange={(e) => setSearchQuery(e.target.value)} />
+                        </div>
+                  </div>
+
+                  <div className="glass-panel" style={{ padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                        {filteredTree.length === 0 ? (
+                              <div style={{ padding: '4rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>No nodes found matching your focus.</div>
                         ) : (
-                              <div style={{ textAlign: 'center', color: 'rgba(255,255,255,0.5)', padding: '3rem' }}>
-                                    {searchQuery ? 'No nodes found matching your query.' : 'The network tree is currently empty. No users have registered.'}
-                              </div>
+                              filteredTree.map(root => (
+                                    <AdminNetworkNode key={root.id} node={root} onNodeClick={setSelectedUserId} forceExpand={!!searchQuery} />
+                              ))
                         )}
                   </div>
 

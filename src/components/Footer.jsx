@@ -14,16 +14,16 @@ const Footer = () => {
                                     <Link to="/" className="footer-logo">
                                           <PlaySquare className="text-primary" size={32} />
                                           <span>
-                                                WEB<span className="text-primary">STAR</span>
+                                                ITRAM <span className="text-primary">WEBPRO</span>
                                           </span>
                                     </Link>
                                     <p className="footer-desc">
-                                          Funding the next generation of blockbuster web series and movies through a revolutionary project-based profit sharing and network incentive model.
+                                          Funding the next generation of blockbuster web series and movies through a legally structured, project-based revenue sharing and network model.
                                     </p>
                                     <div className="footer-contact-list">
                                           <div className="footer-contact-item">
                                                 <Mail size={18} className="text-primary" />
-                                                <span>contact@webstar.com</span>
+                                                <span>contact@itramwebpro.com</span>
                                           </div>
                                           <div className="footer-contact-item">
                                                 <Phone size={18} className="text-primary" />
@@ -58,9 +58,9 @@ const Footer = () => {
                         </div>
 
                         <div className="footer-bottom">
-                              <p>© {new Date().getFullYear()} WEBSTAR (A product of The Anytime Mediatec Pvt Ltd). All rights reserved.</p>
+                              <p>© {new Date().getFullYear()} ITRAM WEBPRO (A product of The Anytime Mediatec Pvt Ltd). All rights reserved.</p>
                               <p className="footer-disclaimer">
-                                    Disclaimer: Content production is high-risk. Returns are not guaranteed and depend entirely on project performance.
+                                    Disclaimer: Content production is high-risk. Revenue shares are not guaranteed and depend entirely on actual project performance. This platform is not regulated by SEBI or RBI. This is not a Collective Investment Scheme.
                               </p>
                         </div>
                   </div>

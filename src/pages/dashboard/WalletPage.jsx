@@ -1,11 +1,12 @@
 import React, { useState, useEffect } from 'react';
 import { useAuth } from '../../context/AuthContext';
 import api from '../../utils/api';
-import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2, Filter, Copy, Check, TrendingUp, ShieldCheck, Film, Sparkles, Zap } from 'lucide-react';
+import { Wallet as WalletIcon, ArrowDownToLine, Landmark, ArrowUpRight, User, Search, Loader2, Filter, Copy, Check, TrendingUp, ShieldCheck, Film, Sparkles, Zap, AlertOctagon, CheckCircle, Upload, CheckCircle2 } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 import TransactionDetailsModal from '../../components/TransactionDetailsModal';
 import qrImage from '../../assets/Webfilms1.jpeg';
 import './Dashboard.css';
+import './WalletPage.css';
 
 const WalletPage = () => {
       const { user } = useAuth();
@@ -150,7 +151,7 @@ const WalletPage = () => {
 
             const selectedBalance = withdrawSource === 'roi' ? (balances.roi || 0) : (balances.income || 0);
             if (parseFloat(withdrawAmount) > selectedBalance) {
-                  alert(`Insufficient ${withdrawSource === 'roi' ? 'ROI' : 'Income'} Wallet Balance.`);
+                  alert(`Insufficient ${withdrawSource === 'roi' ? 'Revenue Share' : 'Income'} Wallet Balance.`);
                   return;
             }
 
@@ -227,81 +228,81 @@ const WalletPage = () => {
                   </header>
 
                   {/* Balance Cards */}
-                  <div className="dashboard-grid" style={{ marginBottom: '2rem', display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-                        <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                              <div>
-                                    <span className="stat-title">Wallet Balance</span>
-                                    <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem' }}>
+                  <div className="balance-grid">
+                        <div className="balance-card glass-panel main-wallet">
+                              <div className="balance-info">
+                                    <span className="balance-label">Wallet Balance</span>
+                                    <h3 className="balance-value">
                                           ₹{((user?.role === 'ADMIN' ? user?.walletBalance : balances.wallet) || 0).toLocaleString('en-IN')}
                                     </h3>
                               </div>
-                              <div className="stat-icon-wrapper primary" style={{ padding: '0.75rem' }}>
+                              <div className="balance-icon icon-wrapper primary">
                                     <WalletIcon size={32} />
                               </div>
                         </div>
 
                         {user?.role !== 'ADMIN' && (
-                              <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', border: '1px solid rgba(16, 185, 129, 0.2)' }}>
-                                    <div>
-                                          <span className="stat-title" style={{ color: '#10b981' }}>Income Wallet (Withdrawable)</span>
-                                          <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#10b981' }}>
+                              <div className="balance-card glass-panel income-wallet">
+                                    <div className="balance-info">
+                                          <span className="balance-label" style={{ color: '#10b981' }}>Income Wallet</span>
+                                          <h3 className="balance-value" style={{ color: '#10b981' }}>
                                                 ₹{(balances.income || 0).toLocaleString('en-IN')}
                                           </h3>
                                     </div>
-                                    <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
+                                    <div className="balance-icon" style={{ background: 'rgba(16, 185, 129, 0.1)', color: '#10b981' }}>
                                           <TrendingUp size={32} />
                                     </div>
                               </div>
                         )}
 
                         {user?.role !== 'ADMIN' && (
-                              <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg, rgba(245, 158, 11, 0.08) 0%, rgba(251, 191, 36, 0.08) 100%)', border: '1px solid rgba(245, 158, 11, 0.25)' }}>
-                                    <div>
-                                          <span className="stat-title" style={{ color: '#f59e0b' }}>ROI Wallet</span>
-                                          <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#fbbf24' }}>
+                              <div className="balance-card glass-panel roi-wallet">
+                                    <div className="balance-info">
+                                          <span className="balance-label" style={{ color: '#f59e0b' }}>Revenue Share Wallet</span>
+                                          <h3 className="balance-value" style={{ color: '#fbbf24' }}>
                                                 ₹{(balances.roi || 0).toLocaleString('en-IN', { minimumFractionDigits: 2 })}
                                           </h3>
                                     </div>
-                                    <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
+                                    <div className="balance-icon" style={{ background: 'rgba(245, 158, 11, 0.15)', color: '#f59e0b' }}>
                                           <Sparkles size={32} />
                                     </div>
                               </div>
                         )}
 
-                        <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'linear-gradient(135deg, rgba(59, 130, 246, 0.1) 0%, rgba(37, 99, 235, 0.1) 100%)', border: '1px solid rgba(59, 130, 246, 0.3)' }}>
-                              <div>
-                                    <span className="stat-title" style={{ color: '#60a5fa' }}>Total Assets (Net Worth)</span>
-                                    <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#60a5fa' }}>
+                        <div className="balance-card glass-panel net-worth">
+                              <div className="balance-info">
+                                    <span className="balance-label" style={{ color: '#60a5fa' }}>Total Assets (Net Worth)</span>
+                                    <h3 className="balance-value" style={{ color: '#60a5fa' }}>
                                           ₹{((user?.role === 'ADMIN' ? (user?.walletBalance || 0) : (balances.wallet || 0)) + (balances.income || 0) + (balances.roi || 0) + (portfolio.totalInvestedAmount || 0)).toLocaleString('en-IN')}
                                     </h3>
                               </div>
-                              <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa' }}>
+                              <div className="balance-icon" style={{ background: 'rgba(59, 130, 246, 0.2)', color: '#60a5fa' }}>
                                     <ShieldCheck size={32} />
                               </div>
                         </div>
 
                         {user?.role !== 'ADMIN' && (
                               <>
-                                    <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                          <div>
-                                                <span className="stat-title" style={{ color: '#34d399' }}>Total Invested</span>
-                                                <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#34d399' }}>
+                                    <div className="balance-card glass-panel">
+                                          <div className="balance-info">
+                                                <span className="balance-label" style={{ color: '#34d399' }}>Total Contributed</span>
+                                                <h3 className="balance-value" style={{ color: '#34d399' }}>
                                                       ₹{(portfolio.totalInvestedAmount || 0).toLocaleString('en-IN')}
                                                 </h3>
                                           </div>
-                                          <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(52, 211, 153, 0.1)', color: '#34d399' }}>
+                                          <div className="balance-icon" style={{ background: 'rgba(52, 211, 153, 0.1)', color: '#34d399' }}>
                                                 <Film size={32} />
                                           </div>
                                     </div>
 
-                                    <div className="stat-card glass-panel" style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                          <div>
-                                                <span className="stat-title" style={{ color: '#fbbf24' }}>Estimated Profit</span>
-                                                <h3 className="stat-value" style={{ fontSize: '2rem', marginTop: '0.5rem', color: '#fbbf24' }}>
+                                    <div className="balance-card glass-panel">
+                                          <div className="balance-info">
+                                                <span className="balance-label" style={{ color: '#fbbf24' }}>Est. Revenue Share</span>
+                                                <h3 className="balance-value" style={{ color: '#fbbf24' }}>
                                                       ₹{(portfolio.estimatedProfit || 0).toLocaleString('en-IN')}
                                                 </h3>
                                           </div>
-                                          <div className="stat-icon-wrapper" style={{ padding: '0.75rem', background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24' }}>
+                                          <div className="balance-icon" style={{ background: 'rgba(251, 191, 36, 0.1)', color: '#fbbf24' }}>
                                                 <TrendingUp size={32} />
                                           </div>
                                     </div>
@@ -309,442 +310,240 @@ const WalletPage = () => {
                         )}
                   </div>
 
-                  <div className="dashboard-grid" style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(300px, 1fr))', gap: '2rem' }}>
-
-                        {/* Standard Users see the forms */}
+                  <div className="dashboard-grid">
+                        {/* Tab Content */}
                         {user?.role !== 'ADMIN' && (
-                              <>
-                                    {/* Tabs for Deposit/Withdraw */}
-                                    <div className="glass-panel" style={{ gridColumn: '1 / -1', padding: '0.5rem', display: 'flex', gap: '0.5rem', borderRadius: '1rem', background: 'rgba(255,255,255,0.03)' }}>
+                              <div className="tab-container-full">
+                                    {/* Tabs */}
+                                    <div className="form-tabs glass-panel">
                                           <button
                                                 onClick={() => setActiveTab('DEPOSIT')}
-                                                style={{
-                                                      flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer',
-                                                      background: activeTab === 'DEPOSIT' ? '#3b82f6' : 'transparent', color: activeTab === 'DEPOSIT' ? 'white' : 'rgba(255,255,255,0.5)',
-                                                      transition: 'all 0.2s ease'
-                                                }}
+                                                className={`tab-btn ${activeTab === 'DEPOSIT' ? 'active' : 'inactive'}`}
                                           >
-                                                <ArrowDownToLine size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Add Funds
+                                                <ArrowDownToLine size={20} /> Add Funds
                                           </button>
                                           <button
                                                 onClick={() => setActiveTab('WITHDRAW')}
-                                                style={{
-                                                      flex: 1, padding: '0.75rem', borderRadius: '0.75rem', border: 'none', fontWeight: 600, fontSize: '0.9rem', cursor: 'pointer',
-                                                      background: activeTab === 'WITHDRAW' ? '#3b82f6' : 'transparent', color: activeTab === 'WITHDRAW' ? 'white' : 'rgba(255,255,255,0.5)',
-                                                      transition: 'all 0.2s ease'
-                                                }}
+                                                className={`tab-btn ${activeTab === 'WITHDRAW' ? 'active' : 'inactive'}`}
                                           >
-                                                <ArrowUpRight size={16} style={{ verticalAlign: 'middle', marginRight: '0.5rem' }} /> Withdraw
+                                                <ArrowUpRight size={20} /> Withdraw
                                           </button>
                                     </div>
 
                                     {activeTab === 'DEPOSIT' ? (
-                                          <>
-                                                {/* Payment Options Section */}
-
-                                                <div className="dashboard-card glass-panel" style={{ gridColumn: '1 / -1' }}>
-                                                      <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <Landmark className="text-primary" /> Payment Methods
-                                                      </h2>
-                                                      <p className="text-muted" style={{ marginBottom: '1.5rem', fontSize: '0.9rem' }}>
-                                                            Transfer the amount via QR Code or Bank Transfer, then submit a deposit request with your UTR/Reference number.
+                                          <div className="side-by-side-layout">
+                                                {/* Left: Payment Methods */}
+                                                <div className="layout-column glass-panel">
+                                                      <div className="column-header">
+                                                            <Landmark className="text-primary" size={24} />
+                                                            <h2 className="card-title">Payment Methods</h2>
+                                                      </div>
+                                                      <p className="column-desc">
+                                                            Transfer funds via QR or Bank, then submit your request with the Reference number.
                                                       </p>
 
-                                                      <div style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(280px, 1fr))', gap: '1.5rem' }}>
-                                                            {/* Left: QR Code (UPI) */}
-                                                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', alignItems: 'center', justifyContent: 'center' }}>
-                                                                  <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'white', marginBottom: '1rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                        Scanner / UPI
-                                                                  </h3>
-                                                                  <div style={{ background: 'white', padding: '0.75rem', borderRadius: '1rem', marginBottom: '1rem', boxShadow: '0 8px 32px rgba(0, 0, 0, 0.2)' }}>
-                                                                        <img src={qrImage} alt="Payment QR Code" style={{ width: '180px', height: '180px', objectFit: 'contain', display: 'block' }} />
+                                                      <div className="methods-stack">
+                                                            {/* QR Section */}
+                                                            <div className="method-box-compact glass-panel">
+                                                                  <h3 className="method-title">Scan & Pay (UPI)</h3>
+                                                                  <div className="qr-wrapper-small">
+                                                                        <img src={qrImage} alt="Deposit QR" className="qr-img-small" />
                                                                   </div>
-                                                                  <div style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', padding: '0.6rem 1rem', borderRadius: '2rem', display: 'flex', alignItems: 'center', gap: '0.75rem' }}>
-                                                                        <span style={{ fontSize: '0.85rem', color: '#60a5fa', fontWeight: 600 }}>UPI: webfilms@kotak</span>
-                                                                        <button
-                                                                              onClick={() => {
-                                                                                    navigator.clipboard.writeText('webfilms@kotak');
-                                                                                    setCopiedText('upi');
-                                                                                    setTimeout(() => setCopiedText(''), 2000);
-                                                                              }}
-                                                                              style={{ background: 'transparent', border: 'none', color: copiedText === 'upi' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', display: 'flex', alignItems: 'center', padding: 0 }}
-                                                                              title="Copy UPI ID"
-                                                                        >
-                                                                              {copiedText === 'upi' ? <Check size={14} /> : <Copy size={14} />}
-                                                                        </button>
+                                                                  <div className="upi-info-pill" onClick={() => {
+                                                                        navigator.clipboard.writeText('webfilms@kotak');
+                                                                        setCopiedText('upi');
+                                                                        setTimeout(() => setCopiedText(''), 2000);
+                                                                  }}>
+                                                                        <span className="upi-id">webfilms@kotak</span>
+                                                                        {copiedText === 'upi' ? <Check size={14} /> : <Copy size={14} />}
                                                                   </div>
                                                             </div>
 
-                                                            {/* Right: Bank Details */}
-                                                            <div style={{ background: 'rgba(255, 255, 255, 0.03)', padding: '1.5rem', borderRadius: '1rem', border: '1px solid rgba(255, 255, 255, 0.08)', display: 'flex', flexDirection: 'column', gap: '1rem', justifyContent: 'center' }}>
-                                                                  <h3 style={{ fontSize: '1rem', fontWeight: 600, color: 'white', marginBottom: '0.5rem', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                        Direct Bank Transfer
-                                                                  </h3>
-                                                                  <div>
-                                                                        <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Bank Name</span>
-                                                                        <p style={{ margin: 0, fontWeight: 500, color: 'white' }}>KOTAK MAHINDRA BANK</p>
-                                                                  </div>
-                                                                  <div>
-                                                                        <span style={{ fontSize: '0.8rem', color: 'rgba(255, 255, 255, 0.5)' }}>Account Name</span>
-                                                                        <p style={{ margin: 0, fontWeight: 500, color: 'white' }}>ITRAM MANAGEMENT LLP</p>
-                                                                  </div>
-                                                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
-                                                                        <div>
-                                                                              <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>Account Number</span>
-                                                                              <p style={{ margin: 0, fontWeight: 700, color: '#3b82f6', letterSpacing: '1px' }}>1249346867</p>
+                                                            {/* Bank Details Section */}
+                                                            <div className="method-box-compact glass-panel">
+                                                                  <h3 className="method-title">Bank Transfer</h3>
+                                                                  <div className="bank-details-list">
+                                                                        <div className="bank-row">
+                                                                              <span className="label">Bank</span>
+                                                                              <span className="value">KOTAK MAHINDRA BANK</span>
                                                                         </div>
-                                                                        <button
-                                                                              onClick={() => {
-                                                                                    navigator.clipboard.writeText('1249346867');
-                                                                                    setCopiedText('acc');
-                                                                                    setTimeout(() => setCopiedText(''), 2000);
-                                                                              }}
-                                                                              style={{ background: 'transparent', border: 'none', color: copiedText === 'acc' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '0.5rem' }}
-                                                                        >
-                                                                              {copiedText === 'acc' ? <Check size={16} /> : <Copy size={16} />}
-                                                                        </button>
-                                                                  </div>
-                                                                  <div style={{ display: 'flex', alignItems: 'center', justifyContent: 'space-between', background: 'rgba(0,0,0,0.2)', padding: '0.5rem 0.75rem', borderRadius: '0.5rem' }}>
-                                                                        <div>
-                                                                              <span style={{ fontSize: '0.75rem', color: 'rgba(255, 255, 255, 0.5)', display: 'block', marginBottom: '0.2rem' }}>IFSC Code</span>
-                                                                              <p style={{ margin: 0, fontWeight: 600, color: 'white' }}>KKBK0001487</p>
+                                                                        <div className="bank-row">
+                                                                              <span className="label">Account Name</span>
+                                                                              <span className="value">ITRAM MANAGEMENT LLP</span>
                                                                         </div>
-                                                                        <button
-                                                                              onClick={() => {
-                                                                                    navigator.clipboard.writeText('KKBK0001487');
-                                                                                    setCopiedText('ifsc');
-                                                                                    setTimeout(() => setCopiedText(''), 2000);
-                                                                              }}
-                                                                              style={{ background: 'transparent', border: 'none', color: copiedText === 'ifsc' ? '#10b981' : 'rgba(255,255,255,0.6)', cursor: 'pointer', padding: '0.5rem' }}
-                                                                        >
-                                                                              {copiedText === 'ifsc' ? <Check size={16} /> : <Copy size={16} />}
-                                                                        </button>
+                                                                        <div className="bank-row copyable" onClick={() => {
+                                                                              navigator.clipboard.writeText('1249346867');
+                                                                              setCopiedText('acc');
+                                                                              setTimeout(() => setCopiedText(''), 2000);
+                                                                        }}>
+                                                                              <span className="label">Acc Number</span>
+                                                                              <span className="value highlight">1249346867</span>
+                                                                              {copiedText === 'acc' ? <Check size={14} /> : <Copy size={14} />}
+                                                                        </div>
+                                                                        <div className="bank-row copyable" onClick={() => {
+                                                                              navigator.clipboard.writeText('KKBK0001487');
+                                                                              setCopiedText('ifsc');
+                                                                              setTimeout(() => setCopiedText(''), 2000);
+                                                                        }}>
+                                                                              <span className="label">IFSC Code</span>
+                                                                              <span className="value">KKBK0001487</span>
+                                                                              {copiedText === 'ifsc' ? <Check size={14} /> : <Copy size={14} />}
+                                                                        </div>
                                                                   </div>
                                                             </div>
                                                       </div>
                                                 </div>
 
-                                                {/* Deposit Form */}
-                                                <div className="dashboard-card glass-panel">
-                                                      <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                            <ArrowDownToLine className="text-green-400" /> Submit Deposit Request
-                                                      </h2>
+                                                {/* Right: Deposit Form */}
+                                                <div className="layout-column glass-panel">
+                                                      <div className="column-header">
+                                                            <ArrowDownToLine className="text-green-400" size={24} />
+                                                            <h2 className="card-title">Submit Request</h2>
+                                                      </div>
+                                                      <p className="column-desc">Enter your transaction details for verification.</p>
 
-                                                      <form onSubmit={handleDeposit} style={{ display: 'flex', flexDirection: 'column', gap: '1.5rem' }}>
-                                                            <div className="form-group">
-                                                                  <label>Amount Transferred (₹)</label>
+                                                      <form onSubmit={handleDeposit} className="premium-form">
+                                                            <div className="form-group-floating">
+                                                                  <label>Amount (₹)</label>
                                                                   <input
                                                                         type="number"
                                                                         required
                                                                         min="1000"
-                                                                        placeholder="E.g. 100000"
-                                                                        className="dashboard-input"
+                                                                        placeholder="Enter amount"
+                                                                        className="premium-input"
                                                                         value={depositAmount}
                                                                         onChange={(e) => setDepositAmount(e.target.value)}
-                                                                        style={{
-                                                                              width: '100%',
-                                                                              padding: '0.875rem 1rem',
-                                                                              background: 'rgba(255, 255, 255, 0.05)',
-                                                                              border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                                              color: 'white',
-                                                                              borderRadius: '0.75rem'
-                                                                        }}
                                                                   />
                                                             </div>
 
-                                                            <div className="form-group">
-                                                                  <label>UTR / Transaction Reference Number</label>
+                                                            <div className="form-group-floating">
+                                                                  <label>Reference (UTR) Number</label>
                                                                   <input
                                                                         type="text"
                                                                         required
-                                                                        placeholder="E.g. UPI1234567890"
-                                                                        className="dashboard-input"
+                                                                        placeholder="Enter 12-digit UTR"
+                                                                        className="premium-input"
                                                                         value={utrNumber}
                                                                         onChange={(e) => setUtrNumber(e.target.value)}
-                                                                        style={{
-                                                                              width: '100%',
-                                                                              padding: '0.875rem 1rem',
-                                                                              background: 'rgba(255, 255, 255, 0.05)',
-                                                                              border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                                              color: 'white',
-                                                                              borderRadius: '0.75rem'
-                                                                        }}
                                                                   />
                                                             </div>
 
-                                                            <div className="form-group">
-                                                                  <label>Payment Receipt / Screenshot</label>
-                                                                  <input
-                                                                        type="file"
-                                                                        required
-                                                                        accept="image/*,.pdf"
-                                                                        onChange={(e) => setReceiptFile(e.target.files[0])}
-                                                                        style={{
-                                                                              width: '100%',
-                                                                              padding: '0.875rem 1rem',
-                                                                              background: 'rgba(255, 255, 255, 0.05)',
-                                                                              border: '1px solid rgba(255, 255, 255, 0.1)',
-                                                                              color: 'white',
-                                                                              borderRadius: '0.75rem'
-                                                                        }}
-                                                                  />
-                                                                  <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
-                                                                        Upload a screenshot of your payment confirmation for faster verification.
-                                                                  </p>
-                                                            </div>
-
-                                                            <button type="submit" className="btn btn-primary" disabled={isSubmitting || !depositAmount || !utrNumber || !receiptFile}>
-                                                                  {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : 'Submit Request'}
-                                                            </button>
-                                                      </form>
-                                                </div>
-                                          </>
-                                    ) : (
-                                          <div className="dashboard-card glass-panel" style={{ gridColumn: '1 / -1' }}>
-                                                <h2 className="card-title" style={{ display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                      <ArrowUpRight className="text-red-400" /> Request Withdrawal
-                                                </h2>
-                                                {user?.kycStatus !== 'VERIFIED' ? (
-                                                      <div style={{ padding: '2rem', textAlign: 'center', background: 'rgba(239, 68, 68, 0.05)', borderRadius: '1rem', border: '1px solid rgba(239, 68, 68, 0.2)' }}>
-                                                            <User size={48} className="text-red-400" style={{ margin: '0 auto 1.5rem auto' }} />
-                                                            <h3 style={{ color: 'white', marginBottom: '0.5rem' }}>KYC Required</h3>
-                                                            <p style={{ color: 'rgba(255,255,255,0.6)', maxWidth: '400px', margin: '0 auto 1.5rem auto' }}>
-                                                                  For security reasons, you must complete your identity verification before you can withdraw funds.
-                                                            </p>
-                                                            <button
-                                                                  onClick={() => window.location.href = '/dashboard/kyc'}
-                                                                  className="btn btn-primary"
-                                                                  style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem' }}
-                                                            >
-                                                                  Go to KYC Verification
-                                                            </button>
-                                                      </div>
-                                                ) : (
-                                                      <form onSubmit={handleWithdraw} style={{ display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(250px, 1fr))', gap: '1.5rem' }}>
-                                                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                                                  <label>Withdraw From</label>
-                                                                  <div style={{ display: 'flex', gap: '0.75rem', marginTop: '0.5rem' }}>
-                                                                        <button type="button" onClick={() => setWithdrawSource('income')} style={{
-                                                                              flex: 1, padding: '1rem', borderRadius: '0.75rem', cursor: 'pointer',
-                                                                              background: withdrawSource === 'income' ? 'rgba(16, 185, 129, 0.15)' : 'rgba(255,255,255,0.03)',
-                                                                              border: withdrawSource === 'income' ? '2px solid #10b981' : '1px solid rgba(255,255,255,0.1)',
-                                                                              color: 'white', textAlign: 'left', transition: 'all 0.2s'
-                                                                        }}>
-                                                                              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#10b981' }}>Income Wallet</div>
-                                                                              <div style={{ fontSize: '1.25rem', fontWeight: 700, marginTop: '0.25rem' }}>₹{(balances.income || 0).toLocaleString('en-IN')}</div>
-                                                                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>Commissions & Bonuses</div>
-                                                                        </button>
-                                                                        <button type="button" onClick={() => setWithdrawSource('roi')} style={{
-                                                                              flex: 1, padding: '1rem', borderRadius: '0.75rem', cursor: 'pointer',
-                                                                              background: withdrawSource === 'roi' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(255,255,255,0.03)',
-                                                                              border: withdrawSource === 'roi' ? '2px solid #f59e0b' : '1px solid rgba(255,255,255,0.1)',
-                                                                              color: 'white', textAlign: 'left', transition: 'all 0.2s'
-                                                                        }}>
-                                                                              <div style={{ fontWeight: 600, fontSize: '0.9rem', color: '#f59e0b' }}>ROI Wallet</div>
-                                                                              <div style={{ fontSize: '1.25rem', fontWeight: 700, marginTop: '0.25rem' }}>₹{(balances.roi || 0).toLocaleString('en-IN')}</div>
-                                                                              <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>Daily ROI Earnings</div>
-                                                                        </button>
+                                                            <div className="form-group-floating">
+                                                                  <label>Transfer Receipt</label>
+                                                                  <div className="file-upload-zone">
+                                                                        <input
+                                                                              type="file"
+                                                                              required
+                                                                              accept="image/*,.pdf"
+                                                                              onChange={(e) => setReceiptFile(e.target.files[0])}
+                                                                        />
+                                                                        {receiptFile ? (
+                                                                              <div className="file-selected"><Check size={16} /> {receiptFile.name}</div>
+                                                                        ) : (
+                                                                              <div className="file-placeholder"><Upload size={20} /> Click to upload screenshot</div>
+                                                                        )}
                                                                   </div>
                                                             </div>
-                                                            <div className="form-group" style={{ gridColumn: '1 / -1' }}>
-                                                                  <label>Withdrawal Amount (₹)</label>
-                                                                  <input
-                                                                        type="number"
-                                                                        required
-                                                                        min="1000"
-                                                                        placeholder="Minimum ₹1,000"
-                                                                        value={withdrawAmount}
-                                                                        onChange={(e) => setWithdrawAmount(e.target.value)}
-                                                                        className="dashboard-input"
-                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
-                                                                  />
-                                                                  <p style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.5rem' }}>
-                                                                        Available: ₹{(withdrawSource === 'roi' ? (balances.roi || 0) : (balances.income || 0)).toLocaleString('en-IN')} from {withdrawSource === 'roi' ? 'ROI Wallet' : 'Income Wallet'}
-                                                                  </p>
+
+                                                            <button type="submit" className="btn-premium primary" disabled={isSubmitting || !depositAmount || !utrNumber || !receiptFile}>
+                                                                  {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : 'Submit Deposit Request'}
+                                                            </button>
+                                                      </form>
+                                                </div>
+                                          </div>
+                                    ) : (
+                                          <div className="side-by-side-layout">
+                                                {/* Left: Withdrawal Details */}
+                                                <div className="layout-column glass-panel">
+                                                      <div className="column-header">
+                                                            <ArrowUpRight className="text-red-400" size={24} />
+                                                            <h2 className="card-title">Withdrawal Details</h2>
+                                                      </div>
+                                                      <p className="column-desc">Select your balance source and view your available funds.</p>
+
+                                                      {user?.kycStatus !== 'VERIFIED' ? (
+                                                            <div className="kyc-warning-box">
+                                                                  <AlertOctagon size={48} />
+                                                                  <h3>KYC Required</h3>
+                                                                  <p>Complete identity verification to enable withdrawals.</p>
+                                                                  <button className="btn-premium secondary" onClick={() => window.location.href = '/dashboard/kyc'}>Verify KYC Now</button>
                                                             </div>
-                                                            <div className="form-group">
-                                                                  <label>Bank Name</label>
-                                                                  <input
-                                                                        type="text"
-                                                                        placeholder="E.g. HDFC Bank"
-                                                                        value={bankName}
-                                                                        onChange={(e) => setBankName(e.target.value)}
-                                                                        className="dashboard-input"
-                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
-                                                                  />
+                                                      ) : (
+                                                            <div className="source-grid">
+                                                                  <div
+                                                                        className={`source-card-premium income ${withdrawSource === 'income' ? 'active' : ''}`}
+                                                                        onClick={() => setWithdrawSource('income')}
+                                                                  >
+                                                                        <div className="label">Income Wallet</div>
+                                                                        <div className="amount">₹{(balances.income || 0).toLocaleString('en-IN')}</div>
+                                                                        <div className="check-icon">{withdrawSource === 'income' && <CheckCircle size={20} />}</div>
+                                                                  </div>
+                                                                  <div
+                                                                        className={`source-card-premium roi ${withdrawSource === 'roi' ? 'active' : ''}`}
+                                                                        onClick={() => setWithdrawSource('roi')}
+                                                                  >
+                                                                        <div className="label">Revenue Share</div>
+                                                                        <div className="amount">₹{(balances.roi || 0).toLocaleString('en-IN')}</div>
+                                                                        <div className="check-icon">{withdrawSource === 'roi' && <CheckCircle size={20} />}</div>
+                                                                  </div>
                                                             </div>
-                                                            <div className="form-group">
-                                                                  <label>Account Number</label>
-                                                                  <input
-                                                                        type="text"
-                                                                        placeholder="Account Number"
-                                                                        value={accountNumber}
-                                                                        onChange={(e) => setAccountNumber(e.target.value)}
-                                                                        className="dashboard-input"
-                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
-                                                                  />
-                                                            </div>
-                                                            <div className="form-group">
-                                                                  <label>IFSC Code</label>
-                                                                  <input
-                                                                        type="text"
-                                                                        placeholder="IFSC Code"
-                                                                        value={ifscCode}
-                                                                        onChange={(e) => setIfscCode(e.target.value)}
-                                                                        className="dashboard-input"
-                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
-                                                                  />
-                                                            </div>
-                                                            <div className="form-group">
-                                                                  <label>UPI ID (Optional)</label>
-                                                                  <input
-                                                                        type="text"
-                                                                        placeholder="E.g. user@okaxis"
-                                                                        value={upiId}
-                                                                        onChange={(e) => setUpiId(e.target.value)}
-                                                                        className="dashboard-input"
-                                                                        style={{ width: '100%', padding: '0.875rem 1rem', background: 'rgba(255, 255, 255, 0.05)', border: '1px solid rgba(255, 255, 255, 0.1)', color: 'white', borderRadius: '0.75rem' }}
-                                                                  />
-                                                            </div>
-                                                            <div style={{ gridColumn: '1 / -1', marginTop: '1rem' }}>
-                                                                  <button type="submit" className="btn btn-primary" style={{ width: '100%' }} disabled={isSubmitting || !withdrawAmount}>
+                                                      )}
+                                                </div>
+
+                                                {/* Right: Withdrawal Form */}
+                                                <div className="layout-column glass-panel">
+                                                      <div className="column-header">
+                                                            <Landmark className="text-primary" size={24} />
+                                                            <h2 className="card-title">Bank Information</h2>
+                                                      </div>
+
+                                                      {user?.kycStatus === 'VERIFIED' && (
+                                                            <form onSubmit={handleWithdraw} className="premium-form">
+                                                                  <div className="form-group-floating">
+                                                                        <label>Withdraw Amount (₹)</label>
+                                                                        <input
+                                                                              type="number"
+                                                                              required
+                                                                              min="1000"
+                                                                              placeholder="Min ₹1,000"
+                                                                              className="premium-input"
+                                                                              value={withdrawAmount}
+                                                                              onChange={(e) => setWithdrawAmount(e.target.value)}
+                                                                        />
+                                                                  </div>
+
+                                                                  <div className="form-row">
+                                                                        <div className="form-group-floating">
+                                                                              <label>Bank Name</label>
+                                                                              <input type="text" placeholder="e.g. HDFC" value={bankName} onChange={(e) => setBankName(e.target.value)} className="premium-input" />
+                                                                        </div>
+                                                                        <div className="form-group-floating">
+                                                                              <label>IFSC Code</label>
+                                                                              <input type="text" placeholder="IFSC" value={ifscCode} onChange={(e) => setIfscCode(e.target.value)} className="premium-input" />
+                                                                        </div>
+                                                                  </div>
+
+                                                                  <div className="form-group-floating">
+                                                                        <label>Account Number</label>
+                                                                        <input type="text" placeholder="Number" value={accountNumber} onChange={(e) => setAccountNumber(e.target.value)} className="premium-input" />
+                                                                  </div>
+
+                                                                  <div className="form-group-floating">
+                                                                        <label>UPI ID (Optional)</label>
+                                                                        <input type="text" placeholder="user@okaxis" value={upiId} onChange={(e) => setUpiId(e.target.value)} className="premium-input" />
+                                                                  </div>
+
+                                                                  <button type="submit" className="btn-premium primary" style={{ marginTop: '0.5rem' }} disabled={isSubmitting || !withdrawAmount}>
                                                                         {isSubmitting ? <><Loader2 size={18} className="animate-spin" /> Processing...</> : 'Request Withdrawal'}
                                                                   </button>
-                                                            </div>
-                                                      </form>
-                                                )}
+                                                            </form>
+                                                      )}
+                                                </div>
                                           </div>
                                     )}
-                              </>
+                              </div>
                         )}
                   </div>
-
-                  {/* Admin Pending Manual Deposits */}
-                  {user?.role === 'ADMIN' && (
-                        <div className="dashboard-card glass-panel" style={{ padding: 0, overflow: 'hidden', marginTop: '2rem' }}>
-                              <div style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }}>
-                                    <h2 className="card-title" style={{ margin: 0 }}>Pending Manual Deposits (Admin view)</h2>
-                                    <div style={{ position: 'relative', maxWidth: '300px', width: '100%' }}>
-                                          <Search size={18} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
-                                          <input
-                                                type="text"
-                                                placeholder="Search by name, email or UTR..."
-                                                value={searchQuery}
-                                                onChange={(e) => setSearchQuery(e.target.value)}
-                                                className="dashboard-input"
-                                                style={{ width: '100%', padding: '0.75rem 1rem 0.75rem 2.5rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem' }}
-                                          />
-                                    </div>
-                              </div>
-                              <div style={{ width: '100%', maxWidth: '100%', overflowX: 'auto', display: 'block', WebkitOverflowScrolling: 'touch' }}>
-                                    <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                          <thead>
-                                                <tr style={{ background: 'rgba(0,0,0,0.2)', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem' }}>
-                                                      <th style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>User info</th>
-                                                      <th style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>Bank UTR / Reference</th>
-                                                      <th style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>Amount (₹)</th>
-                                                      <th style={{ padding: '1rem 1.5rem', fontWeight: 500 }}>Action</th>
-                                                </tr>
-                                          </thead>
-                                          <tbody>
-                                                {filteredDeposits.length === 0 ? <tr><td colSpan="4" style={{ padding: '2rem', textAlign: 'center', color: '#666' }}>No pending deposit requests found.</td></tr> : filteredDeposits.map((dep) => (
-                                                      <tr
-                                                            key={dep.id}
-                                                            style={{ borderTop: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
-                                                            onMouseEnter={(e) => e.currentTarget.style.background = 'rgba(255,255,255,0.02)'}
-                                                            onMouseLeave={(e) => e.currentTarget.style.background = 'transparent'}
-                                                      >
-                                                            <td style={{ padding: '1rem 1.5rem', fontWeight: 500 }} onClick={() => setSelectedUserId(dep.userId)}>
-                                                                  <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6' }}><User size={16} /> {dep.user.fullName}</div>
-                                                                  <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginLeft: '1.5rem' }}>{dep.user.email}</span>
-                                                            </td>
-                                                            <td style={{ padding: '1rem 1.5rem', color: '#3b82f6', letterSpacing: '1px', fontSize: '0.9rem' }} onClick={() => setSelectedUserId(dep.userId)}>
-                                                                  {dep.bankReference}
-                                                                  {dep.receiptUrl && (
-                                                                        <div style={{ marginTop: '0.3rem' }}>
-                                                                              <a href={dep.receiptUrl} target="_blank" rel="noopener noreferrer" style={{ fontSize: '0.75rem', color: '#10b981', display: 'flex', alignItems: 'center', gap: '0.2rem' }}>
-                                                                                    <ArrowUpRight size={12} /> View Receipt
-                                                                              </a>
-                                                                        </div>
-                                                                  )}
-                                                            </td>
-                                                            <td style={{ padding: '1rem 1.5rem', fontWeight: 700 }} onClick={() => setSelectedUserId(dep.userId)}>₹{dep.amount.toLocaleString('en-IN')}</td>
-                                                            <td style={{ padding: '1rem 1.5rem', display: 'flex', gap: '0.5rem' }}>
-                                                                  <button onClick={(e) => handleReviewDepositClick(dep, 'APPROVED', e)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem' }}>Verify & Credit</button>
-                                                                  <button onClick={(e) => handleReviewDepositClick(dep, 'REJECTED', e)} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', borderColor: '#ef4444', color: '#ef4444' }}>Reject</button>
-                                                            </td>
-                                                      </tr>
-                                                ))}
-                                          </tbody>
-                                    </table>
-                              </div>
-                        </div>
-                  )}
-
-                  {/* Deposit Review Confirmation Modal */}
-                  {depositConfirmModal && (
-                        <div
-                              onClick={() => setDepositConfirmModal(null)}
-                              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000, padding: '1rem' }}
-                        >
-                              <div
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #111 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', width: '100%', maxWidth: '420px', overflow: 'hidden', animation: 'fadeIn 0.2s ease' }}
-                              >
-                                    <div style={{ height: '3px', background: depositConfirmModal.status === 'APPROVED' ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #f87171, #ef4444)' }} />
-                                    <div style={{ padding: '1.5rem' }}>
-                                          <h3 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '1.1rem', fontWeight: 700 }}>
-                                                {depositConfirmModal.status === 'APPROVED' ? '✅ Verify Content Deposit' : '❌ Reject Deposit'}
-                                          </h3>
-                                          <p style={{ margin: '0 0 1.5rem 0', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                                                Are you sure you want to <strong style={{ color: depositConfirmModal.status === 'APPROVED' ? '#10b981' : '#ef4444' }}>{depositConfirmModal.status === 'APPROVED' ? 'approve' : 'reject'}</strong> a deposit of <strong style={{ color: 'white' }}>₹{depositConfirmModal.amount.toLocaleString('en-IN')}</strong> for <strong style={{ color: 'white' }}>{depositConfirmModal.userName}</strong>?
-                                                {depositConfirmModal.status === 'APPROVED' ? ' This will instantly credit their wallet.' : ' This will mark the transaction as rejected.'}
-                                          </p>
-
-                                          {depositConfirmModal.status === 'REJECTED' && (
-                                                <div style={{ marginBottom: '1.5rem' }}>
-                                                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Reason for Rejection *</label>
-                                                      <textarea
-                                                            placeholder="State the reason (e.g., Invalid UTR, Name Mismatch)"
-                                                            value={depositRejectionReason}
-                                                            onChange={(e) => setDepositRejectionReason(e.target.value)}
-                                                            rows="3"
-                                                            style={{
-                                                                  width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
-                                                                  color: 'white', borderRadius: '0.5rem', outline: 'none', resize: 'vertical', fontFamily: 'inherit', fontSize: '0.9rem'
-                                                            }}
-                                                      />
-                                                </div>
-                                          )}
-
-                                          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                                                <button
-                                                      onClick={() => setDepositConfirmModal(null)}
-                                                      disabled={processingReview}
-                                                      style={{ padding: '0.6rem 1.25rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
-                                                >
-                                                      Cancel
-                                                </button>
-                                                <button
-                                                      onClick={executeDepositReview}
-                                                      disabled={processingReview}
-                                                      style={{
-                                                            padding: '0.6rem 1.25rem',
-                                                            background: depositConfirmModal.status === 'APPROVED' ? '#10b981' : '#ef4444',
-                                                            border: 'none', color: 'white', borderRadius: '0.5rem',
-                                                            cursor: processingReview ? 'not-allowed' : 'pointer',
-                                                            fontWeight: 600, fontSize: '0.85rem',
-                                                            opacity: processingReview ? 0.6 : 1,
-                                                            display: 'flex', alignItems: 'center', gap: '0.5rem'
-                                                      }}
-                                                >
-                                                      {processingReview ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : `Confirm ${depositConfirmModal.status === 'APPROVED' ? 'Approve' : 'Reject'}`}
-                                                </button>
-                                          </div>
-                                    </div>
-                              </div>
-                        </div>
-                  )}
 
                   {/* Transaction History */}
                   <div className="dashboard-card glass-panel" style={{ marginTop: '2rem', padding: 0 }}>
@@ -774,8 +573,8 @@ const WalletPage = () => {
                                                 <option value="ALL" style={{ background: '#1a1a2e' }}>All Types</option>
                                                 <option value="DEPOSIT" style={{ background: '#1a1a2e' }}>Deposit</option>
                                                 <option value="WITHDRAWAL" style={{ background: '#1a1a2e' }}>Withdrawal</option>
-                                                <option value="INVESTMENT" style={{ background: '#1a1a2e' }}>Investment</option>
-                                                <option value="RETURN" style={{ background: '#1a1a2e' }}>ROI Return</option>
+                                                <option value="INVESTMENT" style={{ background: '#1a1a2e' }}>Contribution</option>
+                                                <option value="RETURN" style={{ background: '#1a1a2e' }}>Rev. Share</option>
                                                 <option value="COMMISSION" style={{ background: '#1a1a2e' }}>Commission</option>
                                                 <option value="BONUS" style={{ background: '#1a1a2e' }}>Bonus</option>
                                           </select>
@@ -817,52 +616,27 @@ const WalletPage = () => {
                                                 key={tx.id}
                                                 className="transaction-item"
                                                 onClick={() => setSelectedTransaction(tx)}
-                                                style={{
-                                                      display: 'flex', justifyContent: 'space-between', alignItems: 'center',
-                                                      padding: '0.875rem 1rem', borderBottom: '1px solid rgba(255,255,255,0.04)',
-                                                      cursor: 'pointer', transition: 'background 0.15s', gap: '0.75rem'
-                                                }}
                                           >
-                                                <div style={{ display: 'flex', gap: '0.65rem', alignItems: 'center', minWidth: 0, flex: 1 }}>
-                                                      <div style={{
-                                                            background: tx.status === 'REJECTED' ? 'rgba(255, 255, 255, 0.05)' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'),
-                                                            color: tx.status === 'REJECTED' ? '#9ca3af' : (['DEPOSIT', 'COMMISSION'].includes(tx.type) ? '#10b981' : '#ef4444'),
-                                                            padding: '0.55rem', borderRadius: '50%', flexShrink: 0
-                                                      }}>
-                                                            {['DEPOSIT', 'COMMISSION'].includes(tx.type) ? <ArrowDownToLine size={18} /> : <ArrowUpRight size={18} />}
+                                                <div className="tx-main-info">
+                                                      <div className={`tx-icon-boxed ${tx.status === 'REJECTED' ? 'rejected' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS'].includes(tx.type) ? 'incoming' : 'outgoing')}`}>
+                                                            {['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS'].includes(tx.type) ? <ArrowDownToLine size={18} /> : <ArrowUpRight size={18} />}
                                                       </div>
-                                                      <div style={{ minWidth: 0, flex: 1 }}>
-                                                            <div style={{ display: 'flex', alignItems: 'center', gap: '0.4rem', flexWrap: 'wrap' }}>
-                                                                  <span style={{
-                                                                        fontWeight: 600, fontSize: '0.88rem',
-                                                                        color: tx.status === 'REJECTED' ? '#9ca3af' : 'white',
-                                                                        textDecoration: tx.status === 'REJECTED' ? 'line-through' : 'none',
-                                                                        whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis',
-                                                                        maxWidth: '180px'
-                                                                  }}>
+                                                      <div className="tx-details">
+                                                            <div className="tx-header">
+                                                                  <span className={`tx-desc ${tx.status === 'REJECTED' ? 'line-through' : ''}`}>
                                                                         {tx.description || tx.type}
                                                                   </span>
-                                                                  <span style={{
-                                                                        fontSize: '0.65rem', padding: '0.1rem 0.4rem',
-                                                                        borderRadius: '0.75rem', fontWeight: 600, flexShrink: 0,
-                                                                        background: tx.status === 'APPROVED' ? 'rgba(16, 185, 129, 0.15)' : tx.status === 'PENDING' ? 'rgba(245, 158, 11, 0.15)' : 'rgba(239, 68, 68, 0.15)',
-                                                                        color: tx.status === 'APPROVED' ? '#10b981' : tx.status === 'PENDING' ? '#f59e0b' : '#ef4444'
-                                                                  }}>
+                                                                  <span className={`status-badge status-${tx.status.toLowerCase()}`}>
                                                                         {tx.status}
                                                                   </span>
                                                             </div>
-                                                            <p style={{ margin: '0.15rem 0 0 0', fontSize: '0.72rem', color: 'rgba(255,255,255,0.35)' }}>
+                                                            <p className="tx-date">
                                                                   {new Date(tx.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                                                             </p>
                                                       </div>
                                                 </div>
-                                                <div style={{
-                                                      color: tx.status === 'REJECTED' ? '#6b7280' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'RETURN', 'REFUND', 'BONUS'].includes(tx.type) ? '#10b981' : '#f87171'),
-                                                      fontWeight: 700, fontSize: 'clamp(0.85rem, 3vw, 1rem)',
-                                                      textDecoration: tx.status === 'REJECTED' ? 'line-through' : 'none',
-                                                      whiteSpace: 'nowrap', flexShrink: 0, textAlign: 'right'
-                                                }}>
-                                                      {tx.status === 'REJECTED' ? '' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'RETURN', 'REFUND', 'BONUS'].includes(tx.type) ? '+' : '-')}₹{Math.abs(tx.amount).toLocaleString('en-IN')}
+                                                <div className={`tx-amount ${tx.status === 'REJECTED' ? 'rejected' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS'].includes(tx.type) ? 'positive' : 'negative')}`}>
+                                                      {tx.status === 'REJECTED' ? '' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS'].includes(tx.type) ? '+' : '-')}₹{Math.abs(tx.amount).toLocaleString('en-IN')}
                                                 </div>
                                           </div>
                                     ))}

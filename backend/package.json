@@ -5,7 +5,9 @@
   "main": "server.js",
   "scripts": {
     "test": "jest",
-    "start": "node server.js"
+    "start": "node server.js",
+    "make-admin": "node scripts/create_admin.js",
+    "wipe-s3": "node scripts/clear_s3.js"
   },
   "keywords": [],
   "author": "",

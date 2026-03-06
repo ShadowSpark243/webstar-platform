@@ -188,7 +188,7 @@ const ProfilePage = () => {
                                                             <span className="text-emerald-400">Direct Sign-up (System)</span>
                                                       )}
                                                 </div>
-                                                <div className="prof-net-hint mt-1">The person who invited you to WEBSTAR.</div>
+                                                <div className="prof-net-hint mt-1">The person who invited you to ITRAM WEBPRO.</div>
                                           </div>
                                           <div className="prof-net-box">
                                                 <label className="prof-label"><Hash size={16} /> My Referral Code</label>

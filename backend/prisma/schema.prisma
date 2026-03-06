@@ -44,8 +44,12 @@ model User {
   referrals              User[]             @relation("Referrals")
   supportTickets         SupportTicket[]
   supportMessages        SupportMessage[]
+  sessions               Session[]
 
   @@index([referredById], map: "User_referredById_fkey")
+  @@index([status])
+  @@index([kycStatus])
+  @@index([role])
 }
 
 model NetworkLevelStat {
@@ -97,6 +101,9 @@ model Transaction {
   user            User     @relation(fields: [userId], references: [id])
 
   @@index([userId], map: "Transaction_userId_fkey")
+  @@index([status])
+  @@index([type])
+  @@index([createdAt])
 }
 
 model Project {
@@ -108,7 +115,10 @@ model Project {
   targetAmount   Float
   raisedAmount   Float        @default(0)
   minInvestment  Float
-  roiPercentage  Float
+  revenueSharePercent  Float
+  spvName        String?
+  spvRegistration String?
+  revenueAgreementUrl String?
   durationMonths Int
   status         ProjStatus   @default(OPEN)
   createdAt      DateTime     @default(now())
@@ -121,7 +131,9 @@ model Investment {
   userId         Int
   projectId      Int
   amount         Float
-  expectedReturn Float
+  estimatedRevShare Float
+  agreementAccepted Boolean       @default(false)
+  agreementTimestamp DateTime?
   status         InvStatus     @default(ACTIVE)
   maturityDate   DateTime?
   returnedAmount Float         @default(0)
@@ -136,6 +148,8 @@ model Investment {
 
   @@index([projectId], map: "Investment_projectId_fkey")
   @@index([userId], map: "Investment_userId_fkey")
+  @@index([status])
+  @@index([createdAt])
 }
 
 model DailyPayout {
@@ -171,20 +185,24 @@ model SupportTicket {
 model SupportMessage {
   id         Int           @id @default(autoincrement())
   ticketId   Int
-  senderId   Int
+  senderId   Int?
+  adminId    Int?
   senderRole Role
   message    String        @db.Text
   createdAt  DateTime      @default(now())
   ticket     SupportTicket @relation(fields: [ticketId], references: [id], onDelete: Cascade)
-  sender     User          @relation(fields: [senderId], references: [id])
+  sender     User?         @relation(fields: [senderId], references: [id])
+  admin      Admin?        @relation(fields: [adminId], references: [id])
 
   @@index([ticketId])
   @@index([senderId])
+  @@index([adminId])
 }
 
 model AdminLog {
   id         Int      @id @default(autoincrement())
   adminId    Int
+  admin      Admin    @relation(fields: [adminId], references: [id])
   action     String
   targetType String
   targetId   Int?
@@ -197,15 +215,40 @@ model AdminLog {
 
 model Session {
   id         Int      @id @default(autoincrement())
-  userId     Int
+  userId     Int?
+  adminId    Int?
   token      String   @unique
   device     String?
   ip         String?
   lastActive DateTime @default(now())
   createdAt  DateTime @default(now())
+  user       User?    @relation(fields: [userId], references: [id])
+  admin      Admin?   @relation(fields: [adminId], references: [id])
 
   @@index([userId])
+  @@index([adminId])
   @@index([token])
+}
+
+model Admin {
+  id                     Int                @id @default(autoincrement())
+  fullName               String
+  email                  String             @unique
+  username               String             @unique
+  phone                  String?            @unique
+  password               String
+  referralCode           String             @unique
+  role                   Role               @default(ADMIN)
+  status                 Status             @default(ACTIVE)
+  createdAt              DateTime           @default(now())
+  updatedAt              DateTime           @updatedAt
+  resetPasswordToken     String?            @unique
+  resetPasswordExpires   DateTime?
+  logs                   AdminLog[]
+  supportMessages        SupportMessage[]
+  sessions               Session[]
+  @@index([status])
+  @@index([role])
 }
 
 model AppSetting {

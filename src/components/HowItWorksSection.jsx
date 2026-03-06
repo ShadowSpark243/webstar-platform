@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { Wallet, Clapperboard, Coins, Users } from 'lucide-react';
+import { Wallet, Clapperboard, Coins, Users, FileText } from 'lucide-react';
 import './HowItWorksSection.css';
 
 const HowItWorksSection = () => {
@@ -8,26 +8,26 @@ const HowItWorksSection = () => {
             {
                   num: '01',
                   icon: <Wallet className="text-white" size={24} />,
-                  title: "Capital Contribution",
-                  desc: "Volunteers contribute capital (Min ₹1,00,000) to fund specific upcoming web series or movie projects."
+                  title: "Project Funding Contribution",
+                  desc: "Contributors fund specific upcoming web series or movie projects through a dedicated SPV (LLP/Company). Minimum contribution: ₹1,00,000."
             },
             {
                   num: '02',
                   icon: <Clapperboard className="text-white" size={24} />,
                   title: "Content Production",
-                  desc: "Capital is deployed exclusively for writing, casting, shooting, and post-production of the selected project."
+                  desc: "Capital is deployed exclusively for writing, casting, shooting, and post-production of the selected project through the project SPV."
             },
             {
                   num: '03',
                   icon: <Users className="text-white" size={24} />,
                   title: "Release & Revenue",
-                  desc: "Project generates revenue through Subscriptions, Ads, Licensing, and Brand Integrations."
+                  desc: "Project generates revenue through OTT licensing, theatrical release, satellite TV rights, music rights, and brand integrations."
             },
             {
                   num: '04',
                   icon: <Coins className="text-white" size={24} />,
-                  title: "Profit Sharing",
-                  desc: "20% of net profit is distributed to the Network and Rank Achievers. 80% is retained for company growth."
+                  title: "Revenue Distribution",
+                  desc: "20% of net project revenue is distributed to contributors and rank achievers. 80% is retained for company growth and operations."
             }
       ];
 
@@ -38,7 +38,7 @@ const HowItWorksSection = () => {
                               How the <span className="text-gradient">Project Model</span> Works
                         </h2>
                         <p className="section-subtitle">
-                              A transparent workflow from initial funding to final profit distribution.
+                              A transparent workflow from initial funding to revenue distribution — structured through legally compliant SPVs.
                         </p>
                   </div>
 

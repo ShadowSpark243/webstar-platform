@@ -70,7 +70,7 @@ async function processDailyPayouts() {
             const activeInvestments = await prisma.investment.findMany({
                   where: { status: 'ACTIVE' },
                   include: {
-                        project: { select: { title: true, roiPercentage: true, durationMonths: true } },
+                        project: { select: { title: true, revenueSharePercent: true, durationMonths: true } },
                         user: { select: { id: true, fullName: true } }
                   }
             });
@@ -109,7 +109,7 @@ async function processDailyPayouts() {
                         // 4. Calculate today's daily amount
                         const { dailyAmount, daysInMonth } = calculateDailyAmount(
                               inv.amount,
-                              inv.project.roiPercentage,
+                              inv.project.revenueSharePercent,
                               today
                         );
 
@@ -147,7 +147,7 @@ async function processDailyPayouts() {
                                           type: 'DAILY_ROI',
                                           amount: dailyAmount,
                                           status: 'APPROVED',
-                                          description: `Daily ROI: ${inv.project.title} (Month ${currentMonthCycle}, Day ${dayOfMonth}/${daysInMonth})`
+                                          description: `Daily Revenue Distribution: ${inv.project.title} (Month ${currentMonthCycle}, Day ${dayOfMonth}/${daysInMonth})`
                                     }
                               }),
                               // Update Investment tracking fields
@@ -182,7 +182,7 @@ async function processDailyPayouts() {
                                                 type: 'RETURN',
                                                 amount: inv.amount,
                                                 status: 'APPROVED',
-                                                description: `Principal Returned: ${inv.project.title} investment matured after ${inv.project.durationMonths} months.`
+                                                description: `Contribution Returned: ${inv.project.title} participation cycle completed after ${inv.project.durationMonths} months.`
                                           }
                                     })
                               );
@@ -245,7 +245,7 @@ async function finalizeInvestment(inv, today) {
                               type: 'RETURN',
                               amount: inv.amount,
                               status: 'APPROVED',
-                              description: `Principal Returned: ${inv.project.title} investment matured.`
+                              description: `Contribution Returned: ${inv.project.title} participation cycle completed.`
                         }
                   })
             ]);
@@ -333,7 +333,7 @@ async function getRecentPayouts(userId, limit = 30) {
             include: {
                   investment: {
                         include: {
-                              project: { select: { title: true, roiPercentage: true } }
+                              project: { select: { title: true, revenueSharePercent: true } }
                         }
                   }
             }

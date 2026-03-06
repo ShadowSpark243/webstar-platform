@@ -101,7 +101,7 @@ const AuthModal = () => {
                                                 {isLoginView ? 'Welcome Back' : 'Start Participating'}
                                           </h2>
                                           <p className="auth-subtitle">
-                                                {isLoginView ? 'Login to check your portfolio and network.' : 'Join the WEBSTAR network to fund blockbuster content.'}
+                                                {isLoginView ? 'Login to check your participations and network.' : 'Join the ITRAM WEBPRO network to fund blockbuster content.'}
                                           </p>
                                     </div>
 

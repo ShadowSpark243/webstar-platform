@@ -1,0 +1,672 @@
+/* WalletPage — Tier 3 Premium Responsive Styles */
+
+.wallet-page-container {
+      padding: 1.5rem;
+      max-width: 1400px;
+      margin: 0 auto;
+      animation: fadeIn 0.4s ease-out;
+}
+
+@keyframes fadeIn {
+      from {
+            opacity: 0;
+            transform: translateY(10px);
+      }
+
+      to {
+            opacity: 1;
+            transform: translateY(0);
+      }
+}
+
+.balance-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+      gap: 1.25rem;
+      margin-bottom: 2rem;
+}
+
+.balance-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 1.75rem;
+      border-radius: var(--radius-xl);
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border: 1px solid var(--glass-border);
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.balance-card:hover {
+      transform: translateY(-5px);
+      background: rgba(15, 23, 42, 0.7);
+      border-color: rgba(59, 130, 246, 0.4);
+      box-shadow: var(--glass-shadow);
+}
+
+.balance-info .balance-label {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
+      letter-spacing: 0.08em;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+}
+
+.balance-info .balance-value {
+      font-size: 2.25rem;
+      font-weight: 800;
+      color: white;
+      margin: 0;
+      background: linear-gradient(135deg, #fff 0%, rgba(255, 255, 255, 0.7) 100%);
+      -webkit-background-clip: text;
+      background-clip: text;
+      -webkit-text-fill-color: transparent;
+}
+
+.balance-icon {
+      padding: 1rem;
+      border-radius: 1.25rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: rgba(255, 255, 255, 0.05);
+}
+
+/* Tab System */
+.tab-container-full {
+      width: 100%;
+}
+
+.form-tabs {
+      display: flex;
+      gap: 0.5rem;
+      padding: 0.5rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-xl);
+      margin-bottom: 2.5rem;
+      border: 1px solid var(--glass-border);
+      width: fit-content;
+}
+
+.tab-btn {
+      flex: 1;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 1rem;
+      border-radius: 1rem;
+      border: none;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s ease;
+}
+
+.tab-btn.active {
+      background: #3b82f6;
+      color: white;
+      box-shadow: 0 8px 20px -5px rgba(59, 130, 246, 0.5);
+}
+
+.tab-btn.inactive {
+      background: transparent;
+      color: rgba(255, 255, 255, 0.4);
+}
+
+.tab-btn.inactive:hover {
+      background: rgba(255, 255, 255, 0.05);
+      color: white;
+}
+
+/* Side-by-Side Layout */
+.side-by-side-layout {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 2rem;
+      align-items: start;
+}
+
+.layout-column {
+      padding: 2rem;
+      display: flex;
+      flex-direction: column;
+      gap: 1.5rem;
+      background: var(--glass-bg);
+      backdrop-filter: blur(12px);
+      border-radius: var(--radius-xl);
+      border: 1px solid var(--glass-border);
+}
+
+.column-header {
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+}
+
+.column-desc {
+      font-size: 0.95rem;
+      color: rgba(255, 255, 255, 0.5);
+      margin: -1rem 0 1rem 0;
+      line-height: 1.6;
+}
+
+/* Methods Stack */
+.methods-stack {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+}
+
+.method-box-compact {
+      padding: 1.5rem;
+      text-align: center;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+}
+
+.method-title {
+      font-size: 1.1rem;
+      font-weight: 700;
+      margin-bottom: 1.25rem;
+      color: white;
+}
+
+.qr-wrapper-small {
+      background: white;
+      padding: 0.75rem;
+      border-radius: 1.25rem;
+      display: inline-block;
+      margin-bottom: 1.25rem;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.4);
+}
+
+.qr-img-small {
+      width: 140px;
+      height: 140px;
+}
+
+.upi-info-pill {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+      padding: 0.75rem 1.25rem;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 2rem;
+      cursor: pointer;
+      transition: all 0.2s;
+      margin: 0 auto;
+      width: fit-content;
+}
+
+.upi-info-pill:hover {
+      background: rgba(59, 130, 246, 0.2);
+      transform: scale(1.02);
+}
+
+.upi-id {
+      font-weight: 700;
+      color: #60a5fa;
+      font-size: 0.9rem;
+}
+
+/* Bank Details List */
+.bank-details-list {
+      display: flex;
+      flex-direction: column;
+      gap: 0.75rem;
+      text-align: left;
+}
+
+.bank-row {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 0.75rem 1rem;
+      background: rgba(255, 255, 255, 0.03);
+      border-radius: 0.75rem;
+}
+
+.bank-row.copyable {
+      cursor: pointer;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: all 0.2s;
+}
+
+.bank-row.copyable:hover {
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(59, 130, 246, 0.3);
+}
+
+.bank-row .label {
+      font-size: 0.75rem;
+      color: rgba(255, 255, 255, 0.4);
+}
+
+.bank-row .value {
+      font-size: 0.9rem;
+      font-weight: 600;
+      color: white;
+}
+
+.bank-row .value.highlight {
+      color: #3b82f6;
+      font-family: 'JetBrains Mono', monospace;
+}
+
+/* Forms */
+.premium-form {
+      display: flex;
+      flex-direction: column;
+      gap: 1.25rem;
+}
+
+.form-group-floating {
+      display: flex;
+      flex-direction: column;
+      gap: 0.5rem;
+}
+
+.form-group-floating label {
+      font-size: 0.85rem;
+      font-weight: 600;
+      color: rgba(255, 255, 255, 0.7);
+      margin-left: 0.25rem;
+}
+
+.premium-input {
+      background: rgba(0, 0, 0, 0.25);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 1rem;
+      padding: 1rem 1.25rem;
+      color: white;
+      font-size: 1rem;
+      transition: all 0.2s;
+      outline: none;
+}
+
+.premium-input:focus {
+      border-color: #3b82f6;
+      background: rgba(0, 0, 0, 0.4);
+      box-shadow: 0 0 0 4px rgba(59, 130, 246, 0.1);
+}
+
+.form-row {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+}
+
+/* File Upload Zone */
+.file-upload-zone {
+      position: relative;
+      border: 2px dashed rgba(255, 255, 255, 0.1);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      text-align: center;
+      transition: all 0.2s;
+      cursor: pointer;
+      background: rgba(255, 255, 255, 0.02);
+}
+
+.file-upload-zone:hover {
+      border-color: #3b82f6;
+      background: rgba(59, 130, 246, 0.05);
+}
+
+.file-upload-zone input {
+      position: absolute;
+      inset: 0;
+      opacity: 0;
+      cursor: pointer;
+}
+
+.file-placeholder {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 0.5rem;
+      color: rgba(255, 255, 255, 0.4);
+      font-size: 0.9rem;
+}
+
+.file-selected {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.5rem;
+      color: #10b981;
+      font-weight: 600;
+}
+
+/* Premium Buttons */
+.btn-premium {
+      padding: 1rem 1.5rem;
+      border-radius: 1rem;
+      font-weight: 700;
+      font-size: 1rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      border: none;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 0.75rem;
+}
+
+.btn-premium.primary {
+      background: linear-gradient(135deg, #3b82f6 0%, #2563eb 100%);
+      color: white;
+      box-shadow: 0 10px 20px -5px rgba(37, 99, 235, 0.4);
+}
+
+.btn-premium.primary:hover:not(:disabled) {
+      transform: translateY(-2px);
+      box-shadow: 0 15px 25px -5px rgba(37, 99, 235, 0.5);
+      background: linear-gradient(135deg, #60a5fa 0%, #3b82f6 100%);
+}
+
+.btn-premium.secondary {
+      background: rgba(255, 255, 255, 0.05);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      color: white;
+}
+
+.btn-premium.secondary:hover {
+      background: rgba(255, 255, 255, 0.1);
+}
+
+.btn-premium:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+      filter: grayscale(0.5);
+}
+
+/* Withdrawal Specifics */
+.kyc-warning-box {
+      padding: 3rem 2rem;
+      text-align: center;
+      background: rgba(239, 68, 68, 0.05);
+      border: 1px solid rgba(239, 68, 68, 0.2);
+      border-radius: 1.5rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      gap: 1rem;
+}
+
+.kyc-warning-box svg {
+      color: #ef4444;
+      margin-bottom: 0.5rem;
+}
+
+.kyc-warning-box h3 {
+      margin: 0;
+      font-size: 1.4rem;
+      color: white;
+}
+
+.kyc-warning-box p {
+      color: rgba(255, 255, 255, 0.6);
+      margin-bottom: 1.5rem;
+}
+
+.source-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 1rem;
+}
+
+.source-card-premium {
+      padding: 1.5rem;
+      border-radius: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.02);
+      cursor: pointer;
+      transition: all 0.3s;
+      position: relative;
+}
+
+.source-card-premium .label {
+      font-size: 0.8rem;
+      color: rgba(255, 255, 255, 0.5);
+      text-transform: uppercase;
+      font-weight: 600;
+      margin-bottom: 0.5rem;
+}
+
+.source-card-premium .amount {
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: white;
+}
+
+.source-card-premium .check-icon {
+      position: absolute;
+      top: 0.75rem;
+      right: 0.75rem;
+      color: transparent;
+      transition: all 0.2s;
+}
+
+.source-card-premium.active {
+      background: rgba(37, 99, 235, 0.1);
+      border-color: #3b82f6;
+      box-shadow: 0 0 0 1px #3b82f6;
+}
+
+.source-card-premium.active.income {
+      border-color: #10b981;
+      background: rgba(16, 185, 129, 0.1);
+      box-shadow: 0 0 0 1px #10b981;
+}
+
+.source-card-premium.active.roi {
+      border-color: #f59e0b;
+      background: rgba(245, 158, 11, 0.1);
+      box-shadow: 0 0 0 1px #f59e0b;
+}
+
+.source-card-premium.active.income .check-icon {
+      color: #10b981;
+}
+
+.source-card-premium.active.roi .check-icon {
+      color: #f59e0b;
+}
+
+/* Responsive Adjustments */
+@media (max-width: 1024px) {
+      .side-by-side-layout {
+            grid-template-columns: 1.2fr 1fr;
+            gap: 1.5rem;
+      }
+}
+
+@media (max-width: 768px) {
+      .side-by-side-layout {
+            grid-template-columns: 1fr;
+      }
+
+      .layout-column {
+            padding: 1.5rem;
+      }
+
+      .form-row {
+            grid-template-columns: 1fr;
+      }
+
+      .source-grid {
+            grid-template-columns: 1fr;
+      }
+
+      .balance-info .balance-value {
+            font-size: 1.75rem;
+      }
+}
+
+/* Transaction Ledger Overhaul */
+.transaction-list {
+      display: flex;
+      flex-direction: column;
+      gap: 1rem;
+      padding: 1rem !important;
+}
+
+.transaction-item {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: 1.25rem 1.5rem !important;
+      background: rgba(255, 255, 255, 0.02) !important;
+      border: 1px solid rgba(255, 255, 255, 0.05) !important;
+      border-radius: 1.25rem !important;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1) !important;
+      cursor: pointer;
+}
+
+.transaction-item:hover {
+      background: rgba(255, 255, 255, 0.05) !important;
+      border-color: rgba(59, 130, 246, 0.3) !important;
+      transform: translateX(5px);
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.5);
+}
+
+.tx-main-info {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+}
+
+.tx-icon-boxed {
+      width: 48px;
+      height: 48px;
+      border-radius: 1.1rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      flex-shrink: 0;
+}
+
+.tx-icon-boxed.incoming {
+      background: rgba(16, 185, 129, 0.12);
+      color: #10b981;
+      border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.tx-icon-boxed.outgoing {
+      background: rgba(255, 255, 255, 0.05);
+      color: rgba(255, 255, 255, 0.6);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.tx-icon-boxed.rejected {
+      background: rgba(239, 68, 68, 0.1);
+      color: #ef4444;
+      border: 1px solid rgba(239, 68, 68, 0.2);
+}
+
+.tx-details {
+      display: flex;
+      flex-direction: column;
+      gap: 0.25rem;
+}
+
+.tx-header {
+      display: flex;
+      align-items: center;
+      gap: 1rem;
+}
+
+.tx-desc {
+      font-size: 1rem;
+      font-weight: 700;
+      color: white;
+      white-space: nowrap;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      max-width: 300px;
+}
+
+.tx-desc.line-through {
+      text-decoration: line-through;
+      color: rgba(255, 255, 255, 0.3);
+}
+
+.tx-date {
+      font-size: 0.8rem;
+      color: var(--text-muted);
+}
+
+.tx-amount {
+      font-size: 1.25rem;
+      font-weight: 800;
+      font-family: 'JetBrains Mono', monospace;
+}
+
+.tx-amount.positive {
+      color: #10b981;
+}
+
+.tx-amount.negative {
+      color: white;
+}
+
+.tx-amount.rejected {
+      color: rgba(255, 255, 255, 0.3);
+      text-decoration: line-through;
+}
+
+/* Responsive Ledger */
+@media (max-width: 768px) {
+      .tx-desc {
+            max-width: 150px;
+            font-size: 0.9rem;
+      }
+
+      .tx-header {
+            flex-direction: column;
+            align-items: flex-start;
+            gap: 0.35rem;
+      }
+
+      .tx-amount {
+            font-size: 1.1rem;
+      }
+
+      .tx-icon-boxed {
+            width: 40px;
+            height: 40px;
+      }
+}
+
+@media (max-width: 480px) {
+      .transaction-item {
+            padding: 1rem !important;
+      }
+
+      .tx-desc {
+            max-width: 120px;
+      }
+
+      .tx-amount {
+            font-size: 1rem;
+      }
+
+      .wallet-page-container {
+            padding: 1rem;
+      }
+
+      .tab-btn {
+            font-size: 0.85rem;
+            padding: 0.75rem;
+      }
+
+      .column-header h2 {
+            font-size: 1.1rem;
+      }
+}

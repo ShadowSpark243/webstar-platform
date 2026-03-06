@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { ShieldCheck, Search, FileText, User, Loader2 } from 'lucide-react';
+import { ShieldCheck, Search, FileText, User, Loader2, CheckCircle, XCircle, Eye, ChevronRight } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 
 const AdminKyc = () => {
@@ -13,7 +13,7 @@ const AdminKyc = () => {
       const [confirmModal, setConfirmModal] = useState(null); // { docId, status, userName }
       const [rejectionReason, setRejectionReason] = useState('');
       const [processing, setProcessing] = useState(false);
-      const [viewingDocument, setViewingDocument] = useState(null); // Stores the full doc object when viewing
+      const [viewingDocument, setViewingDocument] = useState(null);
 
       const fetchData = async () => {
             try {
@@ -21,8 +21,8 @@ const AdminKyc = () => {
                         api.get('/admin/users'),
                         api.get('/admin/kyc')
                   ]);
-                  if (usersRes.data.success) setUserList(usersRes.data.users);
-                  if (kycRes.data.success) setKycDocs(kycRes.data.documents);
+                  if (usersRes.data.success) setUserList(usersRes.data.users || []);
+                  if (kycRes.data.success) setKycDocs(kycRes.data.documents || []);
             } catch (err) {
                   console.error('Failed to fetch admin KYC data:', err);
             } finally {
@@ -36,14 +36,14 @@ const AdminKyc = () => {
 
       const filteredUsers = userList.filter(u =>
             (u.fullName || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-            (u.username || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
-            (u.email || '').toLowerCase().includes((searchQuery || '').toLowerCase())
+            (u.email || '').toLowerCase().includes((searchQuery || '').toLowerCase()) ||
+            String(u.id).includes(searchQuery)
       );
 
       const pendingDocs = kycDocs.filter(doc => doc.status === 'PENDING');
 
       const handleKycReview = (docId, status, userName, e) => {
-            e.stopPropagation();
+            if (e) e.stopPropagation();
             setConfirmModal({ docId, status, userName });
             setRejectionReason('');
       };
@@ -59,6 +59,7 @@ const AdminKyc = () => {
                   await api.put('/admin/kyc/review', { docId: confirmModal.docId, status: confirmModal.status, rejectionReason });
                   setConfirmModal(null);
                   setRejectionReason('');
+                  setViewingDocument(null);
                   fetchData();
             } catch (err) {
                   alert("Failed to process KYC review: " + (err?.response?.data?.message || err.message));
@@ -67,329 +68,230 @@ const AdminKyc = () => {
             }
       };
 
-      if (isLoading) return <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Syncing verification databases...</div>;
+      if (isLoading) return (
+            <div style={{ padding: '5rem', textAlign: 'center' }}>
+                  <Loader2 size={48} className="animate-spin" style={{ color: '#8b5cf6', margin: '0 auto 1.5rem auto' }} />
+                  <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '1rem' }}>Synchronizing verification databases...</p>
+            </div>
+      );
 
       return (
-            <div>
-                  <header style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', flexWrap: 'wrap', gap: '1rem', marginBottom: '1.5rem' }}>
-                        <div style={{ flex: '1 1 300px' }}>
-                              <h1 className="admin-page-title" style={{ fontSize: '1.5rem', marginBottom: '0.25rem' }}><ShieldCheck size={28} style={{ display: 'inline', verticalAlign: 'middle', marginRight: '0.5rem', color: '#10b981' }} /> Verification Queue</h1>
-                              <p className="admin-page-subtitle" style={{ marginBottom: 0, fontSize: '0.85rem' }}>Review identity submissions.</p>
-                        </div>
-                        {activeTab === 'ALL' && (
-                              <div style={{ position: 'relative', width: '100%', maxWidth: '300px', flex: '1 1 200px' }}>
-                                    <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
-                                    <input
-                                          type="text"
-                                          placeholder="Search database..."
-                                          value={searchQuery}
-                                          onChange={(e) => setSearchQuery(e.target.value)}
-                                          style={{ width: '100%', padding: '0.65rem 1rem 0.65rem 2.5rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '0.5rem', outline: 'none', fontSize: '0.85rem' }}
-                                    />
-                              </div>
-                        )}
+            <div className="fade-in">
+                  <header style={{ marginBottom: '2rem' }}>
+                        <h1 className="admin-page-title">Verification Center</h1>
+                        <p className="admin-page-subtitle">Review and manage platform identity submissions.</p>
                   </header>
 
-                  <div style={{ display: 'flex', gap: '1rem', marginBottom: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', paddingBottom: '1rem' }}>
+                  <div className="tab-switcher" style={{ display: 'inline-flex', background: 'rgba(0,0,0,0.3)', padding: '0.25rem', borderRadius: '0.75rem', border: '1px solid rgba(255,255,255,0.05)', marginBottom: '1.5rem' }}>
                         <button
                               onClick={() => setActiveTab('PENDING')}
-                              style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.2s', background: activeTab === 'PENDING' ? '#3b82f6' : 'transparent', color: activeTab === 'PENDING' ? 'white' : '#94a3b8' }}
+                              className={`tab-btn ${activeTab === 'PENDING' ? 'active' : ''}`}
+                              style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', background: activeTab === 'PENDING' ? '#8b5cf6' : 'transparent', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s', display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                         >
-                              Pending Approvals ({pendingDocs.length})
+                              Pending Queue <span style={{ background: 'rgba(0,0,0,0.2)', padding: '0.1rem 0.5rem', borderRadius: '0.4rem', fontSize: '0.75rem' }}>{pendingDocs.length}</span>
                         </button>
                         <button
                               onClick={() => setActiveTab('ALL')}
-                              style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', fontWeight: 600, border: 'none', cursor: 'pointer', transition: 'all 0.2s', background: activeTab === 'ALL' ? '#3b82f6' : 'transparent', color: activeTab === 'ALL' ? 'white' : '#94a3b8' }}
+                              className={`tab-btn ${activeTab === 'ALL' ? 'active' : ''}`}
+                              style={{ padding: '0.5rem 1rem', borderRadius: '0.5rem', border: 'none', background: activeTab === 'ALL' ? '#3b82f6' : 'transparent', color: 'white', cursor: 'pointer', fontSize: '0.85rem', fontWeight: 600, transition: 'all 0.2s' }}
                         >
-                              Global User Database
+                              User Database
                         </button>
                   </div>
 
-                  <div className="dashboard-card glass-panel" style={{ padding: 0, overflowX: 'auto', border: '1px solid rgba(255,255,255,0.05)' }}>
-                        <div style={{ width: '100%', maxWidth: '100%', display: 'block' }}>
-                              {activeTab === 'ALL' ? (
-                                    <>
-                                          {/* Desktop Table View */}
-                                          <div className="mobile-hide">
-                                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                                      <thead>
-                                                            <tr style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>User</th>
-                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Contact</th>
-                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Joined</th>
-                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>KYC Status</th>
-                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem', textAlign: 'right' }}>Action</th>
-                                                            </tr>
-                                                      </thead>
-                                                      <tbody>
-                                                            {filteredUsers.length === 0 ? (
-                                                                  <tr>
-                                                                        <td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>
-                                                                              No users found matching your search.
-                                                                        </td>
-                                                                  </tr>
-                                                            ) : filteredUsers.map((usr) => (
-                                                                  <tr
-                                                                        key={usr.id}
-                                                                        onClick={() => setSelectedUserId(usr.id)}
-                                                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
-                                                                        onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.03)' })}
-                                                                        onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
-                                                                  >
-                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                              <div style={{ fontWeight: 600, color: 'white' }}>{usr.fullName}</div>
-                                                                              <div style={{ fontSize: '0.8rem', color: '#8b5cf6', marginTop: '0.2rem' }}>@{usr.username || String(usr.id).padStart(5, '0')}</div>
-                                                                        </td>
-                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                              <div style={{ color: 'white' }}>{usr.email}</div>
-                                                                              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{usr.phone || 'N/A'}</div>
-                                                                        </td>
-                                                                        <td style={{ padding: '1.25rem 1.5rem', color: '#e2e8f0' }}>{new Date(usr.createdAt).toLocaleDateString()}</td>
-                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                              <span style={{
-                                                                                    padding: '0.25rem 0.6rem',
-                                                                                    borderRadius: '1rem',
-                                                                                    fontSize: '0.8rem',
-                                                                                    fontWeight: 600,
-                                                                                    background: usr.kycStatus === 'VERIFIED' ? 'rgba(16, 185, 129, 0.15)'
-                                                                                          : usr.kycStatus === 'REJECTED' ? 'rgba(239, 68, 68, 0.15)'
-                                                                                                : usr.kycStatus === 'PENDING' ? 'rgba(245, 158, 11, 0.15)'
-                                                                                                      : 'rgba(255, 255, 255, 0.05)',
-                                                                                    color: usr.kycStatus === 'VERIFIED' ? '#10b981'
-                                                                                          : usr.kycStatus === 'REJECTED' ? '#ef4444'
-                                                                                                : usr.kycStatus === 'PENDING' ? '#f59e0b'
-                                                                                                      : 'gray'
-                                                                              }}>
-                                                                                    {usr.kycStatus}
-                                                                              </span>
-                                                                        </td>
-                                                                        <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                                                                              <div style={{ display: 'inline-flex', alignItems: 'center', gap: '0.5rem', color: '#3b82f6', fontSize: '0.9rem', fontWeight: 500 }}>
-                                                                                    <User size={16} /> Inspect
-                                                                              </div>
-                                                                        </td>
-                                                                  </tr>
-                                                            ))}
-                                                      </tbody>
-                                                </table>
-                                          </div>
-
-                                          {/* Mobile Card View */}
-                                          <div className="mobile-show">
-                                                <div className="admin-card-list">
-                                                      {filteredUsers.length === 0 ? (
-                                                            <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>No users found.</div>
-                                                      ) : filteredUsers.map((usr) => (
-                                                            <div key={usr.id} className="admin-card" onClick={() => setSelectedUserId(usr.id)}>
-                                                                  <div className="admin-card-row">
-                                                                        <div>
-                                                                              <div style={{ fontWeight: 700, color: 'white', fontSize: '1rem' }}>{usr.fullName}</div>
-                                                                              <div style={{ fontSize: '0.75rem', color: '#8b5cf6' }}>@{usr.username || String(usr.id).padStart(5, '0')}</div>
-                                                                        </div>
-                                                                        <div style={{ textAlign: 'right' }}>
-                                                                              <div className="admin-card-label">Status</div>
-                                                                              <div style={{
-                                                                                    marginTop: '0.2rem',
-                                                                                    fontSize: '0.8rem',
-                                                                                    fontWeight: 700,
-                                                                                    color: usr.kycStatus === 'VERIFIED' ? '#10b981' : usr.kycStatus === 'PENDING' ? '#f59e0b' : '#ef4444'
-                                                                              }}>{usr.kycStatus}</div>
-                                                                        </div>
-                                                                  </div>
-                                                                  <div className="admin-card-row" style={{ marginTop: '0.4rem', paddingTop: '0.6rem', borderTop: '1px solid rgba(255,255,255,0.05)' }}>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' }}>
-                                                                              {usr.email}
-                                                                        </div>
-                                                                        <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.4)', textAlign: 'right', minWidth: 'fit-content' }}>
-                                                                              {new Date(usr.createdAt).toLocaleDateString()}
-                                                                        </div>
-                                                                  </div>
-                                                            </div>
-                                                      ))}
-                                                </div>
-                                          </div>
-                                    </>
-                              ) : (
-                                    <>
-                                          {/* Desktop Table View */}
-                                          <div className="mobile-hide">
-                                                <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'left' }}>
-                                                      <thead>
-                                                            <tr style={{ background: 'rgba(0,0,0,0.2)', borderBottom: '1px solid rgba(255,255,255,0.1)' }}>
-                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>User</th>
-                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Document</th>
-                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem' }}>Submitted On</th>
-                                                                  <th style={{ padding: '1.25rem 1.5rem', color: 'rgba(255,255,255,0.5)', fontWeight: 600, textTransform: 'uppercase', fontSize: '0.85rem', textAlign: 'right' }}>Action</th>
-                                                            </tr>
-                                                      </thead>
-                                                      <tbody>
-                                                            {pendingDocs.length === 0 ? (
-                                                                  <tr>
-                                                                        <td colSpan="4" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(16, 185, 129, 0.7)' }}>
-                                                                              ✓ The KYC Pending Queue is entirely clear.
-                                                                        </td>
-                                                                  </tr>
-                                                            ) : pendingDocs.map((doc) => (
-                                                                  <tr
-                                                                        key={doc.id}
-                                                                        onClick={() => setSelectedUserId(doc.userId)}
-                                                                        style={{ borderBottom: '1px solid rgba(255,255,255,0.05)', cursor: 'pointer', transition: 'background 0.2s' }}
-                                                                        onMouseEnter={(e) => Object.assign(e.currentTarget.style, { background: 'rgba(255,255,255,0.03)' })}
-                                                                        onMouseLeave={(e) => Object.assign(e.currentTarget.style, { background: 'transparent' })}
-                                                                  >
-                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                              <div style={{ fontWeight: 600, color: 'white', display: 'flex', alignItems: 'center', gap: '0.5rem' }}>
-                                                                                    {doc.fullName || doc.user?.fullName}
-                                                                              </div>
-                                                                              <div style={{ fontSize: '0.85rem', color: '#8b5cf6', marginTop: '0.2rem', fontWeight: 500 }}>
-                                                                                    @{doc.username || doc.user?.username}
-                                                                              </div>
-                                                                        </td>
-                                                                        <td style={{ padding: '1.25rem 1.5rem' }}>
-                                                                              <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', fontWeight: 500, color: '#e2e8f0' }}>
-                                                                                    <FileText size={16} className="text-purple-400" />
-                                                                                    {doc.documentType}
-                                                                              </div>
-                                                                              <div style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.2rem' }}>
-                                                                                    ID: {doc.documentNumber}
-                                                                              </div>
-                                                                        </td>
-                                                                        <td style={{ padding: '1.25rem 1.5rem', color: '#e2e8f0' }}>{new Date(doc.createdAt).toLocaleDateString()}</td>
-                                                                        <td style={{ padding: '1.25rem 1.5rem', textAlign: 'right' }}>
-                                                                              <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end', alignItems: 'center' }}>
-                                                                                    {(doc.presignedUrl || doc.documentUrl) && (
-                                                                                          <button
-                                                                                                onClick={(e) => { e.stopPropagation(); setViewingDocument(doc); }}
-                                                                                                className="btn btn-outline"
-                                                                                                style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', color: '#3b82f6', borderColor: '#3b82f6', background: 'transparent' }}
-                                                                                          >
-                                                                                                View Document
-                                                                                          </button>
-                                                                                    )}
-                                                                                    <button onClick={(e) => handleKycReview(doc.id, 'VERIFIED', doc.fullName || doc.user?.fullName || 'this user', e)} className="btn btn-primary" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', background: '#10b981', border: 'none' }}>Approve</button>
-                                                                                    <button onClick={(e) => handleKycReview(doc.id, 'REJECTED', doc.fullName || doc.user?.fullName || 'this user', e)} className="btn btn-outline" style={{ padding: '0.5rem 1rem', fontSize: '0.85rem', color: '#ef4444', borderColor: '#ef4444', background: 'transparent' }}>Reject</button>
-                                                                              </div>
-                                                                        </td>
-                                                                  </tr>
-                                                            ))}
-                                                      </tbody>
-                                                </table>
-                                          </div>
-
-                                          {/* Mobile Card View for Pending Queue */}
-                                          <div className="mobile-show">
-                                                <div className="admin-card-list">
-                                                      {pendingDocs.length === 0 ? (
-                                                            <div style={{ padding: '3rem', textAlign: 'center', color: '#10b981', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '0.75rem' }}>
-                                                                  ✓ Queue is empty.
-                                                            </div>
-                                                      ) : pendingDocs.map((doc) => (
-                                                            <div key={doc.id} className="admin-card" onClick={() => setSelectedUserId(doc.userId)}>
-                                                                  <div className="admin-card-row">
-                                                                        <div>
-                                                                              <div style={{ fontWeight: 700, color: 'white', fontSize: '1rem' }}>{doc.fullName || doc.user?.fullName}</div>
-                                                                              <div style={{ fontSize: '0.75rem', color: '#8b5cf6' }}>@{doc.username || doc.user?.username}</div>
-                                                                        </div>
-                                                                        <div style={{ textAlign: 'right' }}>
-                                                                              <div className="admin-card-label">Document</div>
-                                                                              <div style={{ fontSize: '0.85rem', color: '#e2e8f0', fontWeight: 600, marginTop: '0.2rem' }}>{doc.documentType}</div>
-                                                                        </div>
-                                                                  </div>
-
-                                                                  <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.5)', marginTop: '0.4rem' }}>
-                                                                        ID: <span style={{ color: 'white' }}>{doc.documentNumber}</span>
-                                                                  </div>
-
-                                                                  {(doc.presignedUrl || doc.documentUrl) && (
-                                                                        <button
-                                                                              onClick={(e) => { e.stopPropagation(); setViewingDocument(doc); }}
-                                                                              style={{ background: 'none', border: 'none', cursor: 'pointer', padding: 0, fontSize: '0.85rem', color: '#3b82f6', marginTop: '0.5rem', display: 'inline-block', fontWeight: 600 }}
-                                                                        >
-                                                                              View Document
-                                                                        </button>
-                                                                  )}
-
-                                                                  <div className="admin-card-row" style={{ marginTop: '0.75rem', paddingTop: '0.75rem', borderTop: '1px solid rgba(255,255,255,0.05)', gap: '0.5rem' }}>
-                                                                        <button
-                                                                              onClick={(e) => handleKycReview(doc.id, 'VERIFIED', doc.fullName || doc.user?.fullName || 'this user', e)}
-                                                                              style={{ flex: 1, padding: '0.6rem', borderRadius: '0.5rem', background: '#10b981', color: 'white', border: 'none', fontWeight: 700, fontSize: '0.8rem' }}
-                                                                        >
-                                                                              Approve
-                                                                        </button>
-                                                                        <button
-                                                                              onClick={(e) => handleKycReview(doc.id, 'REJECTED', doc.fullName || doc.user?.fullName || 'this user', e)}
-                                                                              style={{ flex: 1, padding: '0.6rem', borderRadius: '0.5rem', background: 'transparent', color: '#ef4444', border: '1px solid #ef4444', fontWeight: 700, fontSize: '0.8rem' }}
-                                                                        >
-                                                                              Reject
-                                                                        </button>
-                                                                  </div>
-                                                            </div>
-                                                      ))}
-                                                </div>
-                                          </div>
-                                    </>
-                              )}
+                  {activeTab === 'ALL' && (
+                        <div style={{ marginBottom: '1.5rem', display: 'flex', justifyContent: 'flex-end' }}>
+                              <div className="search-wrapper">
+                                    <Search size={18} className="search-icon" />
+                                    <input
+                                          type="text"
+                                          placeholder="Search database..."
+                                          className="admin-search-input"
+                                          value={searchQuery}
+                                          onChange={(e) => setSearchQuery(e.target.value)}
+                                    />
+                              </div>
                         </div>
+                  )}
+
+                  <div className="glass-panel" style={{ padding: 0, overflow: 'hidden', border: '1px solid rgba(255,255,255,0.05)', borderRadius: '1rem' }}>
+                        {activeTab === 'PENDING' ? (
+                              <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+                                    <table className="admin-table">
+                                          <thead>
+                                                <tr>
+                                                      <th>Identity Profile</th>
+                                                      <th>Document Type</th>
+                                                      <th>Submission</th>
+                                                      <th style={{ textAlign: 'right' }}>Management</th>
+                                                </tr>
+                                          </thead>
+                                          <tbody>
+                                                {pendingDocs.length === 0 ? (
+                                                      <tr>
+                                                            <td colSpan="4" style={{ padding: '5rem', textAlign: 'center' }}>
+                                                                  <div style={{ background: 'rgba(16, 185, 129, 0.1)', width: '60px', height: '60px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', margin: '0 auto 1.5rem auto', color: '#10b981' }}>
+                                                                        <CheckCircle size={32} />
+                                                                  </div>
+                                                                  <h3 style={{ color: 'white', margin: '0 0 0.5rem 0' }}>Queue Cleared</h3>
+                                                                  <p style={{ color: 'rgba(255,255,255,0.4)', margin: 0 }}>All KYC submissions have been processed.</p>
+                                                            </td>
+                                                      </tr>
+                                                ) : (
+                                                      pendingDocs.map((doc) => (
+                                                            <tr key={doc.id} className="clickable-row">
+                                                                  <td onClick={() => setSelectedUserId(doc.userId)}>
+                                                                        <div style={{ fontWeight: 600, color: 'white' }}>{doc.fullName || doc.user?.fullName}</div>
+                                                                        <div style={{ fontSize: '0.75rem', color: '#8b5cf6', marginTop: '0.2rem' }}>@{doc.username || doc.user?.username || String(doc.userId).padStart(5, '0')}</div>
+                                                                  </td>
+                                                                  <td>
+                                                                        <div style={{ display: 'flex', alignItems: 'center', gap: '0.6rem', color: 'white', fontWeight: 500 }}>
+                                                                              <FileText size={16} style={{ color: '#c4b5fd' }} /> {doc.documentType}
+                                                                        </div>
+                                                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)', marginTop: '0.2rem' }}>ID: {doc.documentNumber}</div>
+                                                                  </td>
+                                                                  <td>
+                                                                        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>{new Date(doc.createdAt).toLocaleDateString()}</div>
+                                                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.3)', marginTop: '0.1rem' }}>{new Date(doc.createdAt).toLocaleTimeString()}</div>
+                                                                  </td>
+                                                                  <td style={{ textAlign: 'right' }}>
+                                                                        <div style={{ display: 'flex', gap: '0.5rem', justifyContent: 'flex-end' }}>
+                                                                              {(doc.presignedUrl || doc.documentUrl) && (
+                                                                                    <button
+                                                                                          onClick={(e) => { e.stopPropagation(); setViewingDocument(doc); }}
+                                                                                          style={{ background: 'rgba(59, 130, 246, 0.1)', border: '1px solid rgba(59, 130, 246, 0.2)', color: '#3b82f6', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 600 }}
+                                                                                    >
+                                                                                          <Eye size={14} style={{ display: 'inline', marginRight: '4px' }} /> View
+                                                                                    </button>
+                                                                              )}
+                                                                              <button
+                                                                                    onClick={(e) => handleKycReview(doc.id, 'VERIFIED', doc.fullName || doc.user?.fullName, e)}
+                                                                                    style={{ background: 'rgba(16, 185, 129, 0.15)', border: '1px solid rgba(16, 185, 129, 0.2)', color: '#10b981', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}
+                                                                              >
+                                                                                    Approve
+                                                                              </button>
+                                                                              <button
+                                                                                    onClick={(e) => handleKycReview(doc.id, 'REJECTED', doc.fullName || doc.user?.fullName, e)}
+                                                                                    style={{ background: 'rgba(239, 68, 68, 0.15)', border: '1px solid rgba(239, 68, 68, 0.2)', color: '#ef4444', padding: '0.5rem 0.75rem', borderRadius: '0.5rem', cursor: 'pointer', fontSize: '0.8rem', fontWeight: 700 }}
+                                                                              >
+                                                                                    Reject
+                                                                              </button>
+                                                                        </div>
+                                                                  </td>
+                                                            </tr>
+                                                      ))
+                                                )}
+                                          </tbody>
+                                    </table>
+                              </div>
+                        ) : (
+                              <div className="table-container" style={{ border: 'none', borderRadius: 0 }}>
+                                    <table className="admin-table">
+                                          <thead>
+                                                <tr>
+                                                      <th>Profile</th>
+                                                      <th>Contact Info</th>
+                                                      <th>Registration</th>
+                                                      <th>KYC Status</th>
+                                                      <th style={{ textAlign: 'right' }}>Management</th>
+                                                </tr>
+                                          </thead>
+                                          <tbody>
+                                                {filteredUsers.length === 0 ? (
+                                                      <tr><td colSpan="5" style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.3)' }}>No users found.</td></tr>
+                                                ) : (
+                                                      filteredUsers.map((usr) => (
+                                                            <tr key={usr.id} className="clickable-row" onClick={() => setSelectedUserId(usr.id)}>
+                                                                  <td>
+                                                                        <div style={{ fontWeight: 600, color: 'white' }}>{usr.fullName}</div>
+                                                                        <div style={{ fontSize: '0.75rem', color: '#8b5cf6' }}>@{usr.username || String(usr.id).padStart(5, '0')}</div>
+                                                                  </td>
+                                                                  <td>
+                                                                        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>{usr.email}</div>
+                                                                        <div style={{ fontSize: '0.75rem', color: 'rgba(255,255,255,0.4)' }}>{usr.phone || 'No phone'}</div>
+                                                                  </td>
+                                                                  <td>
+                                                                        <div style={{ color: 'rgba(255,255,255,0.7)', fontSize: '0.85rem' }}>{new Date(usr.createdAt).toLocaleDateString()}</div>
+                                                                  </td>
+                                                                  <td>
+                                                                        <span className={`badge ${usr.kycStatus === 'VERIFIED' ? 'badge-success' : usr.kycStatus === 'PENDING' ? 'badge-warning' : usr.kycStatus === 'REJECTED' ? 'badge-danger' : 'badge-primary'}`}>
+                                                                              {usr.kycStatus}
+                                                                        </span>
+                                                                  </td>
+                                                                  <td style={{ textAlign: 'right' }}>
+                                                                        <div style={{ color: '#3b82f6', fontWeight: 600, fontSize: '0.85rem' }}>Inspect Profile</div>
+                                                                  </td>
+                                                            </tr>
+                                                      ))
+                                                )}
+                                          </tbody>
+                                    </table>
+                              </div>
+                        )}
                   </div>
 
-                  {/* KYC Review Confirmation Modal */}
+                  {/* Mobile Card List (Pending only for focus) */}
+                  <div className="mobile-show" style={{ padding: '1rem' }}>
+                        {activeTab === 'PENDING' && (
+                              <div style={{ display: 'flex', flexDirection: 'column', gap: '1rem' }}>
+                                    {pendingDocs.length === 0 ? (
+                                          <div style={{ padding: '3rem', textAlign: 'center', background: 'rgba(16, 185, 129, 0.05)', borderRadius: '1rem', color: '#10b981' }}>✓ Queue Clear</div>
+                                    ) : (
+                                          pendingDocs.map((doc) => (
+                                                <div key={doc.id} className="glass-panel" style={{ padding: '1.25rem', borderRadius: '1rem', border: '1px solid rgba(255,255,255,0.05)' }}>
+                                                      <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'flex-start', marginBottom: '1rem' }}>
+                                                            <div>
+                                                                  <div style={{ fontWeight: 600, color: 'white' }}>{doc.fullName || doc.user?.fullName}</div>
+                                                                  <div style={{ fontSize: '0.75rem', color: '#8b5cf6' }}>ID: {doc.documentNumber}</div>
+                                                            </div>
+                                                            <div style={{ textAlign: 'right' }}>
+                                                                  <div style={{ fontSize: '0.7rem', color: 'rgba(255,255,255,0.4)', textTransform: 'uppercase' }}>Type</div>
+                                                                  <div style={{ color: 'white', fontWeight: 600, fontSize: '0.85rem' }}>{doc.documentType}</div>
+                                                            </div>
+                                                      </div>
+                                                      <div style={{ display: 'flex', gap: '0.5rem', marginTop: '1rem' }}>
+                                                            <button onClick={() => setViewingDocument(doc)} style={{ flex: 1, padding: '0.6rem', borderRadius: '0.5rem', background: 'rgba(59, 130, 246, 0.15)', color: '#3b82f6', border: 'none', fontWeight: 700, fontSize: '0.8rem' }}>View</button>
+                                                            <button onClick={() => handleKycReview(doc.id, 'VERIFIED', doc.fullName || doc.user?.fullName)} style={{ flex: 1, padding: '0.6rem', borderRadius: '0.5rem', background: '#10b981', color: 'white', border: 'none', fontWeight: 700, fontSize: '0.8rem' }}>Approve</button>
+                                                            <button onClick={() => handleKycReview(doc.id, 'REJECTED', doc.fullName || doc.user?.fullName)} style={{ flex: 1, padding: '0.6rem', borderRadius: '0.5rem', background: '#ef4444', color: 'white', border: 'none', fontWeight: 700, fontSize: '0.8rem' }}>Reject</button>
+                                                      </div>
+                                                </div>
+                                          ))
+                                    )}
+                              </div>
+                        )}
+                  </div>
+
+                  {/* Modals same as before but premium */}
                   {confirmModal && (
-                        <div
-                              onClick={() => setConfirmModal(null)}
-                              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.7)', backdropFilter: 'blur(6px)', display: 'flex', justifyContent: 'center', alignItems: 'center', zIndex: 10000, padding: '1rem' }}
-                        >
-                              <div
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ background: 'linear-gradient(180deg, #1a1a2e 0%, #111 100%)', border: '1px solid rgba(255,255,255,0.08)', borderRadius: '1rem', width: '100%', maxWidth: '420px', overflow: 'hidden', animation: 'fadeIn 0.2s ease' }}
-                              >
-                                    <div style={{ height: '3px', background: confirmModal.status === 'VERIFIED' ? 'linear-gradient(90deg, #10b981, #34d399)' : 'linear-gradient(90deg, #f87171, #ef4444)' }} />
-                                    <div style={{ padding: '1.5rem' }}>
-                                          <h3 style={{ margin: '0 0 0.5rem 0', color: 'white', fontSize: '1.1rem', fontWeight: 700 }}>
-                                                {confirmModal.status === 'VERIFIED' ? '✅ Approve KYC' : '❌ Reject KYC'}
-                                          </h3>
-                                          <p style={{ margin: '0 0 1.5rem 0', color: 'rgba(255,255,255,0.6)', fontSize: '0.9rem', lineHeight: 1.5 }}>
-                                                Are you sure you want to <strong style={{ color: confirmModal.status === 'VERIFIED' ? '#10b981' : '#ef4444' }}>{confirmModal.status === 'VERIFIED' ? 'approve' : 'reject'}</strong> the KYC documents for <strong style={{ color: 'white' }}>{confirmModal.userName}</strong>?
-                                                {confirmModal.status === 'VERIFIED' ? ' This will verify their identity and allow them to participate.' : ' This will reject their documents and they will need to resubmit.'}
+                        <div onClick={() => setConfirmModal(null)} className="sidebar-overlay" style={{ display: 'flex', justifyContent: 'center', alignItems: 'center', padding: '1rem' }}>
+                              <div onClick={(e) => e.stopPropagation()} style={{ background: '#121826', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '1.25rem', width: '100%', maxWidth: '450px', overflow: 'hidden', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}>
+                                    <div style={{ height: '4px', background: confirmModal.status === 'VERIFIED' ? '#10b981' : '#ef4444' }} />
+                                    <div style={{ padding: '2rem' }}>
+                                          <h3 style={{ margin: '0 0 1rem 0', color: 'white', fontSize: '1.25rem' }}>{confirmModal.status === 'VERIFIED' ? 'Approve Verification?' : 'Reject Verification?'}</h3>
+                                          <p style={{ color: 'rgba(255,255,255,0.6)', fontSize: '0.95rem', lineHeight: 1.6, marginBottom: '1.5rem' }}>
+                                                Are you sure you want to {confirmModal.status === 'VERIFIED' ? 'APPROVE' : 'REJECT'} <strong>{confirmModal.userName}</strong>? This action will be logged.
                                           </p>
 
                                           {confirmModal.status === 'REJECTED' && (
                                                 <div style={{ marginBottom: '1.5rem' }}>
-                                                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', fontWeight: 600 }}>Reason for Rejection *</label>
+                                                      <label style={{ display: 'block', marginBottom: '0.5rem', fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)' }}>Reason for rejection</label>
                                                       <textarea
-                                                            placeholder="State the reason clearly so the user knows how to fix it."
                                                             value={rejectionReason}
                                                             onChange={(e) => setRejectionReason(e.target.value)}
-                                                            rows="3"
-                                                            style={{
-                                                                  width: '100%', padding: '0.75rem', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)',
-                                                                  color: 'white', borderRadius: '0.5rem', outline: 'none', resize: 'vertical', fontFamily: 'inherit', fontSize: '0.9rem'
-                                                            }}
+                                                            placeholder="State clearly why it was rejected..."
+                                                            style={{ width: '100%', background: 'rgba(0,0,0,0.3)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', padding: '0.75rem', borderRadius: '0.5rem', minHeight: '100px', outline: 'none' }}
                                                       />
                                                 </div>
                                           )}
 
-                                          <div style={{ display: 'flex', gap: '0.75rem', justifyContent: 'flex-end' }}>
-                                                <button
-                                                      onClick={() => setConfirmModal(null)}
-                                                      disabled={processing}
-                                                      style={{ padding: '0.6rem 1.25rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'rgba(255,255,255,0.7)', borderRadius: '0.5rem', cursor: 'pointer', fontWeight: 600, fontSize: '0.85rem' }}
-                                                >
-                                                      Cancel
-                                                </button>
+                                          <div style={{ display: 'flex', gap: '1rem', justifyContent: 'flex-end' }}>
+                                                <button onClick={() => setConfirmModal(null)} style={{ padding: '0.6rem 1.25rem', background: 'transparent', color: 'white', border: '1px solid rgba(255,255,255,0.1)', borderRadius: '0.6rem', cursor: 'pointer' }}>Cancel</button>
                                                 <button
                                                       onClick={executeKycReview}
                                                       disabled={processing}
-                                                      style={{
-                                                            padding: '0.6rem 1.25rem',
-                                                            background: confirmModal.status === 'VERIFIED' ? '#10b981' : '#ef4444',
-                                                            border: 'none', color: 'white', borderRadius: '0.5rem',
-                                                            cursor: processing ? 'not-allowed' : 'pointer',
-                                                            fontWeight: 600, fontSize: '0.85rem',
-                                                            opacity: processing ? 0.6 : 1,
-                                                            display: 'flex', alignItems: 'center', gap: '0.5rem'
-                                                      }}
+                                                      style={{ padding: '0.6rem 1.25rem', background: confirmModal.status === 'VERIFIED' ? '#10b981' : '#ef4444', color: 'white', border: 'none', borderRadius: '0.6rem', cursor: 'pointer', fontWeight: 700, display: 'flex', alignItems: 'center', gap: '0.5rem' }}
                                                 >
-                                                      {processing ? <><Loader2 size={16} className="animate-spin" /> Processing...</> : `Confirm ${confirmModal.status === 'VERIFIED' ? 'Approve' : 'Reject'}`}
+                                                      {processing ? <Loader2 size={16} className="animate-spin" /> : 'Confirm Action'}
                                                 </button>
                                           </div>
                                     </div>
@@ -397,68 +299,25 @@ const AdminKyc = () => {
                         </div>
                   )}
 
-                  {/* Document Viewer Modal with Action Buttons */}
                   {viewingDocument && (
-                        <div
-                              onClick={() => setViewingDocument(null)}
-                              style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.85)', backdropFilter: 'blur(8px)', display: 'flex', flexDirection: 'column', zIndex: 10000 }}
-                        >
-                              {/* Viewer Header */}
-                              <div
-                                    onClick={(e) => e.stopPropagation()}
-                                    style={{ padding: '1.5rem', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center', background: '#0f172a' }}
-                              >
-                                    <div>
-                                          <h3 style={{ margin: 0, color: 'white', fontSize: '1.1rem', fontWeight: 600 }}>{viewingDocument.fullName || viewingDocument.user?.fullName}</h3>
-                                          <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.6)', marginTop: '0.2rem' }}>{viewingDocument.documentType} | ID: {viewingDocument.documentNumber}</div>
+                        <div onClick={() => setViewingDocument(null)} style={{ position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.9)', zIndex: 11000, display: 'flex', flexDirection: 'column' }}>
+                              <div onClick={e => e.stopPropagation()} style={{ padding: '1.5rem', background: '#0b0f19', borderBottom: '1px solid rgba(255,255,255,0.1)', display: 'flex', justifyContent: 'space-between', alignItems: 'center' }}>
+                                    <div style={{ color: 'white' }}>
+                                          <h4 style={{ margin: 0 }}>{viewingDocument.fullName || viewingDocument.user?.fullName}</h4>
+                                          <span style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.5)' }}>{viewingDocument.documentType} | {viewingDocument.documentNumber}</span>
                                     </div>
-
-                                    <div style={{ display: 'flex', gap: '0.75rem', alignItems: 'center' }}>
-                                          <button
-                                                onClick={(e) => {
-                                                      setViewingDocument(null);
-                                                      handleKycReview(viewingDocument.id, 'REJECTED', viewingDocument.fullName || viewingDocument.user?.fullName || 'this user', e);
-                                                }}
-                                                className="btn btn-outline"
-                                                style={{ padding: '0.5rem 1.25rem', borderColor: '#ef4444', color: '#ef4444', background: 'transparent' }}
-                                          >
-                                                Reject Identity
-                                          </button>
-                                          <button
-                                                onClick={(e) => {
-                                                      setViewingDocument(null);
-                                                      handleKycReview(viewingDocument.id, 'VERIFIED', viewingDocument.fullName || viewingDocument.user?.fullName || 'this user', e);
-                                                }}
-                                                className="btn btn-primary"
-                                                style={{ padding: '0.5rem 1.25rem', background: '#10b981', border: 'none' }}
-                                          >
-                                                Approve Identity
-                                          </button>
-                                          <div style={{ width: '1px', height: '24px', background: 'rgba(255,255,255,0.2)', margin: '0 0.5rem' }} />
-                                          <button
-                                                onClick={() => setViewingDocument(null)}
-                                                style={{ background: 'rgba(255,255,255,0.1)', border: 'none', color: 'white', width: '36px', height: '36px', borderRadius: '50%', display: 'flex', alignItems: 'center', justifyContent: 'center', cursor: 'pointer' }}
-                                          >
-                                                ×
-                                          </button>
+                                    <div style={{ display: 'flex', gap: '1rem' }}>
+                                          <button onClick={() => handleKycReview(viewingDocument.id, 'VERIFIED', viewingDocument.fullName || viewingDocument.user?.fullName)} style={{ padding: '0.5rem 1.25rem', background: '#10b981', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: 700, cursor: 'pointer' }}>Approve</button>
+                                          <button onClick={() => handleKycReview(viewingDocument.id, 'REJECTED', viewingDocument.fullName || viewingDocument.user?.fullName)} style={{ padding: '0.5rem 1.25rem', background: '#ef4444', color: 'white', border: 'none', borderRadius: '0.5rem', fontWeight: 700, cursor: 'pointer' }}>Reject</button>
+                                          <button onClick={() => setViewingDocument(null)} style={{ padding: '0.5rem', color: 'white', background: 'transparent', border: 'none', fontSize: '1.5rem', marginLeft: '1rem' }}>×</button>
                                     </div>
                               </div>
-
-                              {/* Viewer Body containing the Image */}
-                              <div
-                                    style={{ flex: 1, padding: '2rem', display: 'flex', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' }}
-                                    onClick={(e) => e.stopPropagation()}
-                              >
-                                    <img
-                                          src={viewingDocument.presignedUrl || viewingDocument.documentUrl}
-                                          alt="KYC Document"
-                                          style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '0.5rem', boxShadow: '0 25px 50px -12px rgba(0, 0, 0, 0.5)' }}
-                                    />
+                              <div style={{ flex: 1, display: 'flex', alignItems: 'center', justifyContent: 'center', padding: '2rem' }}>
+                                    <img src={viewingDocument.presignedUrl || viewingDocument.documentUrl} alt="KYC" style={{ maxWidth: '100%', maxHeight: '100%', objectFit: 'contain', borderRadius: '0.5rem', boxShadow: '0 0 50px rgba(0,0,0,0.5)' }} />
                               </div>
                         </div>
                   )}
 
-                  {/* Unified User Details Modal */}
                   {selectedUserId && (
                         <UserDetailsModal
                               userId={selectedUserId}
