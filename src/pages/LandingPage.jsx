@@ -5,7 +5,6 @@ import AboutSection from '../components/AboutSection';
 import HowItWorksSection from '../components/HowItWorksSection';
 import CompensationSection from '../components/CompensationSection';
 import RanksSection from '../components/RanksSection';
-import RiskSection from '../components/RiskSection';
 import Footer from '../components/Footer';
 import AuthModal from '../components/AuthModal';
 
@@ -24,7 +23,6 @@ const LandingPage = () => {
                         <HowItWorksSection />
                         <CompensationSection />
                         <RanksSection />
-                        <RiskSection />
                   </main>
 
                   <Footer />

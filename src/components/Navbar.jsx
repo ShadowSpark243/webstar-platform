@@ -23,7 +23,6 @@ const Navbar = () => {
             { name: 'How It Works', href: '#how-it-works' },
             { name: 'Compensation', href: '#compensation' },
             { name: 'Ranks', href: '#ranks' },
-            { name: 'Risk', href: '#risk' },
       ];
 
       const handleActionClick = () => {
