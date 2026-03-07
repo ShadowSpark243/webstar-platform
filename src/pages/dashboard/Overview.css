@@ -608,10 +608,11 @@
       display: flex;
       align-items: center;
       gap: 1rem;
-      padding: 0.75rem;
+      padding: 0.85rem 1rem;
+      background: rgba(255, 255, 255, 0.02);
       border-radius: 1rem;
+      border: 1px solid rgba(255, 255, 255, 0.04);
       transition: all 0.2s;
-      border: 1px solid transparent;
 }
 
 .ov-tx:hover {
@@ -761,6 +762,14 @@
       }
 }
 
+@media (max-width: 480px) {
+      .ov-tx-desc {
+            max-width: 140px;
+      }
+      .ov-tx-amt {
+            font-size: 0.9rem !important;
+      }
+}
 @media (max-width: 430px) {
       .ov-hero {
             padding: 0.85rem;
@@ -881,9 +890,21 @@
 /* ── Aggregated Stats Grid ── */
 .ov-inv-proj-stats {
       display: grid;
-      grid-template-columns: repeat(4, 1fr);
-      gap: 0.5rem;
-      margin-bottom: 0.75rem;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 0.75rem;
+      background: rgba(255, 255, 255, 0.02);
+      padding: 1rem;
+      border-radius: 1.25rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+}
+@media (max-width: 480px) {
+      .ov-inv-proj-stats {
+            grid-template-columns: 1fr;
+            gap: 0.5rem;
+      }
+      .ov-inv-card {
+            padding: 1rem !important;
+      }
 }
 
 .ov-inv-proj-stat {

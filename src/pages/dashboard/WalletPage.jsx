@@ -631,7 +631,16 @@ const WalletPage = () => {
                                                       <div className="tx-details">
                                                             <div className="tx-header">
                                                                   <span className={`tx-desc ${tx.status === 'REJECTED' ? 'line-through' : ''}`}>
-                                                                        {tx.description || tx.type}
+                                                                        {tx.description || ({
+                                                                              DEPOSIT: 'Deposit',
+                                                                              WITHDRAWAL: 'Withdrawal',
+                                                                              INVESTMENT: 'Contribution',
+                                                                              COMMISSION: 'Commission',
+                                                                              RETURN: 'Revenue Share',
+                                                                              DAILY_ROI: 'Daily Revenue Share',
+                                                                              BONUS: 'Bonus',
+                                                                              REFUND: 'Refund'
+                                                                        }[tx.type] || tx.type)}
                                                                   </span>
                                                                   <span className={`status-badge status-${tx.status.toLowerCase()}`}>
                                                                         {tx.status}
@@ -642,8 +651,8 @@ const WalletPage = () => {
                                                             </p>
                                                       </div>
                                                 </div>
-                                                <div className={`tx-amount ${tx.status === 'REJECTED' ? 'rejected' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS'].includes(tx.type) ? 'positive' : 'negative')}`}>
-                                                      {tx.status === 'REJECTED' ? '' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS'].includes(tx.type) ? '+' : '-')}₹{Math.abs(tx.amount).toLocaleString('en-IN')}
+                                                <div className={`tx-amount ${tx.status === 'REJECTED' ? 'rejected' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS', 'RETURN', 'REFUND'].includes(tx.type) ? 'positive' : 'negative')}`}>
+                                                      {tx.status === 'REJECTED' ? '' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS', 'RETURN', 'REFUND'].includes(tx.type) ? '+' : '-')}₹{Math.abs(tx.amount).toLocaleString('en-IN')}
                                                 </div>
                                           </div>
                                     ))}

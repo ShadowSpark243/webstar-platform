@@ -37,6 +37,17 @@ const txIcons = {
       DAILY_ROI: { icon: <Sparkles size={14} />, color: '#f59e0b' }
 };
 
+const typeLabels = {
+      DEPOSIT: 'Deposit',
+      WITHDRAWAL: 'Withdrawal',
+      INVESTMENT: 'Contribution',
+      COMMISSION: 'Commission',
+      RETURN: 'Revenue Share',
+      REFUND: 'Refund',
+      DAILY_ROI: 'Daily Revenue Share',
+      BONUS: 'Bonus'
+};
+
 const rankIconMap = { 'Starter': <Star size={20} />, 'Manager': <Award size={20} />, 'Senior Manager': <Trophy size={20} />, 'Director': <Crown size={20} /> };
 
 const Overview = () => {
@@ -323,12 +334,12 @@ const Overview = () => {
                                                 </div>
                                           ) : tx.map(t => {
                                                 const tc = txIcons[t.type] || txIcons.DEPOSIT;
-                                                const pos = ['DEPOSIT', 'COMMISSION', 'REFUND', 'RETURN'].includes(t.type);
+                                                const pos = ['DEPOSIT', 'COMMISSION', 'REFUND', 'RETURN', 'DAILY_ROI', 'BONUS'].includes(t.type);
                                                 return (
                                                       <div key={t.id} className="ov-tx">
                                                             <div className="ov-tx-ic" style={{ background: `${tc.color}15`, color: tc.color }}>{tc.icon}</div>
                                                             <div className="ov-tx-mid">
-                                                                  <span className="ov-tx-desc">{t.description || t.type}</span>
+                                                                  <span className="ov-tx-desc">{t.description || typeLabels[t.type] || t.type}</span>
                                                                   <span className="ov-tx-dt">{new Date(t.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short' })}</span>
                                                             </div>
                                                             <span className={`ov-tx-amt ${pos ? 'ov-green' : 'ov-red'}`}>{pos ? '+' : '-'}₹{Math.abs(t.amount).toLocaleString('en-IN')}</span>
