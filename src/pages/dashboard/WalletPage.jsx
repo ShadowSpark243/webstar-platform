@@ -122,6 +122,7 @@ const WalletPage = () => {
                   alert('Failed to process deposit review: ' + (error.response?.data?.message || error.message));
             } finally {
                   setProcessingReview(false);
+            }
       };
 
       const loadMoreTransactions = async () => {
