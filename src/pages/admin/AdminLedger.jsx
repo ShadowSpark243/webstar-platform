@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import api from '../../utils/api';
-import { Search, User, ArrowDownToLine, ArrowUpRight, Activity, Wallet, Briefcase, Network, Filter, Loader2, CheckCircle, XCircle } from 'lucide-react';
+import { Search, User, ArrowDownToLine, ArrowUpRight, Activity, Wallet, Briefcase, Network, Filter, Loader2, CheckCircle, XCircle, Eye } from 'lucide-react';
 import UserDetailsModal from '../../components/UserDetailsModal';
 import TransactionDetailsModal from '../../components/TransactionDetailsModal';
 
