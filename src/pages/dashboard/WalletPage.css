@@ -682,3 +682,40 @@
             font-size: 1.1rem;
       }
 }
+
+/* See More Button Styles */
+.see-more-container {
+      padding: 1.5rem;
+      display: flex;
+      justify-content: center;
+      border-top: 1px solid rgba(255, 255, 255, 0.05);
+      background: rgba(255, 255, 255, 0.01);
+}
+
+.btn-see-more {
+      padding: 0.75rem 2rem;
+      background: rgba(59, 130, 246, 0.1);
+      border: 1px solid rgba(59, 130, 246, 0.2);
+      border-radius: 2rem;
+      color: #60a5fa;
+      font-weight: 700;
+      font-size: 0.9rem;
+      cursor: pointer;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      display: flex;
+      align-items: center;
+      gap: 0.75rem;
+}
+
+.btn-see-more:hover:not(:disabled) {
+      background: rgba(59, 130, 246, 0.2);
+      border-color: #3b82f6;
+      transform: translateY(-2px);
+      box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.2);
+      color: white;
+}
+
+.btn-see-more:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+}

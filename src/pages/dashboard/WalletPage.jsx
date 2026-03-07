@@ -33,6 +33,8 @@ const WalletPage = () => {
       // Live Database State
       const [transactions, setTransactions] = useState([]);
       const [loadingHistory, setLoadingHistory] = useState(true);
+      const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 1 });
+      const [fetchingMore, setFetchingMore] = useState(false);
 
       // Admin State
       const [depositQueue, setDepositQueue] = useState([]);
@@ -56,6 +58,9 @@ const WalletPage = () => {
 
                   if (res.data.success) {
                         setTransactions(user?.role === 'ADMIN' ? res.data.transactions : res.data.recentTransactions || res.data.history);
+                        if (res.data.pagination) {
+                              setPagination(res.data.pagination);
+                        }
                         if (res.data.balances) {
                               setBalances(res.data.balances);
                         }
@@ -117,6 +122,24 @@ const WalletPage = () => {
                   alert('Failed to process deposit review: ' + (error.response?.data?.message || error.message));
             } finally {
                   setProcessingReview(false);
+      };
+
+      const loadMoreTransactions = async () => {
+            if (fetchingMore || pagination.page >= pagination.totalPages) return;
+            
+            setFetchingMore(true);
+            try {
+                  const nextPage = pagination.page + 1;
+                  const res = await api.get(`/wallet/history?page=${nextPage}&limit=${pagination.limit}`);
+                  
+                  if (res.data.success) {
+                        setTransactions(prev => [...prev, ...res.data.history]);
+                        setPagination(res.data.pagination);
+                  }
+            } catch (error) {
+                  console.error('Failed to load more transactions:', error);
+            } finally {
+                  setFetchingMore(false);
             }
       };
 
@@ -661,6 +684,22 @@ const WalletPage = () => {
                               <div className="empty-state" style={{ padding: '3rem', textAlign: 'center' }}>
                                     <WalletIcon size={48} className="text-muted mb-4" style={{ margin: '0 auto 1rem auto' }} />
                                     <p style={{ color: 'rgba(255,255,255,0.6)' }}>No transactions found.</p>
+                              </div>
+                        )}
+
+                        {user?.role !== 'ADMIN' && pagination.page < pagination.totalPages && (
+                              <div className="see-more-container">
+                                    <button 
+                                          className="btn-see-more" 
+                                          onClick={loadMoreTransactions}
+                                          disabled={fetchingMore}
+                                    >
+                                          {fetchingMore ? (
+                                                <><Loader2 size={18} className="animate-spin" /> Loading...</>
+                                          ) : (
+                                                <>See More Transactions</>
+                                          )}
+                                    </button>
                               </div>
                         )}
                   </div>
