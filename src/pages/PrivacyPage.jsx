@@ -17,22 +17,16 @@ const PrivacyPage = () => {
                               <div style={{ display: 'inline-flex', padding: '1rem', background: 'rgba(139, 92, 246, 0.1)', borderRadius: '1rem', color: '#8b5cf6', marginBottom: '1.5rem' }}>
                                     <Lock size={32} />
                               </div>
-                              <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.75rem' }}>Privacy Policy</h1>
+                               <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.75rem' }}>Privacy Policy</h1>
                               <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>ITRAM WEBPRO — A product of ITRAM Management LLP</p>
-                              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Last updated: March 06, 2026 | Effective Date: March 06, 2026</p>
+                              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Last updated: March 07, 2026</p>
                         </header>
 
-                        {/* Regulatory Compliance Banner */}
-                        <div style={{ padding: '1.25rem', background: 'rgba(139, 92, 246, 0.06)', border: '1px solid rgba(139, 92, 246, 0.25)', borderRadius: '0.75rem', marginBottom: '2rem', display: 'flex', gap: '0.75rem', alignItems: 'flex-start' }}>
-                              <Shield size={20} style={{ color: '#8b5cf6', flexShrink: 0, marginTop: '2px' }} />
-                              <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.7 }}>
-                                    This Privacy Policy is drafted in compliance with the <strong>Information Technology Act, 2000</strong> (IT Act),
-                                    the <strong>IT (Reasonable Security Practices and Procedures and Sensitive Personal Data or Information) Rules, 2011</strong>,
-                                    and the <strong>Digital Personal Data Protection Act, 2023</strong> (DPDP Act) of India.
-                              </div>
-                        </div>
-
                         <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: '1.5rem', background: 'rgba(30, 41, 59, 0.5)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', lineHeight: 1.8 }}>
+                              
+                              <section style={sectionStyle}>
+                                    <p style={pStyle}><strong>ITRAM WEBPRO</strong> respects the privacy of its users and is committed to protecting personal information.</p>
+                              </section>
 
                               {/* 1. Data Collection */}
                               <section style={sectionStyle}>

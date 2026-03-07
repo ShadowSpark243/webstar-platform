@@ -40,7 +40,7 @@ const txIcons = {
 const typeLabels = {
       DEPOSIT: 'Deposit',
       WITHDRAWAL: 'Withdrawal',
-      INVESTMENT: 'Contribution',
+      INVESTMENT: 'Contribution Participation',
       COMMISSION: 'Commission',
       RETURN: 'Revenue Share',
       REFUND: 'Refund',
@@ -250,7 +250,7 @@ const Overview = () => {
                                                                   </div>
                                                                   <div className="ov-inv-proj-stat">
                                                                         <span className="ov-inv-nv ov-green">{fmtINR(grp.totalEstRevShare)}</span>
-                                                                        <span className="ov-inv-nl">Est. Return</span>
+                                                                        <span className="ov-inv-nl">Est. Rev Share</span>
                                                                   </div>
                                                                   <div className="ov-inv-proj-stat">
                                                                         <span className="ov-inv-nv">{grp.investments.length}</span>
@@ -267,7 +267,7 @@ const Overview = () => {
 
                                                             {/* View Contribution History Toggle */}
                                                             <button className="ov-inv-hist-toggle" onClick={() => toggleProjectHistory(proj?.id)}>
-                                                                  {isExpanded ? <><ChevronUp size={14} /> Hide History</> : <><ChevronDown size={14} /> View Contribution History ({grp.investments.length})</>}
+                                                                  {isExpanded ? <><ChevronUp size={14} /> Hide History</> : <><ChevronDown size={14} /> View Participation History ({grp.investments.length})</>}
                                                             </button>
 
                                                             {/* Expanded History */}
@@ -294,7 +294,7 @@ const Overview = () => {
                                                                                                       <span className="ov-inv-hist-val">{new Date(item.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</span>
                                                                                                 </div>
                                                                                                 <div className="ov-inv-hist-cell">
-                                                                                                      <span className="ov-inv-hist-lbl"><TrendingUp size={10} /> Expected</span>
+                                                                                                      <span className="ov-inv-hist-lbl"><TrendingUp size={10} /> Est. Share</span>
                                                                                                       <span className="ov-inv-hist-val" style={{ color: '#3b82f6' }}>₹{item.estimatedRevShare.toLocaleString('en-IN')}</span>
                                                                                                 </div>
                                                                                                 <div className="ov-inv-hist-cell">

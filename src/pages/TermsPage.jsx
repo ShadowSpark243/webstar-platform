@@ -27,148 +27,162 @@ const TermsPage = () => {
                               <div style={{ display: 'inline-flex', padding: '1rem', background: 'rgba(59, 130, 246, 0.1)', borderRadius: '1rem', color: '#3b82f6', marginBottom: '1.5rem' }}>
                                     <Scale size={32} />
                               </div>
-                              <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.75rem' }}>Terms of Service</h1>
-                              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>ITRAM WEBPRO — A product of ITRAM Management LLP</p>
-                              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Last updated: March 06, 2026 | Effective Date: March 06, 2026</p>
+                               <h1 style={{ fontSize: '2.5rem', fontWeight: 800, marginBottom: '0.75rem' }}>Terms & Conditions</h1>
+                              <p style={{ color: 'rgba(255,255,255,0.5)', fontSize: '0.9rem' }}>(Media Project Participation Platform)</p>
+                              <p style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.8rem' }}>Last updated: March 07, 2026</p>
                         </header>
 
-                        {/* Critical Disclaimer */}
-                        <div style={disclaimerBox}>
-                              <AlertTriangle size={22} style={{ color: '#ef4444', flexShrink: 0, marginTop: '2px' }} />
-                              <div style={{ fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.7 }}>
-                                    <strong style={{ color: '#ef4444' }}>IMPORTANT LEGAL NOTICE:</strong> ITRAM WEBPRO is <strong>NOT</strong> a Collective
-                                    Investment Scheme (CIS) under SEBI (Collective Investment Schemes) Regulations, 1999, and is <strong>NOT</strong> regulated
-                                    by the Securities and Exchange Board of India (SEBI) or the Reserve Bank of India (RBI). Contributions made through this
-                                    platform are structured as <strong>revenue-sharing agreements</strong> under individual Special Purpose Vehicles (SPVs) and
-                                    do <strong>NOT</strong> constitute securities, deposits, or guaranteed financial instruments. <strong>Returns are NOT guaranteed.</strong>
-                              </div>
-                        </div>
-
                         <div className="glass-panel" style={{ padding: '2.5rem', borderRadius: '1.5rem', background: 'rgba(30, 41, 59, 0.5)', backdropFilter: 'blur(10px)', border: '1px solid rgba(255,255,255,0.05)', lineHeight: 1.8 }}>
-
-                              {/* 1. Acceptance */}
+                              
                               <section style={sectionStyle}>
-                                    <h2 style={h2Style}><BookOpen size={20} /> 1. Acceptance of Terms</h2>
-                                    <p style={pStyle}>By registering on, accessing, or using the ITRAM WEBPRO platform ("Platform"), operated by ITRAM Management LLP, a Limited Liability Partnership registered under the Limited Liability Partnership Act, 2008, with its registered office in India ("Company", "we", "us"), you ("User", "Contributor", "you") agree to be bound by these Terms of Service ("Terms"), our Privacy Policy, and all applicable Indian laws. If you do not agree, you must immediately cease using the Platform.</p>
-                                    <p style={pStyle}>These Terms constitute a legally binding agreement between you and the Company. By clicking "I Agree", creating an account, or making any contribution, you acknowledge that you have read, understood, and agree to be bound by these Terms in their entirety.</p>
+                                    <p style={pStyle}>Welcome to <strong>ITRAM WEBPRO</strong>, operated by <strong>ITRAM Management LLP</strong> (“Company”, “we”, “our”, or “us”).</p>
+                                    <p style={pStyle}>This platform enables verified participants to <strong>support and participate in film, web series, and digital media productions</strong>.</p>
+                                    <p style={pStyle}>By accessing or using the platform, you agree to the following Terms and Conditions.</p>
                               </section>
 
-                              {/* 2. Nature of the Platform */}
                               <section style={sectionStyle}>
-                                    <h2 style={h2Style}><Landmark size={20} /> 2. Nature of the Platform & SPV Structure</h2>
-                                    <p style={pStyle}>ITRAM WEBPRO operates as a technology platform that facilitates contributions to content production projects (films, web series, OTT content) through a <strong>Special Purpose Vehicle (SPV)</strong> model.</p>
-                                    <h3 style={h3Style}>2.1 SPV Structure</h3>
+                                    <h2 style={h2Style}><BookOpen size={20} /> 1. Platform Purpose</h2>
+                                    <p style={pStyle}>The platform facilitates <strong>participation in media production projects</strong>, including:</p>
                                     <ul style={{ paddingLeft: '1.5rem' }}>
-                                          <li style={liStyle}>Each content project listed on the Platform is managed through a separate SPV entity (LLP or Private Limited Company) created specifically for that project.</li>
-                                          <li style={liStyle}>Contributors participate in a <strong>revenue-sharing arrangement</strong> with the project-specific SPV, NOT an equity or debt instrument.</li>
-                                          <li style={liStyle}>Revenue shares are distributed based on actual net revenue generated by the completed project through OTT licensing, theatrical distribution, satellite rights, music rights, brand placements, and allied revenues.</li>
+                                          <li style={liStyle}>Films</li>
+                                          <li style={liStyle}>Web series</li>
+                                          <li style={liStyle}>OTT content</li>
+                                          <li style={liStyle}>Digital media productions</li>
                                     </ul>
-                                    <h3 style={h3Style}>2.2 Non-Investment Disclaimer</h3>
-                                    <p style={pStyle}>Contributions made through this Platform are <strong>NOT</strong> investments in securities as defined under the Securities Contracts (Regulation) Act, 1956, or the SEBI Act, 1992. The Platform does not offer any deposit scheme, chit fund, or financial instrument. The Company is not a Non-Banking Financial Company (NBFC) and does not accept deposits under the Companies Act, 2013.</p>
+                                    <p style={pStyle}>Participants may support projects through structured <strong>project participation agreements</strong> with production entities.</p>
+                                    <p style={pStyle}>Funds collected for a project are utilized for the <strong>development, production, marketing, and distribution of media content</strong>.</p>
                               </section>
 
-                              {/* 3. Eligibility */}
                               <section style={sectionStyle}>
-                                    <h2 style={h2Style}><Users size={20} /> 3. Eligibility & KYC</h2>
-                                    <p style={pStyle}>To use the Platform, you must:</p>
+                                    <h2 style={h2Style}><Users size={20} /> 2. Eligibility</h2>
+                                    <p style={pStyle}>To use the platform, users must:</p>
                                     <ul style={{ paddingLeft: '1.5rem' }}>
-                                          <li style={liStyle}>Be at least 18 years of age and a resident of India.</li>
-                                          <li style={liStyle}>Complete Know Your Customer (KYC) verification as required under the Prevention of Money Laundering Act, 2002 (PMLA) and related RBI/SEBI guidelines.</li>
-                                          <li style={liStyle}>Provide a valid PAN card, Aadhaar (optional, per Supreme Court guidelines), bank account, and other identity documents as requested.</li>
-                                          <li style={liStyle}>Provide accurate and truthful information. Any misrepresentation may result in account termination and forfeiture of pending revenue shares.</li>
+                                          <li style={liStyle}>Be <strong>18 years or older</strong></li>
+                                          <li style={liStyle}>Complete required <strong>identity verification (KYC)</strong></li>
+                                          <li style={liStyle}>Provide accurate personal information</li>
+                                          <li style={liStyle}>Agree to applicable agreements related to project participation</li>
                                     </ul>
-                                    <p style={pStyle}>The Company reserves the right to refuse or revoke access if KYC verification fails or if suspicious activity is detected in compliance with PMLA obligations.</p>
+                                    <p style={pStyle}>The company reserves the right to approve or decline registrations at its discretion.</p>
                               </section>
 
-                              {/* 4. Risk Factors */}
                               <section style={sectionStyle}>
-                                    <h2 style={h2Style}><AlertTriangle size={20} /> 4. Risk Factors & Disclaimers</h2>
-                                    <div style={{ ...disclaimerBox, marginTop: '0.5rem' }}>
-                                          <AlertTriangle size={18} style={{ color: '#f59e0b', flexShrink: 0, marginTop: '2px' }} />
-                                          <p style={{ margin: 0, fontSize: '0.85rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
-                                                Content production is inherently high-risk. You may lose part or all of your contribution. Past project performance does not guarantee future results.
-                                          </p>
-                                    </div>
-                                    <p style={pStyle}>By contributing, you acknowledge the following risks:</p>
+                                    <h2 style={h2Style}><Landmark size={20} /> 3. Project Participation Structure</h2>
+                                    <p style={pStyle}>Participation in projects may occur through legally structured arrangements such as:</p>
                                     <ul style={{ paddingLeft: '1.5rem' }}>
-                                          <li style={liStyle}><strong>Production Risk:</strong> Projects may be delayed, abandoned, or fail to complete due to creative, financial, regulatory, or force majeure events.</li>
-                                          <li style={liStyle}><strong>Market Risk:</strong> Completed content may not generate expected revenue from OTT platforms, theatrical releases, or other distribution channels.</li>
-                                          <li style={liStyle}><strong>Revenue Uncertainty:</strong> Revenue share percentages shown on the Platform are <strong>projections only</strong> and are NOT guaranteed. Actual revenue may be zero.</li>
-                                          <li style={liStyle}><strong>Liquidity Risk:</strong> Contributions are locked for the stated project duration and cannot be withdrawn early under normal circumstances.</li>
-                                          <li style={liStyle}><strong>Regulatory Risk:</strong> Changes in Indian tax law, entertainment regulations, or content censorship rules (CBFC/MIB) may adversely affect project outcomes.</li>
-                                          <li style={liStyle}><strong>Platform Risk:</strong> The Platform is a technology intermediary. Technical failures, cyber attacks, or operational issues may temporarily affect access.</li>
+                                          <li style={liStyle}><strong>Special Purpose Production Entities (SPV / LLP)</strong></li>
+                                          <li style={liStyle}><strong>Project participation agreements</strong></li>
+                                          <li style={liStyle}><strong>Revenue participation arrangements</strong></li>
                                     </ul>
-                              </section>
-
-                              {/* 5. Contributions & Revenue Share */}
-                              <section style={sectionStyle}>
-                                    <h2 style={h2Style}><Scale size={20} /> 5. Contributions & Revenue Distribution</h2>
-                                    <h3 style={h3Style}>5.1 Making Contributions</h3>
-                                    <p style={pStyle}>All contributions must be made through the Platform's approved payment methods. Each contribution is recorded against the specific project SPV. The minimum contribution amount, projected revenue share percentage, and project duration are displayed at the time of contribution.</p>
-                                    <h3 style={h3Style}>5.2 Revenue Distribution</h3>
-                                    <p style={pStyle}>Revenue distribution occurs based on the actual net revenue received by the project SPV after deducting production costs, distribution fees, taxes, and other applicable expenses. Revenue shares are credited to your Revenue Share Wallet on the Platform and are subject to applicable TDS/TCS as per the Income Tax Act, 1961.</p>
-                                    <h3 style={h3Style}>5.3 Referral Commissions</h3>
-                                    <p style={pStyle}>The Platform operates a multi-level referral commission structure. Commissions are paid from the operational budget and NOT from contributors' capital. Commission disbursement is subject to the Company's discretion and may be modified or discontinued.</p>
-                              </section>
-
-                              {/* 6. Withdrawals */}
-                              <section style={sectionStyle}>
-                                    <h2 style={h2Style}><Clock size={20} /> 6. Withdrawals & Wallet Policy</h2>
-                                    <p style={pStyle}>Withdrawals are subject to:</p>
+                                    <p style={pStyle}>Each project may have its own participation structure and documentation describing:</p>
                                     <ul style={{ paddingLeft: '1.5rem' }}>
-                                          <li style={liStyle}>Completed KYC verification as mandated under PMLA.</li>
-                                          <li style={liStyle}>Minimum withdrawal threshold as displayed on the Platform.</li>
-                                          <li style={liStyle}>Admin review for anti-money laundering (AML) compliance within 48 working hours.</li>
-                                          <li style={liStyle}>Tax Deducted at Source (TDS) as applicable under the Income Tax Act, 1961.</li>
-                                          <li style={liStyle}>Bank account must match the name on your KYC documents.</li>
+                                          <li style={liStyle}>Project details</li>
+                                          <li style={liStyle}>Contribution structure</li>
+                                          <li style={liStyle}>Revenue participation terms</li>
+                                          <li style={liStyle}>Distribution timeline</li>
                                     </ul>
-                                    <p style={pStyle}>The Company reserves the right to withhold, delay, or refuse withdrawals if suspicious activity is detected or if required by law enforcement / regulatory authorities.</p>
+                                    <p style={pStyle}>Participants will receive relevant project documentation before confirming participation.</p>
                               </section>
 
-                              {/* 7. Intellectual Property */}
                               <section style={sectionStyle}>
-                                    <h2 style={h2Style}><Shield size={20} /> 7. Intellectual Property</h2>
-                                    <p style={pStyle}>All content, designs, logos, trademarks, and technology on the Platform are the intellectual property of ITRAM Management LLP or its licensors. Contributors do NOT acquire any copyright, trademark, or IP rights over the content produced by projects they have contributed to. Revenue share is purely financial participation in project proceeds.</p>
-                              </section>
-
-                              {/* 8. Termination */}
-                              <section style={sectionStyle}>
-                                    <h2 style={h2Style}><Ban size={20} /> 8. Termination & Account Suspension</h2>
-                                    <p style={pStyle}>The Company may terminate or suspend your account without prior notice if:</p>
+                                    <h2 style={h2Style}><FileText size={20} /> 4. Project Revenue Sources</h2>
+                                    <p style={pStyle}>Media projects may generate revenue through various commercial channels, including:</p>
                                     <ul style={{ paddingLeft: '1.5rem' }}>
-                                          <li style={liStyle}>You breach any provision of these Terms.</li>
-                                          <li style={liStyle}>KYC documents are found to be forged, expired, or fraudulent.</li>
-                                          <li style={liStyle}>Suspicious activity is detected that may constitute money laundering (PMLA) or fraud.</li>
-                                          <li style={liStyle}>Required by a court order, regulatory directive, or law enforcement agency.</li>
+                                          <li style={liStyle}>OTT platform licensing</li>
+                                          <li style={liStyle}>Theatrical distribution</li>
+                                          <li style={liStyle}>Satellite television broadcasting</li>
+                                          <li style={liStyle}>Music rights licensing</li>
+                                          <li style={liStyle}>Brand partnerships and product placements</li>
+                                          <li style={liStyle}>International distribution</li>
+                                          <li style={liStyle}>Digital platform streaming</li>
+                                          <li style={liStyle}>Merchandise and related rights</li>
                                     </ul>
-                                    <p style={pStyle}>Upon termination, pending revenue shares (if any) will be processed subject to applicable laws. Contributions locked in active projects will follow the project SPV's terms.</p>
+                                    <p style={pStyle}>Revenue allocation is governed by the respective project agreements.</p>
                               </section>
 
-                              {/* 9. Governing Law */}
                               <section style={sectionStyle}>
-                                    <h2 style={h2Style}><Landmark size={20} /> 9. Governing Law & Dispute Resolution</h2>
-                                    <p style={pStyle}>These Terms are governed by and construed in accordance with the laws of India. Any dispute arising from these Terms shall be subject to the exclusive jurisdiction of the courts in Mumbai, Maharashtra.</p>
-                                    <p style={pStyle}>Before initiating litigation, parties agree to attempt resolution through mediation under the Mediation Act, 2023, or through arbitration under the Arbitration and Conciliation Act, 1996, at the seat of Mumbai.</p>
+                                    <h2 style={h2Style}><Scale size={20} /> 5. Revenue Participation</h2>
+                                    <p style={pStyle}>Participants may receive a share of project-generated revenue according to the specific project participation agreement.</p>
+                                    <p style={pStyle}>Media production operates within a dynamic entertainment industry environment and participation outcomes are <strong>subject to market conditions and commercial performance</strong>.</p>
                               </section>
 
-                              {/* 10. Limitation of Liability */}
                               <section style={sectionStyle}>
-                                    <h2 style={h2Style}>10. Limitation of Liability</h2>
-                                    <p style={pStyle}>To the maximum extent permitted by applicable Indian law, the Company, its directors, partners, employees, and agents shall not be liable for any indirect, incidental, special, consequential, or punitive damages, including loss of revenue, data, or goodwill, arising from your use of the Platform or any contribution made through it.</p>
-                                    <p style={pStyle}>The Company's total aggregate liability shall not exceed the amount actually contributed by the User to the specific project giving rise to the claim.</p>
+                                    <h2 style={h2Style}><Landmark size={20} /> 6. Use of Project Funds</h2>
+                                    <p style={pStyle}>Funds collected for projects may be utilized for activities including:</p>
+                                    <ul style={{ paddingLeft: '1.5rem' }}>
+                                          <li style={liStyle}>Script development</li>
+                                          <li style={liStyle}>Production costs</li>
+                                          <li style={liStyle}>Post-production</li>
+                                          <li style={liStyle}>Marketing and promotion</li>
+                                          <li style={liStyle}>Distribution and licensing</li>
+                                          <li style={liStyle}>Platform and operational support</li>
+                                    </ul>
+                                    <p style={pStyle}>All activities are managed under professional production supervision.</p>
                               </section>
 
-                              {/* 11. Amendments */}
+                              <section style={sectionStyle}>
+                                    <h2 style={h2Style}><Shield size={20} /> 7. Platform Role</h2>
+                                    <p style={pStyle}>The platform acts as a <strong>technology and coordination interface</strong> connecting participants with media production projects.</p>
+                                    <p style={pStyle}>The platform facilitates:</p>
+                                    <ul style={{ paddingLeft: '1.5rem' }}>
+                                          <li style={liStyle}>Project information access</li>
+                                          <li style={liStyle}>Participant onboarding</li>
+                                          <li style={liStyle}>Communication between production teams and participants</li>
+                                          <li style={liStyle}>Project updates and reporting</li>
+                                    </ul>
+                                    <p style={pStyle}>The platform does not function as a banking institution, stock exchange, or regulated financial marketplace.</p>
+                              </section>
+
+                              <section style={sectionStyle}>
+                                    <h2 style={h2Style}><FileText size={20} /> 8. Intellectual Property</h2>
+                                    <p style={pStyle}>All intellectual property related to the platform and media projects, including:</p>
+                                    <ul style={{ paddingLeft: '1.5rem' }}>
+                                          <li style={liStyle}>Scripts</li>
+                                          <li style={liStyle}>Visual content</li>
+                                          <li style={liStyle}>Branding</li>
+                                          <li style={liStyle}>Technology</li>
+                                          <li style={liStyle}>Production materials</li>
+                                    </ul>
+                                    <p style={pStyle}>remains the property of the Company or its licensors unless otherwise stated in written agreements. Unauthorized reproduction or commercial use is prohibited.</p>
+                              </section>
+
+                              <section style={sectionStyle}>
+                                    <h2 style={h2Style}><Scale size={20} /> 9. Account Security</h2>
+                                    <p style={pStyle}>Users are responsible for safeguarding their account credentials. The company shall not be responsible for unauthorized access resulting from user negligence or improper handling of login credentials.</p>
+                              </section>
+
+                              <section style={sectionStyle}>
+                                    <h2 style={h2Style}><Shield size={20} /> 10. Compliance</h2>
+                                    <p style={pStyle}>All platform activities are conducted in accordance with applicable Indian laws including:</p>
+                                    <ul style={{ paddingLeft: '1.5rem' }}>
+                                          <li style={liStyle}>The Companies Act</li>
+                                          <li style={liStyle}>The Limited Liability Partnership Act</li>
+                                          <li style={liStyle}>The Indian Contract Act</li>
+                                          <li style={liStyle}>Applicable digital platform regulations</li>
+                                    </ul>
+                                    <p style={pStyle}>Participation may be limited to <strong>verified individuals through private agreements</strong>.</p>
+                              </section>
+
+                              <section style={sectionStyle}>
+                                    <h2 style={h2Style}><AlertTriangle size={20} /> 11. Limitation of Liability</h2>
+                                    <p style={pStyle}>Media production and distribution involve creative and commercial variables.</p>
+                                    <p style={pStyle}>Participation in projects through the platform is <strong>subject to industry performance, audience response, and market conditions</strong>.</p>
+                                    <p style={pStyle}>The Company commits to managing projects with professional care and transparency.</p>
+                              </section>
+
+                              <section style={sectionStyle}>
+                                    <h2 style={h2Style}><Clock size={20} /> 12. Changes to Terms</h2>
+                                    <p style={pStyle}>The Company reserves the right to update these Terms periodically. Continued use of the platform after updates constitutes acceptance of revised Terms.</p>
+                              </section>
+
                               <section style={{ marginBottom: '1rem' }}>
-                                    <h2 style={h2Style}>11. Amendments</h2>
-                                    <p style={pStyle}>The Company reserves the right to modify these Terms at any time. Material changes will be notified via email or Platform notification at least 15 days before taking effect. Continued use of the Platform after such notification constitutes acceptance of the revised Terms.</p>
+                                    <h2 style={h2Style}><Scale size={20} /> 13. Governing Law</h2>
+                                    <p style={pStyle}>These Terms are governed by the laws of <strong>India</strong>. Any disputes shall fall under the jurisdiction of courts located in <strong>Mumbai, Maharashtra</strong>.</p>
                               </section>
 
-                              {/* Contact */}
                               <div style={{ marginTop: '3rem', padding: '1.25rem', background: 'rgba(59, 130, 246, 0.05)', border: '1px solid rgba(59, 130, 246, 0.2)', borderRadius: '1rem', display: 'flex', gap: '1rem', alignItems: 'center' }}>
                                     <FileText className="text-primary" />
                                     <span style={{ fontSize: '0.88rem', color: 'rgba(255,255,255,0.7)', lineHeight: 1.6 }}>
-                                          For questions regarding these Terms, contact us at <strong>legal@itramwebpro.com</strong> or write to: ITRAM Management LLP, Registered Office, India.
+                                          For questions regarding these Terms, contact us at <strong>support@itramwebpro.com</strong>.
                                     </span>
                               </div>
                         </div>

@@ -18,7 +18,7 @@ const ProjectsPage = () => {
       const [confirmInvest, setConfirmInvest] = useState(false);
       const [agreementAccepted, setAgreementAccepted] = useState(false);
       const [resultModal, setResultModal] = useState(null); // { success: bool, message: string }
-      const [myInvestments, setMyInvestments] = useState([]);
+      const [myContributions, setMyContributions] = useState([]);
       const [loadingPortfolio, setLoadingPortfolio] = useState(true);
       const [activeTab, setActiveTab] = useState(location.state?.activeTab || 'opportunities');
       const [expandedProjects, setExpandedProjects] = useState({});
@@ -41,7 +41,7 @@ const ProjectsPage = () => {
       const fetchMyInvestments = async () => {
             try {
                   const res = await api.get('/wallet/my-investments');
-                  if (res.data.success) setMyInvestments(res.data.investments);
+                  if (res.data.success) setMyContributions(res.data.investments);
             } catch (err) {
                   console.error('Failed to fetch my investments:', err);
             } finally {
@@ -124,13 +124,13 @@ const ProjectsPage = () => {
 
       if (isLoading) return <div style={{ padding: '3rem', textAlign: 'center', color: 'rgba(255,255,255,0.5)' }}>Loading projects...</div>;
 
-      const portfolioStats = myInvestments.reduce((acc, inv) => {
+      const portfolioStats = myContributions.reduce((acc, inv) => {
             acc.totalInvested += inv.amount;
             acc.totalEstimatedRevShare += inv.estimatedRevShare;
             return acc;
       }, { totalInvested: 0, totalEstimatedRevShare: 0 });
 
-      const groupedInvestmentsMap = myInvestments.reduce((acc, inv) => {
+      const groupedInvestmentsMap = myContributions.reduce((acc, inv) => {
             if (!acc[inv.projectId]) {
                   acc[inv.projectId] = {
                         project: inv.project,
@@ -177,7 +177,7 @@ const ProjectsPage = () => {
                               onClick={() => setActiveTab('portfolio')}
                               className={`projects-tab-btn ${activeTab === 'portfolio' ? 'active' : 'inactive'}`}
                         >
-                              <TrendingUp size={18} /> Portfolio ({myInvestments.length})
+                              <TrendingUp size={18} /> Participation History ({myContributions.length})
                         </button>
                   </div>
 
@@ -208,7 +208,7 @@ const ProjectsPage = () => {
                                                       <h3 className="p-stat-value text-primary">{groupedPortfolio.length}</h3>
                                                 </div>
                                                 <div className="p-stat-card">
-                                                      <span className="p-stat-label">Estimated Returns</span>
+                                                      <span className="p-stat-label">Estimated Rev. Share</span>
                                                       <h3 className="p-stat-value text-success">₹{portfolioStats.totalEstimatedRevShare.toLocaleString('en-IN')}</h3>
                                                 </div>
                                           </div>
@@ -271,7 +271,7 @@ const ProjectsPage = () => {
                                                                                                 <div className="p-hist-value">{new Date(inv.createdAt).toLocaleDateString()}</div>
                                                                                           </div>
                                                                                           <div className="p-hist-item">
-                                                                                                <div className="p-hist-label"><TrendingUp size={12} /> Expected</div>
+                                                                                                <div className="p-hist-label"><TrendingUp size={12} /> Est. Share</div>
                                                                                                 <div className="p-hist-value returns">₹{inv.estimatedRevShare.toLocaleString('en-IN')}</div>
                                                                                           </div>
                                                                                           <div className="p-hist-item">
@@ -427,7 +427,7 @@ const ProjectsPage = () => {
                                                       {[
                                                             { icon: <Target size={16} />, label: 'Target', value: `₹${(selectedProject.targetAmount / 100000).toFixed(1)}L`, color: '#3b82f6' },
                                                             { icon: <TrendingUp size={16} />, label: 'Raised', value: `₹${(selectedProject.raisedAmount / 100000).toFixed(1)}L`, color: '#8b5cf6' },
-                                                            { icon: <IndianRupee size={16} />, label: 'Min Contribution', value: `₹${selectedProject.minInvestment.toLocaleString('en-IN')}`, color: '#f59e0b' },
+                                                            { icon: <IndianRupee size={16} />, label: 'Min Project Contribution', value: `₹${selectedProject.minInvestment.toLocaleString('en-IN')}`, color: '#f59e0b' },
                                                             { icon: <TrendingUp size={16} />, label: 'Rev. Share', value: `${selectedProject.revenueSharePercent}%`, color: '#10b981' },
                                                             { icon: <Clock size={16} />, label: 'Duration', value: `${selectedProject.durationMonths} months`, color: '#6366f1' },
                                                             { icon: <Users size={16} />, label: 'Contributors', value: selectedProject._count?.investments || 0, color: '#ec4899' }
@@ -519,7 +519,7 @@ const ProjectsPage = () => {
                                                             onChange={(e) => setAgreementAccepted(e.target.checked)}
                                                       />
                                                       <label htmlFor="agreement">
-                                                            I have read and agree to the <a href={selectedProject.revenueAgreementUrl || '#'} target="_blank" rel="noopener noreferrer">Revenue Sharing Agreement</a>. I understand that my contribution is for project funding and returns depend on actual revenue, not guaranteed fixed ROI.
+                                                            I have read and agree to the <a href={selectedProject.revenueAgreementUrl || '#'} target="_blank" rel="noopener noreferrer">Project Participation Agreement</a>. I understand that my contribution is for project funding and returns depend on actual revenue, not guaranteed fixed revenue share.
                                                       </label>
                                                 </div>
 

@@ -27,6 +27,8 @@ import AdminSupport from './pages/admin/AdminSupport'
 import MaintenancePage from './pages/MaintenancePage'
 import TermsPage from './pages/TermsPage'
 import PrivacyPage from './pages/PrivacyPage'
+import ParticipationAgreement from './pages/ParticipationAgreement'
+import DisclaimerPage from './pages/DisclaimerPage'
 
 import { useAuth } from './context/AuthContext'
 
@@ -88,6 +90,8 @@ function App() {
       <Route path="/maintenance" element={<MaintenancePage />} />
       <Route path="/terms" element={<TermsPage />} />
       <Route path="/privacy" element={<PrivacyPage />} />
+      <Route path="/participation-agreement" element={<ParticipationAgreement />} />
+      <Route path="/disclaimer" element={<DisclaimerPage />} />
       <Route path="*" element={<Navigate to="/" />} />
     </Routes >
   )

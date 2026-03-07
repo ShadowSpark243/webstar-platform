@@ -23,7 +23,7 @@ const WalletPage = () => {
       const [accountNumber, setAccountNumber] = useState('');
       const [ifscCode, setIfscCode] = useState('');
       const [upiId, setUpiId] = useState('');
-      const [balances, setBalances] = useState({ wallet: 0, income: 0 });
+      const [balances, setBalances] = useState({ wallet: 0, income: 0, roi: 0 });
       const [portfolio, setPortfolio] = useState({ totalInvestedAmount: 0, estimatedProfit: 0, activeInvestments: 0 });
       const [todayEarnings, setTodayEarnings] = useState(0);
       const [triggeringROI, setTriggeringROI] = useState(false);
@@ -33,7 +33,7 @@ const WalletPage = () => {
       // Live Database State
       const [transactions, setTransactions] = useState([]);
       const [loadingHistory, setLoadingHistory] = useState(true);
-      const [pagination, setPagination] = useState({ page: 1, limit: 20, total: 0, totalPages: 1 });
+      const [pagination, setPagination] = useState({ page: 1, limit: 10, total: 0, totalPages: 1 });
       const [fetchingMore, setFetchingMore] = useState(false);
 
       // Admin State
@@ -53,29 +53,30 @@ const WalletPage = () => {
       const fetchData = async () => {
             setLoadingHistory(true);
             try {
-                  const historyUrl = user?.role === 'ADMIN' ? '/admin/transactions' : '/wallet/dashboard';
-                  const res = await api.get(historyUrl);
-
-                  if (res.data.success) {
-                        setTransactions(user?.role === 'ADMIN' ? res.data.transactions : res.data.recentTransactions || res.data.history);
-                        if (res.data.pagination) {
-                              setPagination(res.data.pagination);
-                        }
-                        if (res.data.balances) {
-                              setBalances(res.data.balances);
-                        }
-                        if (res.data.portfolio) {
-                              setPortfolio(res.data.portfolio);
-                        }
-                        if (res.data.todayEarnings !== undefined) {
-                              setTodayEarnings(res.data.todayEarnings);
-                        }
-                  }
-
                   if (user?.role === 'ADMIN') {
-                        const adminRes = await api.get('/admin/deposits');
-                        if (adminRes.data.success) {
-                              setDepositQueue(adminRes.data.deposits);
+                        // Admin: fetch all transactions + deposit queue
+                        const [txRes, depRes] = await Promise.all([
+                              api.get('/admin/transactions'),
+                              api.get('/admin/deposits')
+                        ]);
+                        if (txRes.data.success) setTransactions(txRes.data.transactions);
+                        if (depRes.data.success) setDepositQueue(depRes.data.deposits);
+                  } else {
+                        // User: fetch dashboard data (balances, portfolio) AND paginated history
+                        const [dashRes, histRes] = await Promise.all([
+                              api.get('/wallet/dashboard'),
+                              api.get('/wallet/history?page=1&limit=10')
+                        ]);
+
+                        if (dashRes.data.success) {
+                              if (dashRes.data.balances) setBalances(dashRes.data.balances);
+                              if (dashRes.data.portfolio) setPortfolio(dashRes.data.portfolio);
+                              if (dashRes.data.todayEarnings !== undefined) setTodayEarnings(dashRes.data.todayEarnings);
+                        }
+
+                        if (histRes.data.success) {
+                              setTransactions(histRes.data.history || []);
+                              if (histRes.data.pagination) setPagination(histRes.data.pagination);
                         }
                   }
             } catch (error) {
@@ -87,13 +88,6 @@ const WalletPage = () => {
 
       useEffect(() => {
             fetchData();
-            
-            const handleFocus = () => {
-                  fetchData();
-            };
-            
-            window.addEventListener('focus', handleFocus);
-            return () => window.removeEventListener('focus', handleFocus);
       }, [user?.role]);
 
       const handleReviewDepositClick = (dep, status, e) => {
@@ -577,69 +571,61 @@ const WalletPage = () => {
                   </div>
 
                   {/* Transaction History */}
-                  <div className="dashboard-card glass-panel" style={{ marginTop: '2rem', padding: 0 }}>
-                        <div style={{ padding: '1.25rem', borderBottom: '1px solid rgba(255,255,255,0.05)', display: 'flex', flexWrap: 'wrap', gap: '1rem', justifyContent: 'space-between', alignItems: 'center' }} className="wallet-header-flex">
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '1rem', alignItems: 'center' }}>
-                                    <h2 className="card-title" style={{ margin: 0, fontSize: '1.1rem' }}>Transaction Ledger</h2>
-                                    <button
-                                          onClick={handleExportCSV}
-                                          style={{
-                                                display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(59, 130, 246, 0.1)',
-                                                border: '1px solid rgba(59, 130, 246, 0.2)', color: '#60a5fa', padding: '0.4rem 0.8rem',
-                                                borderRadius: '0.5rem', fontSize: '0.75rem', fontWeight: 600, cursor: 'pointer'
-                                          }}
-                                    >
+                  <div className="ledger-container glass-panel">
+                        <div className="ledger-header">
+                              <div className="ledger-title-row">
+                                    <h2 className="ledger-title">Transaction Ledger</h2>
+                                    <button onClick={handleExportCSV} className="export-btn">
                                           <ArrowDownToLine size={14} /> Export CSV
                                     </button>
                               </div>
 
-                              <div style={{ display: 'flex', flexWrap: 'wrap', gap: '0.75rem', alignItems: 'center', flex: '1 1 300px', justifyContent: 'flex-end' }} className="wallet-actions-flex">
-                                    <div style={{ display: 'flex', alignItems: 'center', gap: '0.5rem', background: 'rgba(255,255,255,0.05)', padding: '0.2rem', borderRadius: '0.5rem', border: '1px solid rgba(255,255,255,0.1)', flex: '1 1 auto', maxWidth: '100%' }}>
-                                          <Filter size={16} style={{ color: 'rgba(255,255,255,0.5)', marginLeft: '0.5rem' }} />
+                              <div className="ledger-controls">
+                                    <div className="filter-group">
+                                          <Filter size={16} className="filter-icon" />
                                           <select
                                                 value={txTypeFilter}
                                                 onChange={(e) => setTxTypeFilter(e.target.value)}
-                                                style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.8rem', cursor: 'pointer', flex: 1, minWidth: '80px' }}
+                                                className="filter-select"
                                           >
-                                                <option value="ALL" style={{ background: '#1a1a2e' }}>All Types</option>
-                                                <option value="DEPOSIT" style={{ background: '#1a1a2e' }}>Deposit</option>
-                                                <option value="WITHDRAWAL" style={{ background: '#1a1a2e' }}>Withdrawal</option>
-                                                <option value="INVESTMENT" style={{ background: '#1a1a2e' }}>Contribution</option>
-                                                <option value="RETURN" style={{ background: '#1a1a2e' }}>Rev. Share</option>
-                                                <option value="COMMISSION" style={{ background: '#1a1a2e' }}>Commission</option>
-                                                <option value="BONUS" style={{ background: '#1a1a2e' }}>Bonus</option>
+                                                <option value="ALL">All Types</option>
+                                                <option value="DEPOSIT">Deposit</option>
+                                                <option value="WITHDRAWAL">Withdrawal</option>
+                                                <option value="INVESTMENT">Contribution</option>
+                                                <option value="RETURN">Rev. Share</option>
+                                                <option value="COMMISSION">Commission</option>
+                                                <option value="BONUS">Bonus</option>
                                           </select>
 
-                                          <div style={{ width: '1px', height: '20px', background: 'rgba(255,255,255,0.2)' }}></div>
+                                          <div className="filter-divider"></div>
 
                                           <select
                                                 value={txStatusFilter}
                                                 onChange={(e) => setTxStatusFilter(e.target.value)}
-                                                style={{ padding: '0.4rem 0.5rem', background: 'transparent', border: 'none', color: 'white', outline: 'none', fontSize: '0.8rem', cursor: 'pointer', flex: 1, minWidth: '80px' }}
+                                                className="filter-select"
                                           >
-                                                <option value="ALL" style={{ background: '#1a1a2e' }}>All Status</option>
-                                                <option value="APPROVED" style={{ background: '#1a1a2e' }}>Approved / Success</option>
-                                                <option value="PENDING" style={{ background: '#1a1a2e' }}>Pending</option>
-                                                <option value="REJECTED" style={{ background: '#1a1a2e' }}>Rejected</option>
+                                                <option value="ALL">All Status</option>
+                                                <option value="APPROVED">Approved / Success</option>
+                                                <option value="PENDING">Pending</option>
+                                                <option value="REJECTED">Rejected</option>
                                           </select>
                                     </div>
 
-                                    <div style={{ position: 'relative', maxWidth: '100%', width: '100%', flex: '1 1 200px' }}>
-                                          <Search size={16} style={{ position: 'absolute', left: '1rem', top: '50%', transform: 'translateY(-50%)', color: 'rgba(255,255,255,0.5)' }} />
+                                    <div className="search-group">
+                                          <Search size={16} className="search-icon" />
                                           <input
                                                 type="text"
                                                 placeholder="Search transactions..."
                                                 value={txSearchQuery}
                                                 onChange={(e) => setTxSearchQuery(e.target.value)}
-                                                className="dashboard-input"
-                                                style={{ width: '100%', padding: '0.6rem 1rem 0.6rem 2.22rem', background: 'rgba(255,255,255,0.05)', border: '1px solid rgba(255,255,255,0.1)', color: 'white', borderRadius: '2rem', fontSize: '0.85rem' }}
+                                                className="search-input"
                                           />
                                     </div>
                               </div>
                         </div>
 
                         {loadingHistory ? (
-                              <div style={{ color: 'rgba(255,255,255,0.5)', padding: '2rem', textAlign: 'center' }}>Loading history...</div>
+                              <div className="ledger-loading">Loading history...</div>
                         ) : filteredTransactions.length > 0 ? (
                               <div className="transaction-list">
                                     {filteredTransactions.map(tx => (
@@ -649,8 +635,8 @@ const WalletPage = () => {
                                                 onClick={() => setSelectedTransaction(tx)}
                                           >
                                                 <div className="tx-main-info">
-                                                      <div className={`tx-icon-boxed ${tx.status === 'REJECTED' ? 'rejected' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS'].includes(tx.type) ? 'incoming' : 'outgoing')}`}>
-                                                            {['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS'].includes(tx.type) ? <ArrowDownToLine size={18} /> : <ArrowUpRight size={18} />}
+                                                      <div className={`tx-icon-boxed ${tx.status === 'REJECTED' ? 'rejected' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS', 'RETURN', 'REFUND'].includes(tx.type) ? 'incoming' : 'debit')}`}>
+                                                            {['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS', 'RETURN', 'REFUND'].includes(tx.type) ? <ArrowDownToLine size={18} /> : <ArrowUpRight size={18} />}
                                                       </div>
                                                       <div className="tx-details">
                                                             <div className="tx-header">
@@ -666,24 +652,26 @@ const WalletPage = () => {
                                                                               REFUND: 'Refund'
                                                                         }[tx.type] || tx.type)}
                                                                   </span>
-                                                                  <span className={`status-badge status-${tx.status.toLowerCase()}`}>
-                                                                        {tx.status}
-                                                                  </span>
+                                                                  {!['DAILY_ROI', 'RETURN', 'INVESTMENT'].includes(tx.type) && (
+                                                                        <span className={`status-badge status-${(tx.status || 'UNKNOWN').toLowerCase()}`}>
+                                                                              {tx.status || 'UNKNOWN'}
+                                                                        </span>
+                                                                  )}
                                                             </div>
                                                             <p className="tx-date">
                                                                   {new Date(tx.createdAt).toLocaleString('en-IN', { dateStyle: 'medium', timeStyle: 'short' })}
                                                             </p>
                                                       </div>
                                                 </div>
-                                                <div className={`tx-amount ${tx.status === 'REJECTED' ? 'rejected' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS', 'RETURN', 'REFUND'].includes(tx.type) ? 'positive' : 'negative')}`}>
+                                                <div className={`tx-amount ${tx.status === 'REJECTED' ? 'rejected' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS', 'RETURN', 'REFUND'].includes(tx.type) ? 'positive' : 'debit')}`}>
                                                       {tx.status === 'REJECTED' ? '' : (['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS', 'RETURN', 'REFUND'].includes(tx.type) ? '+' : '-')}₹{Math.abs(tx.amount).toLocaleString('en-IN')}
                                                 </div>
                                           </div>
                                     ))}
                               </div>
                         ) : (
-                              <div className="empty-state" style={{ padding: '3rem', textAlign: 'center' }}>
-                                    <WalletIcon size={48} className="text-muted mb-4" style={{ margin: '0 auto 1rem auto' }} />
+                              <div className="empty-state">
+                                    <WalletIcon size={48} className="text-muted" style={{ marginBottom: '1rem' }} />
                                     <p style={{ color: 'rgba(255,255,255,0.6)' }}>No transactions found.</p>
                               </div>
                         )}

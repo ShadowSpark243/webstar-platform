@@ -182,21 +182,41 @@
 }
 
 .ov-stat {
-      background: rgba(15, 23, 42, 0.4);
-      backdrop-filter: blur(10px);
-      padding: 1.5rem;
-      border-radius: 1.5rem;
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      background: linear-gradient(165deg, rgba(255, 255, 255, 0.05) 0%, rgba(255, 255, 255, 0.01) 100%);
+      backdrop-filter: blur(15px);
+      padding: 1.75rem;
+      border-radius: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
       display: flex;
       flex-direction: column;
-      gap: 1.25rem;
+      gap: 1.5rem;
+      position: relative;
+      overflow: hidden;
+      box-shadow: 0 10px 30px -10px rgba(0, 0, 0, 0.3);
+}
+
+.ov-stat::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255, 255, 255, 0.05) 0%, transparent 50%);
+      opacity: 0;
+      transition: opacity 0.4s;
 }
 
 .ov-stat:hover {
-      transform: translateY(-4px);
-      background: rgba(15, 23, 42, 0.6);
-      border-color: rgba(255, 255, 255, 0.1);
+      transform: translateY(-8px) scale(1.02);
+      background: rgba(255, 255, 255, 0.06);
+      border-color: rgba(255, 255, 255, 0.15);
+      box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5);
+}
+
+.ov-stat:hover::before {
+      opacity: 1;
 }
 
 .ov-stat-ic {
@@ -589,13 +609,83 @@
       font-weight: 600;
 }
 
+/* ── Participations (Cards) ── */
+.ov-inv-project-card {
+      background: linear-gradient(165deg, rgba(255, 255, 255, 0.04) 0%, rgba(255, 255, 255, 0.01) 100%);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      border-radius: 2.5rem;
+      padding: 1.75rem;
+      margin-bottom: 1.5rem;
+      transition: all 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+}
+
+.ov-inv-project-card:hover {
+      border-color: rgba(59, 130, 246, 0.3);
+      background: rgba(255, 255, 255, 0.05);
+      box-shadow: 0 30px 60px -12px rgba(0, 0, 0, 0.4);
+}
+
+.ov-inv-proj-top {
+      display: flex;
+      align-items: center;
+      gap: 1.25rem;
+      margin-bottom: 1.5rem;
+      flex-wrap: wrap;
+}
+
+.ov-inv-proj-img {
+      width: 64px;
+      height: 64px;
+      border-radius: 1.25rem;
+      overflow: hidden;
+      flex-shrink: 0;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.ov-inv-proj-info {
+      flex: 1;
+      min-width: 150px;
+}
+
+.ov-inv-proj-info h4 {
+      margin: 0;
+      font-size: 1.25rem;
+      font-weight: 800;
+      color: #fff;
+      letter-spacing: -0.01em;
+}
+
+.ov-inv-proj-status {
+      padding: 0.4rem 1rem;
+      border-radius: 2rem;
+      font-size: 0.65rem;
+      font-weight: 800;
+      letter-spacing: 0.06em;
+      text-transform: uppercase;
+}
+
+.ov-inv-proj-stats {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+}
+
+.ov-inv-proj-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 0.35rem;
+}
+
 /* ── Activity Column ── */
 .ov-col-side {
-      background: rgba(15, 23, 42, 0.4);
-      backdrop-filter: blur(10px);
-      border: 1px solid rgba(255, 255, 255, 0.05);
-      border-radius: 1.5rem;
-      padding: 1.5rem;
+      background: linear-gradient(165deg, rgba(255, 255, 255, 0.03) 0%, rgba(255, 255, 255, 0.01) 100%);
+      backdrop-filter: blur(15px);
+      border: 1px solid rgba(255, 255, 255, 0.06);
+      border-radius: 2.5rem;
+      padding: 2rem 1.5rem;
+      box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
 }
 
 .ov-tx-list {
@@ -637,12 +727,13 @@
 
 .ov-tx-desc {
       display: block;
-      font-size: 0.85rem;
+      font-size: 0.9rem;
       font-weight: 700;
-      color: #fff;
+      color: rgba(255, 255, 255, 0.9);
       white-space: nowrap;
       overflow: hidden;
       text-overflow: ellipsis;
+      margin-bottom: 0.2rem;
 }
 
 .ov-tx-dt {
@@ -732,7 +823,7 @@
       }
 
       .ov-rank-val {
-            font-size: 1rem;
+            font-size: 1.25rem;
       }
 
       .ov-rank-bar {
@@ -758,7 +849,23 @@
       }
 
       .ov-col-side {
-            padding: .75rem;
+            padding: 1.5rem 1rem;
+            border-radius: 2rem;
+      }
+
+      .ov-stat {
+            padding: 1.25rem;
+            border-radius: 1.5rem;
+      }
+
+      .ov-inv-project-card {
+            padding: 1.25rem;
+            border-radius: 2rem;
+      }
+
+      .ov-inv-proj-stats {
+            grid-template-columns: repeat(2, 1fr);
+            gap: 0.75rem;
       }
 }
 

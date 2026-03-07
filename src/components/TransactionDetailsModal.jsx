@@ -1,16 +1,17 @@
 import React from 'react';
-import { X, ArrowDownToLine, ArrowUpRight, User, Hash, Clock, Landmark, FileText, CheckCircle, Clock3, XCircle, ExternalLink, IndianRupee, History, ShieldCheck, Tag } from 'lucide-react';
+import { X, ArrowDownToLine, ArrowUpRight, Hash, Clock, FileText, CheckCircle, Clock3, XCircle, ExternalLink, Tag } from 'lucide-react';
 
 const TransactionDetailsModal = ({ transaction, onClose, onInspectUser }) => {
       if (!transaction) return null;
 
       const isPositive = ['DEPOSIT', 'COMMISSION', 'DAILY_ROI', 'BONUS', 'RETURN', 'REFUND'].includes(transaction.type);
       const isRejected = transaction.status === 'REJECTED';
+      const showStatus = !['DAILY_ROI', 'RETURN', 'INVESTMENT'].includes(transaction.type);
 
       const statusConfig = {
-            APPROVED: { color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)', icon: <CheckCircle size={14} />, label: 'Approved' },
-            PENDING: { color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.12)', icon: <Clock3 size={14} />, label: 'Pending Verification' },
-            REJECTED: { color: '#ef4444', bg: 'rgba(239, 68, 68, 0.12)', icon: <XCircle size={14} />, label: 'Rejected' }
+            APPROVED: { color: '#10b981', bg: 'rgba(16, 185, 129, 0.12)', icon: <CheckCircle size={12} />, label: 'Approved' },
+            PENDING: { color: '#f59e0b', bg: 'rgba(245, 158, 11, 0.12)', icon: <Clock3 size={12} />, label: 'Pending' },
+            REJECTED: { color: '#94a3b8', bg: 'rgba(148, 163, 184, 0.12)', icon: <XCircle size={12} />, label: 'Rejected' }
       };
 
       const typeLabels = {
@@ -24,57 +25,66 @@ const TransactionDetailsModal = ({ transaction, onClose, onInspectUser }) => {
             BONUS: 'Platform Bonus'
       };
 
-      const status = statusConfig[transaction.status] || statusConfig.PENDING;
+      const status = statusConfig[transaction?.status] || statusConfig.PENDING;
+
+      const handleClose = (e) => {
+            e.preventDefault();
+            e.stopPropagation();
+            onClose();
+      };
 
       return (
-            <div className="tx-modal-overlay" onClick={onClose}>
+            <div className="txm-overlay" onClick={handleClose}>
                   <style>{`
-                        .tx-modal-overlay {
+                        .txm-overlay {
                               position: fixed;
                               inset: 0;
-                              background: rgba(4, 7, 12, 0.9);
-                              backdrop-filter: blur(16px);
+                              background: rgba(0, 0, 0, 0.6);
+                              backdrop-filter: blur(8px);
                               display: flex;
+                              align-items: flex-end;
                               justify-content: center;
-                              align-items: center;
                               z-index: 99999;
-                              padding: 1rem;
-                              animation: txFadeIn 0.3s ease-out;
+                              padding: 0;
+                              animation: txmFadeIn 0.25s ease-out;
                         }
+                        @keyframes txmFadeIn { from { opacity: 0; } to { opacity: 1; } }
 
-                        .tx-card-v2 {
+                        .txm-sheet {
                               width: 100%;
-                              max-width: 440px;
-                              background: #0d1117;
+                              max-width: 520px;
+                              max-height: 75vh;
+                              background: linear-gradient(180deg, rgba(15, 23, 42, 0.98) 0%, rgba(10, 15, 30, 0.99) 100%);
                               border: 1px solid rgba(255, 255, 255, 0.08);
-                              border-radius: 2rem;
-                              overflow: hidden;
-                              box-shadow: 0 40px 80px -20px rgba(0, 0, 0, 0.8), 0 0 0 1px rgba(255, 255, 255, 0.05);
-                              animation: txSlideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+                              border-bottom: none;
+                              border-radius: 1.5rem 1.5rem 0 0;
+                              overflow-y: auto;
+                              animation: txmSlideUp 0.35s cubic-bezier(0.16, 1, 0.3, 1);
                               position: relative;
                         }
-
-                        @keyframes txFadeIn { from { opacity: 0; } to { opacity: 1; } }
-                        @keyframes txSlideUp { from { opacity: 0; transform: translateY(30px) scale(0.98); } to { opacity: 1; transform: translateY(0) scale(1); } }
-
-                        .tx-header-v2 {
-                              padding: 2rem 1.5rem;
-                              text-align: center;
-                              background: linear-gradient(180deg, rgba(255, 255, 255, 0.03) 0%, transparent 100%);
-                              position: relative;
-                              border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                        @keyframes txmSlideUp {
+                              from { transform: translateY(100%); }
+                              to { transform: translateY(0); }
                         }
 
-                        .tx-close-btn {
-                              position: absolute;
-                              top: 1.25rem;
-                              right: 1.25rem;
+                        .txm-handle {
                               width: 36px;
-                              height: 36px;
+                              height: 4px;
+                              border-radius: 4px;
+                              background: rgba(255,255,255,0.2);
+                              margin: 0.75rem auto 0;
+                        }
+
+                        .txm-close {
+                              position: absolute;
+                              top: 0.75rem;
+                              right: 1rem;
+                              width: 32px;
+                              height: 32px;
                               border-radius: 50%;
-                              background: rgba(255, 255, 255, 0.05);
-                              border: 1px solid rgba(255, 255, 255, 0.1);
-                              color: white;
+                              background: rgba(255,255,255,0.08);
+                              border: 1px solid rgba(255,255,255,0.1);
+                              color: rgba(255,255,255,0.6);
                               display: flex;
                               align-items: center;
                               justify-content: center;
@@ -82,185 +92,232 @@ const TransactionDetailsModal = ({ transaction, onClose, onInspectUser }) => {
                               transition: all 0.2s;
                               z-index: 10;
                         }
+                        .txm-close:hover {
+                              background: rgba(239, 68, 68, 0.2);
+                              border-color: rgba(239, 68, 68, 0.4);
+                              color: #ef4444;
+                        }
 
-                        .tx-close-btn:hover { background: rgba(239, 68, 68, 0.2); border-color: rgba(239, 68, 68, 0.4); color: #ef4444; }
+                        .txm-hero {
+                              padding: 1.25rem 1.5rem 1rem;
+                              text-align: center;
+                        }
 
-                        .tx-icon-accent {
-                              width: 64px;
-                              height: 64px;
-                              border-radius: 1.5rem;
-                              margin: 0 auto 1.5rem;
+                        .txm-icon {
+                              width: 48px;
+                              height: 48px;
+                              border-radius: 1rem;
+                              margin: 0 auto 0.75rem;
                               display: flex;
                               align-items: center;
                               justify-content: center;
-                              background: rgba(255, 255, 255, 0.03);
-                              border: 1px solid rgba(255, 255, 255, 0.1);
-                              color: #60a5fa;
-                              box-shadow: 0 10px 20px rgba(0, 0, 0, 0.3);
+                              background: ${isPositive ? 'rgba(16, 185, 129, 0.1)' : 'rgba(239, 68, 68, 0.1)'};
+                              border: 1px solid ${isPositive ? 'rgba(16, 185, 129, 0.2)' : 'rgba(239, 68, 68, 0.2)'};
+                              color: ${isPositive ? '#10b981' : '#ef4444'};
                         }
 
-                        .tx-amount-v2 {
-                              font-size: 2.75rem;
+                        .txm-amount {
+                              font-size: 2rem;
                               font-weight: 900;
+                              color: ${isRejected ? '#94a3b8' : (isPositive ? '#10b981' : '#ef4444')};
+                              letter-spacing: -0.03em;
                               margin-bottom: 0.5rem;
-                              color: white;
-                              letter-spacing: -0.04em;
+                              text-decoration: ${isRejected ? 'line-through' : 'none'};
                               font-family: 'Inter', system-ui, sans-serif;
                         }
 
-                        .tx-status-v2 {
+                        .txm-status {
                               display: inline-flex;
                               align-items: center;
-                              gap: 0.5rem;
-                              padding: 0.5rem 1rem;
+                              gap: 0.4rem;
+                              padding: 0.35rem 0.85rem;
                               border-radius: 2rem;
-                              font-size: 0.75rem;
+                              background: ${status.bg};
+                              color: ${status.color};
+                              font-size: 0.7rem;
                               font-weight: 700;
                               text-transform: uppercase;
-                              letter-spacing: 0.05em;
+                              letter-spacing: 0.06em;
                         }
 
-                        .tx-body-v2 {
-                              padding: 1.5rem;
-                              display: flex;
-                              flex-direction: column;
-                              gap: 1.5rem;
-                        }
-
-                        .tx-info-grid {
-                              display: grid;
-                              grid-template-columns: 1fr 1fr;
-                              gap: 1rem;
-                              padding: 1.25rem;
-                              background: rgba(255, 255, 255, 0.02);
-                              border-radius: 1.5rem;
-                              border: 1px solid rgba(255, 255, 255, 0.05);
-                        }
-
-                        .tx-info-item { display: flex; flex-direction: column; gap: 0.35rem; }
-                        .tx-info-label { font-size: 0.65rem; font-weight: 700; color: rgba(255, 255, 255, 0.3); text-transform: uppercase; letter-spacing: 0.05em; display: flex; align-items: center; gap: 0.4rem; }
-                        .tx-info-value { font-size: 0.9rem; font-weight: 600; color: white; }
-
-                        .tx-desc-box {
-                              padding: 1.25rem;
-                              background: rgba(59, 130, 246, 0.05);
-                              border-radius: 1.25rem;
-                              border: 1px solid rgba(59, 130, 246, 0.1);
-                        }
-                        
-                        .tx-desc-text { font-size: 0.9rem; color: #94a3b8; line-height: 1.5; font-weight: 500; }
-
-                        .tx-footer-v2 {
-                              padding: 0 1.5rem 2rem;
+                        .txm-body {
+                              padding: 0 1.25rem 1.25rem;
                               display: flex;
                               flex-direction: column;
                               gap: 0.75rem;
                         }
 
-                        .btn-tx-action {
-                              width: 100%;
-                              padding: 1rem;
-                              border-radius: 1.25rem;
-                              font-weight: 700;
-                              font-size: 0.95rem;
-                              cursor: pointer;
-                              transition: all 0.2s;
-                              display: flex;
-                              align-items: center;
-                              justify-content: center;
+                        .txm-grid {
+                              display: grid;
+                              grid-template-columns: 1fr 1fr;
                               gap: 0.6rem;
                         }
 
-                        .btn-tx-primary { background: #3b82f6; color: white; border: none; box-shadow: 0 10px 20px -5px rgba(59, 130, 246, 0.4); }
-                        .btn-tx-primary:hover { background: #2563eb; transform: translateY(-2px); }
-                        
-                        .btn-tx-secondary { background: rgba(255, 255, 255, 0.05); color: #94a3b8; border: 1px solid rgba(255, 255, 255, 0.1); }
-                        .btn-tx-secondary:hover { background: rgba(255, 255, 255, 0.08); color: white; }
+                        .txm-field {
+                              padding: 0.75rem;
+                              background: rgba(255,255,255,0.03);
+                              border-radius: 0.85rem;
+                              border: 1px solid rgba(255,255,255,0.05);
+                        }
+                        .txm-field.full { grid-column: span 2; }
 
+                        .txm-field-label {
+                              font-size: 0.6rem;
+                              font-weight: 700;
+                              color: rgba(255,255,255,0.35);
+                              text-transform: uppercase;
+                              letter-spacing: 0.08em;
+                              margin-bottom: 0.3rem;
+                              display: flex;
+                              align-items: center;
+                              gap: 0.35rem;
+                        }
+
+                        .txm-field-value {
+                              font-size: 0.85rem;
+                              font-weight: 600;
+                              color: white;
+                        }
+
+                        .txm-desc-box {
+                              padding: 0.85rem;
+                              background: rgba(59,130,246,0.05);
+                              border-radius: 0.85rem;
+                              border: 1px solid rgba(59,130,246,0.1);
+                        }
+
+                        .txm-reject-box {
+                              padding: 0.85rem;
+                              background: rgba(239,68,68,0.05);
+                              border-radius: 0.85rem;
+                              border: 1px solid rgba(239,68,68,0.1);
+                        }
+
+                        .txm-actions {
+                              display: flex;
+                              flex-direction: column;
+                              gap: 0.5rem;
+                              padding-top: 0.25rem;
+                        }
+
+                        .txm-btn {
+                              display: flex;
+                              align-items: center;
+                              justify-content: center;
+                              gap: 0.5rem;
+                              padding: 0.75rem;
+                              border-radius: 0.85rem;
+                              font-weight: 700;
+                              font-size: 0.85rem;
+                              cursor: pointer;
+                              transition: all 0.2s;
+                              text-decoration: none;
+                              border: none;
+                        }
+                        .txm-btn.primary {
+                              background: linear-gradient(135deg, #3b82f6, #2563eb);
+                              color: white;
+                              box-shadow: 0 6px 16px rgba(37,99,235,0.35);
+                        }
+                        .txm-btn.primary:hover {
+                              transform: translateY(-1px);
+                              box-shadow: 0 8px 20px rgba(37,99,235,0.45);
+                        }
+                        .txm-btn.secondary {
+                              background: rgba(255,255,255,0.05);
+                              color: rgba(255,255,255,0.6);
+                              border: 1px solid rgba(255,255,255,0.08);
+                        }
+                        .txm-btn.secondary:hover {
+                              background: rgba(255,255,255,0.08);
+                              color: white;
+                        }
+
+                        @media (min-width: 640px) {
+                              .txm-overlay {
+                                    align-items: center;
+                                    padding: 1rem;
+                              }
+                              .txm-sheet {
+                                    border-radius: 1.25rem;
+                                    border-bottom: 1px solid rgba(255,255,255,0.08);
+                                    max-height: 80vh;
+                              }
+                              .txm-handle { display: none; }
+                        }
+
+                        @media (max-width: 480px) {
+                              .txm-grid { grid-template-columns: 1fr; }
+                              .txm-field.full { grid-column: span 1; }
+                              .txm-amount { font-size: 1.75rem; }
+                        }
                   `}</style>
 
-                  <div className="tx-card-v2" onClick={(e) => e.stopPropagation()}>
-                        <button className="tx-close-btn" onClick={onClose}><X size={18} /></button>
+                  <div className="txm-sheet" onClick={(e) => e.stopPropagation()}>
+                        <div className="txm-handle"></div>
+                        <button className="txm-close" onClick={handleClose}><X size={16} /></button>
 
-                        <div className="tx-header-v2">
-                              <div className="tx-icon-accent" style={{ color: isRejected ? '#ef4444' : (isPositive ? '#10b981' : '#3b82f6') }}>
-                                    {isPositive ? <ArrowDownToLine size={28} /> : <ArrowUpRight size={28} />}
+                        <div className="txm-hero">
+                              <div className="txm-icon">
+                                    {isPositive ? <ArrowDownToLine size={22} /> : <ArrowUpRight size={22} />}
                               </div>
-                              <div className="tx-amount-v2" style={{ color: isRejected ? '#64748b' : (isPositive ? '#10b981' : '#fff'), textDecoration: isRejected ? 'line-through' : 'none' }}>
-                                    {isPositive ? '+' : '-'}₹{Math.abs(transaction.amount).toLocaleString('en-IN')}
+                              <div className="txm-amount">
+                                    {isPositive ? '+' : '-'}₹{Math.abs(transaction?.amount || 0).toLocaleString('en-IN')}
                               </div>
-                              <div className="tx-status-v2" style={{ background: status.bg, color: status.color }}>
-                                    {status.icon} {status.label}
-                              </div>
-                        </div>
-
-                        <div className="tx-body-v2">
-                              <div className="tx-info-grid">
-                                    <div className="tx-info-item">
-                                          <div className="tx-info-label"><Tag size={12} /> Type</div>
-                                          <div className="tx-info-value">{typeLabels[transaction.type] || transaction.type}</div>
-                                    </div>
-                                    <div className="tx-info-item">
-                                          <div className="tx-info-label"><Clock size={12} /> Date</div>
-                                          <div className="tx-info-value">{new Date(transaction.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
-                                    </div>
-                                    <div className="tx-info-item">
-                                          <div className="tx-info-label"><History size={12} /> Time</div>
-                                          <div className="tx-info-value">{new Date(transaction.createdAt).toLocaleTimeString('en-IN', { hour: '2-digit', minute: '2-digit' })}</div>
-                                    </div>
-                                    <div className="tx-info-item" style={{ gridColumn: 'span 2' }}>
-                                          <div className="tx-info-label"><Hash size={12} /> Transaction ID</div>
-                                          <div className="tx-info-value" style={{ fontFamily: 'monospace', fontSize: '0.8rem', color: '#60a5fa' }}>{transaction.id}</div>
-                                    </div>
-                              </div>
-
-                              <div className="tx-desc-box">
-                                    <div className="tx-info-label" style={{ marginBottom: '0.5rem' }}><FileText size={12} /> Description</div>
-                                    <p className="tx-desc-text">{transaction.description || `No additional details for this ${transaction.type.toLowerCase()}.`}</p>
-                              </div>
-
-                              {isRejected && transaction.rejectionReason && (
-                                    <div className="tx-desc-box" style={{ background: 'rgba(239, 68, 68, 0.05)', borderColor: 'rgba(239, 68, 68, 0.1)' }}>
-                                          <div className="tx-info-label" style={{ color: '#ef4444', marginBottom: '0.5rem' }}><XCircle size={12} /> Rejection Reason</div>
-                                          <p className="tx-desc-text" style={{ color: '#fca5a5' }}>{transaction.rejectionReason}</p>
-                                    </div>
-                              )}
-
-                              {transaction.bankReference && (
-                                    <div className="tx-desc-box" style={{ background: 'rgba(255,255,255,0.02)', borderColor: 'rgba(255,255,255,0.05)' }}>
-                                          <div className="tx-info-label" style={{ marginBottom: '0.5rem' }}><Landmark size={12} /> Bank Reference (UTR)</div>
-                                          <div style={{ fontFamily: 'monospace', color: '#60a5fa', fontWeight: 700 }}>{transaction.bankReference}</div>
-                                    </div>
+                              {showStatus && (
+                                    <div className="txm-status">{status.icon} {status.label}</div>
                               )}
                         </div>
 
-                        {onInspectUser && transaction.user && (
-                              <div style={{ padding: '0 1.5rem 1.5rem' }}>
-                                    <div style={{ background: 'linear-gradient(135deg, rgba(99, 102, 241, 0.1) 0%, rgba(139, 92, 246, 0.1) 100%)', padding: '1.25rem', borderRadius: '1.5rem', border: '1px solid rgba(139, 92, 246, 0.2)', display: 'flex', alignItems: 'center', justifyContent: 'space-between' }}>
-                                          <div style={{ minWidth: 0 }}>
-                                                <div className="tx-info-label" style={{ color: '#818cf8' }}><User size={12} /> Contributor</div>
-                                                <div style={{ color: 'white', fontWeight: 800, fontSize: '1rem', margin: '0.2rem 0', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.user.fullName}</div>
-                                                <div style={{ color: 'rgba(255,255,255,0.4)', fontSize: '0.7rem', whiteSpace: 'nowrap', overflow: 'hidden', textOverflow: 'ellipsis' }}>{transaction.user.email}</div>
+                        <div className="txm-body">
+                              <div className="txm-grid">
+                                    <div className="txm-field">
+                                          <div className="txm-field-label"><Tag size={10} /> Type</div>
+                                          <div className="txm-field-value">{typeLabels[transaction?.type] || transaction?.type}</div>
+                                    </div>
+                                    <div className="txm-field">
+                                          <div className="txm-field-label"><Clock size={10} /> Date</div>
+                                          <div className="txm-field-value">{new Date(transaction?.createdAt).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' })}</div>
+                                    </div>
+                                    {transaction?.bankReference && (
+                                          <div className="txm-field full">
+                                                <div className="txm-field-label"><Hash size={10} /> UTR / Reference</div>
+                                                <div className="txm-field-value" style={{ color: '#60a5fa', fontFamily: 'monospace', fontSize: '0.8rem' }}>{transaction.bankReference}</div>
                                           </div>
-                                          <button 
-                                                onClick={() => { onClose(); onInspectUser(transaction.userId); }}
-                                                style={{ background: '#4f46e5', border: 'none', color: 'white', padding: '0.6rem 1rem', borderRadius: '0.75rem', fontWeight: 700, cursor: 'pointer', fontSize: '0.8rem', flexShrink: 0 }}
-                                          >
-                                                Inspect
-                                          </button>
-                                    </div>
+                                    )}
                               </div>
-                        )}
 
-                        <div className="tx-footer-v2">
-                              {transaction.receiptUrl && (
-                                    <a href={transaction.receiptUrl} target="_blank" rel="noopener noreferrer" className="btn-tx-action btn-tx-primary">
-                                          <ExternalLink size={18} /> View Payment Receipt
-                                    </a>
+                              {transaction?.description && (
+                                    <div className="txm-desc-box">
+                                          <div className="txm-field-label" style={{ color: '#60a5fa' }}><FileText size={10} /> Details</div>
+                                          <p style={{ fontSize: '0.8rem', color: 'rgba(255,255,255,0.6)', lineHeight: 1.5, margin: '0.25rem 0 0' }}>
+                                                {transaction.description}
+                                          </p>
+                                    </div>
                               )}
-                              <button onClick={onClose} className="btn-tx-action btn-tx-secondary">
-                                    Dismiss Details
-                              </button>
+
+                              {isRejected && transaction?.rejectionReason && (
+                                    <div className="txm-reject-box">
+                                          <div className="txm-field-label" style={{ color: '#ef4444' }}><XCircle size={10} /> Rejection Reason</div>
+                                          <p style={{ fontSize: '0.8rem', color: '#fca5a5', lineHeight: 1.4, margin: '0.25rem 0 0' }}>{transaction.rejectionReason}</p>
+                                    </div>
+                              )}
+
+                              <div className="txm-actions">
+                                    {transaction?.receiptUrl && (
+                                          <a href={transaction.receiptUrl} target="_blank" rel="noopener noreferrer" className="txm-btn primary">
+                                                <ExternalLink size={15} /> View Receipt
+                                          </a>
+                                    )}
+                                    {onInspectUser && transaction?.userId && (
+                                          <button onClick={() => { onInspectUser(transaction.userId); onClose(); }} className="txm-btn secondary">
+                                                View User
+                                          </button>
+                                    )}
+                                    <button onClick={handleClose} className="txm-btn secondary">
+                                          Dismiss
+                                    </button>
+                              </div>
                         </div>
                   </div>
             </div>

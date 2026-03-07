@@ -49,10 +49,10 @@ const Footer = () => {
                               <div className="footer-nav">
                                     <h4>Legal & Compliance</h4>
                                     <ul>
-                                          <li><a href="#risk">Risk Disclosure</a></li>
-                                          <li><Link to="/terms">Terms of Service</Link></li>
+                                          <li><Link to="/disclaimer">Risk Disclosure</Link></li>
+                                          <li><Link to="/terms">Terms & Conditions</Link></li>
                                           <li><Link to="/privacy">Privacy Policy</Link></li>
-                                          <li><a href="#">KYC Requirements</a></li>
+                                          <li><Link to="/participation-agreement">Participation Agreement</Link></li>
                                     </ul>
                               </div>
                         </div>
